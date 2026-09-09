@@ -46,23 +46,53 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
   );
 }
 
+function SmartImage({ src }: { src: string }) {
+  const [useFallback, setUseFallback] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const prompt = src.includes('/prompt/')
+    ? decodeURIComponent(src.split('/prompt/')[1].split('?')[0])
+    : 'nature';
+  const keywords = (prompt.match(/[a-zA-Z0-9]+/g) || ['nature']).slice(0, 3).join(',');
+  const fallback = `https://loremflickr.com/768/768/${keywords}`;
+  return (
+    <div className="my-3 overflow-hidden rounded-xl border border-[#262640] bg-[#0D0D18]">
+      {!failed && (
+        <img
+          src={useFallback ? fallback : src}
+          alt={prompt}
+          className={`w-full h-auto max-h-96 object-cover ${loaded ? 'opacity-100' : 'opacity-0'}`}
+          onLoad={() => setLoaded(true)}
+          onError={() => {
+            if (!useFallback) {
+              setUseFallback(true);
+              setLoaded(false);
+            } else {
+              setFailed(true);
+            }
+          }}
+        />
+      )}
+      {!loaded && !failed && (
+        <div className="flex items-center justify-center gap-2 py-10 text-xs text-[#94A3B8]">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Creating image... (10-60 seconds)
+        </div>
+      )}
+      {failed && (
+        <div className="py-6 text-center text-xs text-[#94A3B8]">
+          Image service unavailable. Please try again later.
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MessageContent({ content, imageUrl }: { content: string; imageUrl?: string }) {
   const parts = content.split(/(```[\s\S]*?```)/g);
   return (
     <>
-      {imageUrl && (
-        <div className="my-3 overflow-hidden rounded-xl border border-[#262640]">
-          <img
-            src={imageUrl}
-            alt="Generated image"
-            className="w-full h-auto max-h-96 object-cover"
-            loading="eager"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
-        </div>
-      )}
+      {imageUrl && <SmartImage src={imageUrl} />}
       {parts.map((part, i) => {
         if (part.startsWith('```') && part.endsWith('```')) {
           const lines = part.slice(3, -3).split('\n');
@@ -118,7 +148,7 @@ export default function ChatPage() {
   const generateImage = async (prompt: string) => {
     if (!prompt.trim() || imageLoading) return;
 
-    const userMsg: Message = { role: 'user', content: `🎨 ಚಿತ್ರ: ${prompt}` };
+    const userMsg: Message = { role: 'user', content: `🎨 Image: ${prompt}` };
     setMessages((prev) => [...prev, userMsg]);
     setImagePrompt('');
     setShowImageModal(false);
@@ -128,7 +158,7 @@ export default function ChatPage() {
 
     const assistantMsg: Message = {
       role: 'assistant',
-      content: `ಇಲ್ಲಿದೆ ನಿಮ್ಮ ಚಿತ್ರ: **${prompt}** 🎨`,
+      content: `Here is your image: **${prompt}** 🎨`,
       imageUrl,
     };
     setMessages((prev) => [...prev, assistantMsg]);
@@ -266,7 +296,7 @@ export default function ChatPage() {
               className="mt-2 flex items-center gap-2 rounded-full bg-brand-gradient px-4 py-2 text-sm font-medium text-white glow-violet"
             >
               <ImageIcon className="h-4 w-4" />
-              ಚಿತ್ರ ರಚಿಸಿ
+              Create Image
             </button>
           </div>
         ) : (
@@ -310,7 +340,7 @@ export default function ChatPage() {
           onClick={() => setShowImageModal(true)}
           whileTap={{ scale: 0.88 }}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#262640] transition-colors hover:bg-[#363650]"
-          title="ಚಿತ್ರ ರಚಿಸಿ"
+          title="Create Image"
         >
           <ImageIcon className="h-4 w-4 text-[#94A3B8]" />
         </motion.button>
@@ -397,7 +427,7 @@ export default function ChatPage() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gradient">
                       <ImageIcon className="h-5 w-5 text-white" />
                     </div>
-                    <h3 className="font-heading text-lg font-bold text-white">ಚಿತ್ರ ರಚಿಸಿ</h3>
+                    <h3 className="font-heading text-lg font-bold text-white">Create Image</h3>
                   </div>
                   <button
                     onClick={() => setShowImageModal(false)}
@@ -408,14 +438,14 @@ export default function ChatPage() {
                 </div>
 
                 <p className="text-sm text-[#94A3B8]">
-                  ನೀವು ಬಯಸುವ ಚಿತ್ರವನ್ನು ವಿವರಿಸಿ
+                  Describe the image you want
                 </p>
 
                 <form onSubmit={handleImageSubmit} className="flex flex-col gap-3">
                   <textarea
                     value={imagePrompt}
                     onChange={(e) => setImagePrompt(e.target.value)}
-                    placeholder="ಏನು ಬೇಕು ಎಂದು ಬರೆಯಿರಿ..."
+                    placeholder="Describe what you want..."
                     rows={3}
                     autoFocus
                     className="w-full resize-none rounded-xl border border-[#262640] bg-[#0D0D18] px-4 py-3 text-sm text-white placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#6366F1]/30"
@@ -429,12 +459,12 @@ export default function ChatPage() {
                     {imageLoading ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        ರಚಿಸುತ್ತಿದೆ...
+                        Creating...
                       </>
                     ) : (
                       <>
                         <Sparkles className="h-4 w-4" />
-                        ಚಿತ್ರ ರಚಿಸಿ
+                        Create Image
                       </>
                     )}
                   </motion.button>
