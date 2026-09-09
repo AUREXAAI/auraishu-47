@@ -1,0 +1,101 @@
+{
+  "nav": {
+    "home": "Home",
+    "chat": "Chat",
+    "tools": "Tools",
+    "library": "Library",
+    "settings": "Settings"
+  },
+  "header": {
+    "tagline": "One AI. Everything you need.",
+    "pro": "Pro"
+  },
+  "home": {
+    "greeting": "Good Evening,",
+    "username": "Psycho Gamer",
+    "sub": "What would you like to create today?",
+    "askPlaceholder": "Ask anything...",
+    "chips": {
+      "explain": "Explain something",
+      "writeCode": "Write code",
+      "createImage": "Create an image",
+      "makeVideo": "Make a video"
+    },
+    "explore": "Explore Features",
+    "allTools": "All Tools",
+    "recent": "Recent",
+    "viewAll": "View All",
+    "recentNewChat": "New Chat",
+    "recentChatDesc": "Continue your conversation",
+    "recentTime": "2m ago"
+  },
+  "features": {
+    "chat": {
+      "title": "AI Chat",
+      "desc": "Chat with advanced AI for answers, ideas and more."
+    },
+    "solve": {
+      "title": "Solve",
+      "desc": "Get help with problems, math, explanations and more."
+    },
+    "coding": {
+      "title": "Coding",
+      "desc": "Write, debug and improve your code with AI."
+    },
+    "image": {
+      "title": "Image",
+      "desc": "Create stunning images from text or ideas."
+    },
+    "video": {
+      "title": "Video",
+      "desc": "Generate videos from text, images or ideas."
+    },
+    "editor": {
+      "title": "Editor",
+      "desc": "Edit and enhance your videos with AI power."
+    },
+    "courses": {
+      "title": "Courses",
+      "desc": "Learn coding & skills with AI-generated courses."
+    }
+  },
+  "pro": {
+    "title": "Unlock Pro",
+    "desc": "Get more limits, faster speeds, advanced models and exclusive features.",
+    "cta": "Upgrade Now"
+  },
+  "welcome": {
+    "title": "Choose your language",
+    "subtitle": "You can change this later in settings"
+  },
+  "auth": {
+    "tagline": "One AI. Everything you need.",
+    "google": "Continue with Google",
+    "or": "or",
+    "namePlaceholder": "Enter your name",
+    "emailPlaceholder": "Email address",
+    "passwordPlaceholder": "Password",
+    "signUp": "Create Account",
+    "signIn": "Sign In",
+    "haveAccount": "Already have an account?",
+    "noAccount": "Don't have an account?",
+    "signInLink": "Sign in",
+    "signUpLink": "Sign up"
+  },
+  "settings": {
+    "language": "Language",
+    "languageDesc": "Choose your preferred language",
+    "logout": "Logout",
+    "logoutDesc": "Sign out of your account"
+  },
+  "chat": {
+    "inputPlaceholder": "Ask anything...",
+    "emptyState": "Start a conversation with AUREXA AI",
+    "leftToday": "left today",
+    "limitTitle": "Daily limit reached",
+    "limitDesc": "You've used all your free messages for today. Upgrade for more.",
+    "upgrade": "Upgrade",
+    "month": "month",
+    "comeBackTomorrow": "Come back tomorrow"
+  }
+}

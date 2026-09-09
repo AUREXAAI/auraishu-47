@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: #05050D;
+    --surface: #12121F;
+    --card: #1A1A2E;
+    --border: #262640;
+    --text-primary: #FFFFFF;
+    --text-muted: #94A3B8;
+    --brand-violet: #8B5CF6;
+    --brand-blue: #3B82F6;
+    --brand-gradient: linear-gradient(135deg, #8B5CF6, #3B82F6);
+
+    --accent-chat: #6366F1;
+    --accent-solve: #A855F7;
+    --accent-coding: #10B981;
+    --accent-courses: #A855F7;
+    --accent-image: #EC4899;
+    --accent-video: #06B6D4;
+    --accent-editor: #F59E0B;
+
+    --radius-card: 16px;
+    --radius-button: 12px;
+    --radius-input: 999px;
+
+    --shadow-color: 0 0% 3.9%;
+    --background: 240 29% 4%;
+    --foreground: 0 0% 100%;
+    --card: 240 29% 14%;
+    --card-foreground: 0 0% 100%;
+    --popover: 240 29% 14%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 258 90% 66%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 29% 14%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 240 29% 14%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 258 90% 66%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border-hsl: 240 29% 20%;
+    --input: 240 29% 20%;
+    --ring: 258 90% 66%;
+    --radius: 0.75rem;
+    --chart-1: 258 90% 66%;
+    --chart-2: 217 91% 60%;
+    --chart-3: 160 84% 39%;
+    --chart-4: 330 81% 60%;
+    --chart-5: 189 86% 43%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    border-color: var(--border);
+  }
+  html {
+    background-color: var(--bg);
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--text-primary);
+    font-family: 'Inter', 'Noto Sans Kannada', 'Noto Sans Devanagari', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', 'Noto Sans Kannada', 'Noto Sans Devanagari', sans-serif;
+  }
+}
+
+@layer utilities {
+  .font-heading {
+    font-family: 'Poppins', 'Noto Sans Kannada', 'Noto Sans Devanagari', sans-serif;
+  }
+  .font-body {
+    font-family: 'Inter', 'Noto Sans Kannada', 'Noto Sans Devanagari', sans-serif;
+  }
+  .text-gradient {
+    background: linear-gradient(135deg, #8B5CF6, #3B82F6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .bg-brand-gradient {
+    background: linear-gradient(135deg, #8B5CF6, #3B82F6);
+  }
+  .border-gradient {
+    border: 1px solid transparent;
+    background-image: linear-gradient(var(--card), var(--card)), linear-gradient(135deg, #8B5CF6, #3B82F6);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
+  .glow-violet {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+  }
+  .glow-blue {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+  }
+  .glow-chat {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+  }
+  .glow-solve {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+  }
+  .glow-coding {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+  }
+  .glow-courses {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+  }
+  .glow-image {
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.4);
+  }
+  .glow-video {
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+  }
+  .glow-editor {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
