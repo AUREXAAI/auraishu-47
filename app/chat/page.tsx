@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
-import { Send, Sparkles, Loader2, Copy, Check, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Send, Sparkles, Loader2, Copy, Check, AlertCircle, ArrowLeft, Image as ImageIcon, X } from 'lucide-react';
 import Link from 'next/link';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -14,6 +14,7 @@ type Message = {
   role: 'user' | 'assistant';
   content: string;
   error?: boolean;
+  imageUrl?: string;
 };
 
 type Tool = 'chat' | 'solve' | 'coding';
@@ -45,10 +46,23 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
   );
 }
 
-function MessageContent({ content }: { content: string }) {
+function MessageContent({ content, imageUrl }: { content: string; imageUrl?: string }) {
   const parts = content.split(/(```[\s\S]*?```)/g);
   return (
     <>
+      {imageUrl && (
+        <div className="my-3 overflow-hidden rounded-xl border border-[#262640]">
+          <img
+            src={imageUrl}
+            alt="Generated image"
+            className="w-full h-auto max-h-96 object-cover"
+            loading="eager"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        </div>
+      )}
       {parts.map((part, i) => {
         if (part.startsWith('```') && part.endsWith('```')) {
           const lines = part.slice(3, -3).split('\n');
@@ -72,6 +86,9 @@ export default function ChatPage() {
   const [streaming, setStreaming] = useState(false);
   const [usageLeft, setUsageLeft] = useState<number | null>(null);
   const [showLimitDialog, setShowLimitDialog] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [imagePrompt, setImagePrompt] = useState('');
+  const [imageLoading, setImageLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -97,6 +114,27 @@ export default function ChatPage() {
       }
     }
   }, []);
+
+  const generateImage = async (prompt: string) => {
+    if (!prompt.trim() || imageLoading) return;
+
+    const userMsg: Message = { role: 'user', content: `🎨 ಚಿತ್ರ: ${prompt}` };
+    setMessages((prev) => [...prev, userMsg]);
+    setImagePrompt('');
+    setShowImageModal(false);
+    setImageLoading(true);
+
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=768&nologo=true&seed=${Date.now()}`;
+
+    const assistantMsg: Message = {
+      role: 'assistant',
+      content: `ಇಲ್ಲಿದೆ ನಿಮ್ಮ ಚಿತ್ರ: **${prompt}** 🎨`,
+      imageUrl,
+    };
+    setMessages((prev) => [...prev, assistantMsg]);
+    setImageLoading(false);
+    inputRef.current?.focus();
+  };
 
   const sendMessage = async (msgText: string, tool: Tool = 'chat') => {
     if (!msgText.trim() || streaming) return;
@@ -175,7 +213,6 @@ export default function ChatPage() {
         }
       }
 
-      // Update usage
       setUsageLeft((prev) => (prev !== null ? prev - 1 : null));
     } catch {
       setMessages((prev) => {
@@ -198,9 +235,13 @@ export default function ChatPage() {
     sendMessage(input);
   };
 
+  const handleImageSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    generateImage(imagePrompt);
+  };
+
   return (
     <div className="flex h-[calc(100vh-180px)] flex-col gap-3">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <Link href="/" className="flex items-center gap-1 text-sm text-[#94A3B8] transition-colors hover:text-white">
           <ArrowLeft className="h-4 w-4" />
@@ -213,7 +254,6 @@ export default function ChatPage() {
         )}
       </div>
 
-      {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-3">
@@ -221,6 +261,13 @@ export default function ChatPage() {
               <Sparkles className="h-7 w-7 text-[#6366F1]" />
             </div>
             <p className="text-sm text-[#94A3B8]">{tc('emptyState')}</p>
+            <button
+              onClick={() => setShowImageModal(true)}
+              className="mt-2 flex items-center gap-2 rounded-full bg-brand-gradient px-4 py-2 text-sm font-medium text-white glow-violet"
+            >
+              <ImageIcon className="h-4 w-4" />
+              ಚಿತ್ರ ರಚಿಸಿ
+            </button>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -246,7 +293,7 @@ export default function ChatPage() {
                       </div>
                     ) : (
                       <div className="whitespace-pre-wrap break-words">
-                        <MessageContent content={msg.content} />
+                        <MessageContent content={msg.content} imageUrl={msg.imageUrl} />
                       </div>
                     )}
                   </div>
@@ -257,8 +304,16 @@ export default function ChatPage() {
         )}
       </div>
 
-      {/* Input */}
       <form onSubmit={handleSubmit} className="flex items-center gap-2 rounded-full border border-[#262640] bg-[#12121F] px-4 py-2.5">
+        <motion.button
+          type="button"
+          onClick={() => setShowImageModal(true)}
+          whileTap={{ scale: 0.88 }}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#262640] transition-colors hover:bg-[#363650]"
+          title="ಚಿತ್ರ ರಚಿಸಿ"
+        >
+          <ImageIcon className="h-4 w-4 text-[#94A3B8]" />
+        </motion.button>
         <input
           ref={inputRef}
           type="text"
@@ -278,7 +333,6 @@ export default function ChatPage() {
         </motion.button>
       </form>
 
-      {/* Limit Dialog */}
       <AnimatePresence>
         {showLimitDialog && (
           <motion.div
@@ -315,6 +369,76 @@ export default function ChatPage() {
                     {tc('comeBackTomorrow')}
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showImageModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-6"
+            onClick={() => setShowImageModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm rounded-2xl border border-[#262640] bg-[#12121F] p-6"
+            >
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gradient">
+                      <ImageIcon className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="font-heading text-lg font-bold text-white">ಚಿತ್ರ ರಚಿಸಿ</h3>
+                  </div>
+                  <button
+                    onClick={() => setShowImageModal(false)}
+                    className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[#262640]"
+                  >
+                    <X className="h-4 w-4 text-[#94A3B8]" />
+                  </button>
+                </div>
+
+                <p className="text-sm text-[#94A3B8]">
+                  ನೀವು ಬಯಸುವ ಚಿತ್ರವನ್ನು ವಿವರಿಸಿ
+                </p>
+
+                <form onSubmit={handleImageSubmit} className="flex flex-col gap-3">
+                  <textarea
+                    value={imagePrompt}
+                    onChange={(e) => setImagePrompt(e.target.value)}
+                    placeholder="ಏನು ಬೇಕು ಎಂದು ಬರೆಯಿರಿ..."
+                    rows={3}
+                    autoFocus
+                    className="w-full resize-none rounded-xl border border-[#262640] bg-[#0D0D18] px-4 py-3 text-sm text-white placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#6366F1]/30"
+                  />
+                  <motion.button
+                    type="submit"
+                    whileTap={{ scale: 0.97 }}
+                    disabled={imageLoading || !imagePrompt.trim()}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-brand-gradient px-4 py-3 font-heading text-sm font-semibold text-white glow-violet disabled:opacity-50"
+                  >
+                    {imageLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        ರಚಿಸುತ್ತಿದೆ...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        ಚಿತ್ರ ರಚಿಸಿ
+                      </>
+                    )}
+                  </motion.button>
+                </form>
               </div>
             </motion.div>
           </motion.div>
