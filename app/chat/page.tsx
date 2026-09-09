@@ -154,7 +154,7 @@ export default function ChatPage() {
     setShowImageModal(false);
     setImageLoading(true);
 
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=768&nologo=true&seed=${Date.now()}`;
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?model=flux&width=768&height=768&nologo=true`;
 
     const assistantMsg: Message = {
       role: 'assistant',
