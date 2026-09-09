@@ -59,8 +59,9 @@ function SmartImage({ src }: { src: string }) {
     <div className="my-3 overflow-hidden rounded-xl border border-[#262640] bg-[#0D0D18]">
       {!failed && (
         <img
-          src={useFallback ? fallback : src}
+          src={useFallback?fallback:src}
           alt={prompt}
+          referrerPolicy="no-referrer"
           className={`w-full h-auto max-h-96 object-cover ${loaded ? 'opacity-100' : 'opacity-0'}`}
           onLoad={() => setLoaded(true)}
           onError={() => {
