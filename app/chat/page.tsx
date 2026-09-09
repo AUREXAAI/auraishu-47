@@ -59,7 +59,7 @@ function SmartImage({ src }: { src: string }) {
     <div className="my-3 overflow-hidden rounded-xl border border-[#262640] bg-[#0D0D18]">
       {!failed && (
         <img
-          src={useFallback?fallback:src}
+          src={useFallback ? fallback : src}
           alt={prompt}
           referrerPolicy="no-referrer"
           className={`w-full h-auto max-h-96 object-cover ${loaded ? 'opacity-100' : 'opacity-0'}`}
@@ -122,6 +122,39 @@ export default function ChatPage() {
   const [imageLoading, setImageLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const storageKey = typeof window !== 'undefined' && user ? `aurexa_chat_${user.uid}` : null;
+
+  useEffect(() => {
+    if (storageKey) {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMessages(parsed);
+          }
+        }
+      } catch {}
+    }
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (storageKey && messages.length > 0) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(messages.slice(-50)));
+      } catch {}
+    }
+  }, [messages, storageKey]);
+
+  const clearChat = () => {
+    setMessages([]);
+    if (storageKey) {
+      try {
+        localStorage.removeItem(storageKey);
+      } catch {}
+    }
+  };
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -278,11 +311,21 @@ export default function ChatPage() {
           <ArrowLeft className="h-4 w-4" />
           {t('home')}
         </Link>
-        {usageLeft !== null && (
-          <span className="rounded-full border border-[#262640] bg-[#1A1A2E] px-3 py-1 text-xs font-medium text-[#94A3B8]">
-            {usageLeft}/27 {tc('leftToday')}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {messages.length > 0 && (
+            <button
+              onClick={clearChat}
+              className="rounded-full border border-[#262640] bg-[#1A1A2E] px-3 py-1 text-xs font-medium text-[#94A3B8] transition-colors hover:text-white"
+            >
+              New Chat
+            </button>
+          )}
+          {usageLeft !== null && (
+            <span className="rounded-full border border-[#262640] bg-[#1A1A2E] px-3 py-1 text-xs font-medium text-[#94A3B8]">
+              {usageLeft}/27 {tc('leftToday')}
+            </span>
+          )}
+        </div>
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide">
@@ -477,4 +520,4 @@ export default function ChatPage() {
       </AnimatePresence>
     </div>
   );
-}
+            }
