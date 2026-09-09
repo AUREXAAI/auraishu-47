@@ -12,7 +12,7 @@ export function getSystemPrompt(tool: Tool): string {
   return systemPrompts[tool] || systemPrompts.chat;
 }
 
-export const GROQ_MODELS = ['llama-3.3-70b-versatile'];
+export const GROQ_MODELS = ['openai/gpt-oss-120b'];
 export const GROQ_TEMPERATURE = 0.6;
 export const GROQ_MAX_TOKENS = 1024;
 
