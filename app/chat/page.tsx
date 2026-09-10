@@ -9,6 +9,8 @@ import Link from 'next/link';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useAuth } from '@/lib/auth-context';
+import { db } from '@/lib/firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 type Message = {
   role: 'user' | 'assistant';
@@ -120,41 +122,55 @@ export default function ChatPage() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [imagePrompt, setImagePrompt] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
+  const [initialLoaded, setInitialLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const storageKey = typeof window !== 'undefined' && user ? `aurexa_chat_${user.uid}` : null;
+  const docRef = user ? doc(db, 'chats', user.uid) : null;
 
   useEffect(() => {
-    if (storageKey) {
+    if (!docRef) {
+      setInitialLoaded(true);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
       try {
-        const saved = localStorage.getItem(storageKey);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setMessages(parsed);
+        const snap = await getDoc(docRef);
+        if (cancelled) return;
+        if (snap.exists()) {
+          const data = snap.data();
+          if (Array.isArray(data?.messages) && data.messages.length > 0) {
+            setMessages(data.messages);
           }
         }
-      } catch {}
-    }
-  }, [storageKey]);
+      } catch (err) {
+        console.warn('Failed to load chat', err);
+      } finally {
+        if (!cancelled) setInitialLoaded(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [docRef]);
 
   useEffect(() => {
-    if (storageKey && messages.length > 0) {
+    if (!docRef || !initialLoaded) return;
+    const save = async () => {
       try {
-        localStorage.setItem(storageKey, JSON.stringify(messages.slice(-50)));
-      } catch {}
-    }
-  }, [messages, storageKey]);
+        await setDoc(
+          docRef,
+          { messages: messages.slice(-50), updatedAt: Date.now() },
+          { merge: true }
+        );
+      } catch (err) {
+        console.warn('Failed to save chat', err);
+      }
+    };
+    const timer = setTimeout(save, 500);
+    return () => clearTimeout(timer);
+  }, [messages, docRef, initialLoaded]);
 
-  const clearChat = () => {
-    setMessages([]);
-    if (storageKey) {
-      try {
-        localStorage.removeItem(storageKey);
-      } catch {}
-    }
-  };
+  const clearChat = () => { setMessages([]); };
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -162,9 +178,7 @@ export default function ChatPage() {
     }
   }, []);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+  useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -181,15 +195,12 @@ export default function ChatPage() {
 
   const generateImage = async (prompt: string) => {
     if (!prompt.trim() || imageLoading) return;
-
     const userMsg: Message = { role: 'user', content: `🎨 Image: ${prompt}` };
     setMessages((prev) => [...prev, userMsg]);
     setImagePrompt('');
     setShowImageModal(false);
     setImageLoading(true);
-
     const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?model=flux&width=768&height=768&nologo=true`;
-
     const assistantMsg: Message = {
       role: 'assistant',
       content: `Here is your image: **${prompt}** 🎨`,
@@ -202,19 +213,16 @@ export default function ChatPage() {
 
   const sendMessage = async (msgText: string, tool: Tool = 'chat') => {
     if (!msgText.trim() || streaming) return;
-
     const userMsg: Message = { role: 'user', content: msgText };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setStreaming(true);
-
     const assistantMsg: Message = { role: 'assistant', content: '' };
     setMessages((prev) => [...prev, assistantMsg]);
 
     try {
       const idToken = await user?.getIdToken();
       const history = messages.map((m) => ({ role: m.role, content: m.content }));
-
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -231,9 +239,7 @@ export default function ChatPage() {
         }
       }
 
-      if (!res.ok || !res.body) {
-        throw new Error('Request failed');
-      }
+      if (!res.ok || !res.body) throw new Error('Request failed');
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -246,7 +252,6 @@ export default function ChatPage() {
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n\n');
         buffer = lines.pop() || '';
-
         for (const line of lines) {
           const trimmed = line.trim();
           if (!trimmed.startsWith('data: ')) continue;
@@ -271,12 +276,9 @@ export default function ChatPage() {
                 return copy;
               });
             }
-          } catch {
-            // skip
-          }
+          } catch {}
         }
       }
-
       setUsageLeft((prev) => (prev !== null ? prev - 1 : null));
     } catch {
       setMessages((prev) => {
@@ -304,10 +306,24 @@ export default function ChatPage() {
     generateImage(imagePrompt);
   };
 
+  if (!initialLoaded && user) {
+    return (
+      <div className="flex h-[calc(100vh-180px)] items-center justify-center">
+        <div className="glass flex items-center gap-2 rounded-full px-4 py-2 text-sm text-[#94A3B8]">
+          <Loader2 className="h-4 w-4 animate-spin text-[#8B5CF6]" />
+          Loading chat...
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-[calc(100vh-180px)] flex-col gap-3">
+    <div className="relative flex h-[calc(100vh-180px)] flex-col gap-3">
+      <div className="pointer-events-none absolute -top-8 -right-16 h-48 w-48 rounded-full bg-[#6366F1]/10 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 -left-16 h-48 w-48 rounded-full bg-[#8B5CF6]/10 blur-3xl" />
+
       <div className="flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-1 text-sm text-[#94A3B8] transition-colors hover:text-white">
+        <Link href="/" className="glass flex items-center gap-1 rounded-full px-3 py-1.5 text-sm text-[#94A3B8] transition-colors hover:text-white">
           <ArrowLeft className="h-4 w-4" />
           {t('home')}
         </Link>
@@ -315,13 +331,13 @@ export default function ChatPage() {
           {messages.length > 0 && (
             <button
               onClick={clearChat}
-              className="rounded-full border border-[#262640] bg-[#1A1A2E] px-3 py-1 text-xs font-medium text-[#94A3B8] transition-colors hover:text-white"
+              className="glass rounded-full px-3.5 py-1.5 text-xs font-medium text-[#94A3B8] transition-colors hover:text-white"
             >
               New Chat
             </button>
           )}
           {usageLeft !== null && (
-            <span className="rounded-full border border-[#262640] bg-[#1A1A2E] px-3 py-1 text-xs font-medium text-[#94A3B8]">
+            <span className="glass rounded-full px-3 py-1.5 text-xs font-medium text-[#94A3B8]">
               {usageLeft}/27 {tc('leftToday')}
             </span>
           )}
@@ -331,9 +347,13 @@ export default function ChatPage() {
       <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-3">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#6366F1]/15 glow-chat">
-              <Sparkles className="h-7 w-7 text-[#6366F1]" />
-            </div>
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              className="glow-pulse flex h-16 w-16 items-center justify-center rounded-3xl bg-brand-gradient glow-violet"
+            >
+              <Sparkles className="h-8 w-8 text-white" />
+            </motion.div>
             <p className="text-sm text-[#94A3B8]">{tc('emptyState')}</p>
             <button
               onClick={() => setShowImageModal(true)}
@@ -354,16 +374,16 @@ export default function ChatPage() {
                 className={msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'}
               >
                 {msg.role === 'user' ? (
-                  <div className="max-w-[80%] rounded-2xl bg-brand-gradient px-4 py-2.5 text-sm text-white">
+                  <div className="max-w-[80%] rounded-2xl rounded-br-md bg-brand-gradient px-4 py-2.5 text-sm text-white shadow-lg shadow-[#6366F1]/20">
                     {msg.content}
                   </div>
                 ) : (
-                  <div className={`max-w-[85%] rounded-2xl border px-4 py-2.5 text-sm ${msg.error ? 'border-red-500/30 bg-red-500/5 text-red-300' : 'border-[#262640] bg-[#1A1A2E] text-white'}`}>
+                  <div className={`max-w-[85%] rounded-2xl rounded-bl-md px-4 py-2.5 text-sm ${msg.error ? 'border border-red-500/30 bg-red-500/5 text-red-300' : 'glass text-white'}`}>
                     {msg.content === '' && streaming ? (
                       <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 animate-bounce rounded-full bg-[#6366F1]" style={{ animationDelay: '0ms' }} />
+                        <div className="h-2 w-2 animate-bounce rounded-full bg-[#8B5CF6]" style={{ animationDelay: '0ms' }} />
                         <div className="h-2 w-2 animate-bounce rounded-full bg-[#6366F1]" style={{ animationDelay: '150ms' }} />
-                        <div className="h-2 w-2 animate-bounce rounded-full bg-[#6366F1]" style={{ animationDelay: '300ms' }} />
+                        <div className="h-2 w-2 animate-bounce rounded-full bg-[#3B82F6]" style={{ animationDelay: '300ms' }} />
                       </div>
                     ) : (
                       <div className="whitespace-pre-wrap break-words">
@@ -378,7 +398,7 @@ export default function ChatPage() {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="flex items-center gap-2 rounded-full border border-[#262640] bg-[#12121F] px-4 py-2.5">
+      <form onSubmit={handleSubmit} className="glass flex items-center gap-2 rounded-full px-4 py-2.5 transition-shadow focus-within:shadow-[0_0_25px_rgba(99,102,241,0.25)]">
         <motion.button
           type="button"
           onClick={() => setShowImageModal(true)}
@@ -401,7 +421,7 @@ export default function ChatPage() {
           type="submit"
           whileTap={{ scale: 0.88 }}
           disabled={streaming || !input.trim()}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-gradient glow-violet disabled:opacity-50"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-gradient glow-violet disabled:opacity-50"
         >
           {streaming ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Send className="h-4 w-4 text-white" />}
         </motion.button>
@@ -421,7 +441,7 @@ export default function ChatPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rounded-2xl border border-[#262640] bg-[#12121F] p-6"
+              className="glass w-full max-w-sm rounded-3xl p-6"
             >
               <div className="flex flex-col items-center gap-4 text-center">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/15">
@@ -463,7 +483,7 @@ export default function ChatPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rounded-2xl border border-[#262640] bg-[#12121F] p-6"
+              className="glass w-full max-w-sm rounded-3xl p-6"
             >
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
@@ -480,11 +500,7 @@ export default function ChatPage() {
                     <X className="h-4 w-4 text-[#94A3B8]" />
                   </button>
                 </div>
-
-                <p className="text-sm text-[#94A3B8]">
-                  Describe the image you want
-                </p>
-
+                <p className="text-sm text-[#94A3B8]">Describe the image you want</p>
                 <form onSubmit={handleImageSubmit} className="flex flex-col gap-3">
                   <textarea
                     value={imagePrompt}
@@ -520,4 +536,4 @@ export default function ChatPage() {
       </AnimatePresence>
     </div>
   );
-            }
+                  }
