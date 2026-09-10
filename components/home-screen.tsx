@@ -88,22 +88,30 @@ export default function HomeScreen() {
   };
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="flex flex-col gap-6">
+    <motion.div variants={container} initial="hidden" animate="show" className="relative flex flex-col gap-6">
+      {/* Ambient background orbs */}
+      <div className="pointer-events-none absolute -top-12 -left-16 h-56 w-56 rounded-full bg-[#6366F1]/20 blur-3xl" />
+      <div className="pointer-events-none absolute top-40 -right-20 h-64 w-64 rounded-full bg-[#8B5CF6]/15 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-10 left-1/3 h-48 w-48 rounded-full bg-[#3B82F6]/10 blur-3xl" />
+
       {/* Greeting */}
       <motion.div variants={item} className="flex items-start justify-between">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-sm text-white">{t('greeting')}</span>
-          <span className="font-heading text-2xl font-bold text-gradient">
+        <div className="flex flex-col gap-1.5">
+          <span className="glass inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium text-[#94A3B8]">
+            <Sparkles className="h-3 w-3 text-[#8B5CF6]" />
+            {t('greeting')}
+          </span>
+          <span className="font-heading text-3xl font-extrabold gradient-text">
             {displayName} 👋
           </span>
           <span className="text-sm text-[#94A3B8]">{t('sub')}</span>
         </div>
         <motion.div
-          animate={{ y: [0, -10, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-gradient glow-violet"
+          animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+          className="glow-pulse flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-gradient glow-violet"
         >
-          <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+          <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
             <path d="M16 7L23 24H19.5L16 14.5L12.5 24H9L16 7Z" fill="white" fillOpacity="0.95" />
             <path d="M13 20H19V22.5H13V20Z" fill="white" fillOpacity="0.95" />
           </svg>
@@ -112,39 +120,40 @@ export default function HomeScreen() {
 
       {/* Ask Card */}
       <motion.div variants={item}>
-        <div className="rounded-2xl border-gradient p-[1px]">
-          <div className="rounded-2xl bg-[#12121F] p-4">
-            <div className="flex items-center gap-3">
-              <Sparkles className="h-5 w-5 shrink-0 text-[#8B5CF6]" />
-              <input
-                type="text"
-                value={askText}
-                onChange={(e) => setAskText(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
-                placeholder={t('askPlaceholder')}
-                className="flex-1 bg-transparent text-sm text-white placeholder:text-[#94A3B8] focus:outline-none"
-              />
+        <div className="glass glow-pulse rounded-3xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#8B5CF6]/15">
+              <Sparkles className="h-5 w-5 text-[#8B5CF6]" />
+            </div>
+            <input
+              type="text"
+              value={askText}
+              onChange={(e) => setAskText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
+              placeholder={t('askPlaceholder')}
+              className="flex-1 bg-transparent text-sm text-white placeholder:text-[#94A3B8] focus:outline-none"
+            />
+            <motion.button
+              whileTap={{ scale: 0.88 }}
+              onClick={handleAsk}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-gradient glow-violet"
+            >
+              <Send className="h-4 w-4 text-white" />
+            </motion.button>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {chips.map(({ key, icon: Icon, tool }) => (
               <motion.button
-                whileTap={{ scale: 0.88 }}
-                onClick={handleAsk}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-gradient glow-violet"
+                key={key}
+                whileTap={{ scale: 0.95 }}
+                whileHover={{ y: -2 }}
+                onClick={() => tool && router.push(`/chat?tool=${tool}`)}
+                className="glass flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-[#94A3B8] transition-colors hover:text-white"
               >
-                <Send className="h-4 w-4 text-white" />
+                <Icon className="h-3.5 w-3.5 text-[#8B5CF6]" />
+                {t(`chips.${key}`)}
               </motion.button>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {chips.map(({ key, icon: Icon, tool }) => (
-                <motion.button
-                  key={key}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => tool && router.push(`/chat?tool=${tool}`)}
-                  className="flex items-center gap-1.5 rounded-full border border-[#262640] px-3 py-1.5 text-xs text-[#94A3B8] transition-colors hover:border-[#8B5CF6]/50 hover:text-white"
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {t(`chips.${key}`)}
-                </motion.button>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       </motion.div>
@@ -165,12 +174,17 @@ export default function HomeScreen() {
               <motion.button
                 key={feature.key}
                 whileTap={{ scale: 0.97 }}
+                whileHover={{ y: -4 }}
                 onClick={() => handleFeatureClick(feature)}
-                className={`group flex flex-col gap-2.5 rounded-2xl bg-[#1A1A2E] p-4 text-left transition-colors hover:bg-[#1F1F35] ${feature.spanTwo ? 'col-span-2' : ''}`}
-                style={{ border: `1px solid ${feature.color}40` }}
+                className={`glass group relative flex flex-col gap-2.5 overflow-hidden rounded-2xl p-4 text-left transition-colors ${feature.spanTwo ? 'col-span-2' : ''}`}
+                style={{ borderColor: `${feature.color}33` }}
               >
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-xl ${feature.glowClass}`}
+                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  style={{ background: `linear-gradient(135deg, ${feature.color}14, transparent 60%)` }}
+                />
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 ${feature.glowClass}`}
                   style={{ backgroundColor: `${feature.color}1A` }}
                 >
                   <Icon className="h-5 w-5" style={{ color: feature.color }} />
@@ -194,19 +208,23 @@ export default function HomeScreen() {
 
       {/* Unlock Pro Banner */}
       <motion.div variants={item}>
-        <div className="relative overflow-hidden rounded-2xl bg-brand-gradient p-4">
+        <div className="shimmer glow-pulse relative overflow-hidden rounded-3xl p-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20">
+            <motion.div
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20"
+            >
               <Crown className="h-5 w-5 text-white" />
-            </div>
+            </motion.div>
             <div className="flex-1">
               <h3 className="font-heading text-sm font-bold text-white">{tp('title')}</h3>
-              <p className="text-xs leading-relaxed text-white/80">{tp('desc')}</p>
+              <p className="text-xs leading-relaxed text-white/85">{tp('desc')}</p>
             </div>
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => router.push('/pricing')}
-              className="flex shrink-0 items-center gap-1 rounded-full bg-white px-3 py-2 text-xs font-semibold text-[#8B5CF6]"
+              className="flex shrink-0 items-center gap-1 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-[#6D28D9] shadow-lg"
             >
               {tp('cta')}
               <ChevronRight className="h-3.5 w-3.5" />
@@ -226,8 +244,9 @@ export default function HomeScreen() {
         </div>
         <motion.button
           whileTap={{ scale: 0.98 }}
+          whileHover={{ y: -2 }}
           onClick={() => router.push('/chat')}
-          className="flex items-center gap-3 rounded-2xl border border-[#262640] bg-[#1A1A2E] p-3.5 text-left transition-colors hover:bg-[#1F1F35]"
+          className="glass flex items-center gap-3 rounded-2xl p-3.5 text-left transition-colors"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#6366F1]/15 glow-chat">
             <MessageCircle className="h-5 w-5 text-[#6366F1]" />
