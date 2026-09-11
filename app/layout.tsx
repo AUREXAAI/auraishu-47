@@ -61,12 +61,24 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className={`${inter.variable} ${poppins.variable} ${notoKannada.variable} ${notoDevanagari.variable}`}>
+      <head>
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="apple-touch-icon" href="/IMG-20260906-WA0007.jpg" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="AUREXA AI" />
+      </head>
       <body className="font-body antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AuthProvider>
             <AppShell>{children}</AppShell>
           </AuthProvider>
         </NextIntlClientProvider>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js'); }); }`,
+          }}
+        />
       </body>
     </html>
   );
