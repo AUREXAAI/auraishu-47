@@ -1,24 +1,49 @@
 {
-  "name": "AUREXA AI – Created by ISHANT V N",
+  "name": "AUREXA AI — Created by ISHANT V NAIK",
   "short_name": "AUREXA AI",
-  "description": "Multilingual AI chat, images & creative assistant",
+  "description": "Multilingual AI chat, images & code in Kannada, Hindi, English",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#050508",
   "theme_color": "#050508",
   "orientation": "portrait",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["productivity", "utilities"],
   "icons": [
     {
-      "src": "/IMG-20260906-WA0007.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg",
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/IMG-20260906-WA0007.jpg",
+      "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "AUREXA AI Home Screen"
+    },
+    {
+      "src": "/screenshot-2.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "AUREXA AI Chat"
     }
   ]
 }
