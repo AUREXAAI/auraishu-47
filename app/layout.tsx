@@ -63,7 +63,7 @@ export default async function RootLayout({
     <html lang={locale} className={`${inter.variable} ${poppins.variable} ${notoKannada.variable} ${notoDevanagari.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.webmanifest" />
-        <link rel="apple-touch-icon" href="/icon-512.png" />
+        <link rel="apple-touch-icon" href="/17465db46-683e-487b-9fc6-edfcbdfc3934-1_1.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="AUREXA AI" />
