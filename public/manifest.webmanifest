@@ -1,7 +1,7 @@
 {
-  "name": "AUREXA AI — Created by ISHANT V NAIK",
+  "name": "AUREXA AI – Created by ISHANT V N",
   "short_name": "AUREXA AI",
-  "description": "Multilingual AI chat, images & code in Kannada, Hindi, English",
+  "description": "Multilingual AI chat, images & creative assistant",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#050508",
@@ -9,15 +9,15 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon-512.png",
+      "src": "/IMG-20260906-WA0007.jpg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/IMG-20260906-WA0007.jpg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "maskable"
     }
   ]
