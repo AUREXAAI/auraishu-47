@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
@@ -11,7 +11,14 @@ import { useAuth } from '@/lib/auth-context';
 export default function AuthPage() {
   const router = useRouter();
   const t = useTranslations('auth');
-  const { signUpWithEmail, signInWithEmail } = useAuth();
+  const { user, signUpWithEmail, signInWithEmail } = useAuth(); // 'user' ಸೇರಿಸಲಾಗಿದೆ
+
+  // 🚀 ಹೊಸ ಸೇರ್ಪಡೆ: User ಈಗಾಗಲೇ login ಆಗಿದ್ದರೆ ನೇರವಾಗಿ Home page ಗೆ ಕಳುಹಿಸು!
+  useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signup');
   const [name, setName] = useState('');
@@ -119,4 +126,4 @@ export default function AuthPage() {
       </div>
     </div>
   );
-          }
+}
