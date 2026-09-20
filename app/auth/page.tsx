@@ -11,14 +11,7 @@ import { useAuth } from '@/lib/auth-context';
 export default function AuthPage() {
   const router = useRouter();
   const t = useTranslations('auth');
-  const { user, signUpWithEmail, signInWithEmail } = useAuth(); // 'user' ಸೇರಿಸಲಾಗಿದೆ
-
-  // 🚀 ಹೊಸ ಸೇರ್ಪಡೆ: User ಈಗಾಗಲೇ login ಆಗಿದ್ದರೆ ನೇರವಾಗಿ Home page ಗೆ ಕಳುಹಿಸು!
-  useEffect(() => {
-    if (user) {
-      router.push('/');
-    }
-  }, [user, router]);
+  const { user, signUpWithEmail, signInWithEmail } = useAuth();
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signup');
   const [name, setName] = useState('');
@@ -27,22 +20,29 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
+  //  ಮ್ಯಾಜಿಕ್ ಇಲ್ಲಿದೆ! User login ಆದ ತಕ್ಷಣ ತಾನಾಗಿಯೇ Home page ಗೆ ಕಳುಹಿಸುತ್ತದೆ!
+  useEffect(() => {
+    if (user) {
+      router.replace('/'); 
+    }
+  }, [user, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setBusy(true);
+    
     try {
       if (mode === 'signup') {
         await signUpWithEmail(name, email, password);
       } else {
         await signInWithEmail(email, password);
       }
-      router.push('/');
+      // ಯಶಸ್ವಿಯಾದರೆ, useEffect ತಾನಾಗಿಯೇ redirect ಮಾಡುತ್ತದೆ.
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Authentication failed';
       setError(message.replace('Firebase: ', ''));
-    } finally {
-      setBusy(false);
+      setBusy(false); // Error ಬಂದರೆ ಮಾತ್ರ spinner ನಿಲ್ಲಿಸಿ
     }
   };
 
@@ -114,6 +114,7 @@ export default function AuthPage() {
           </form>
 
           <button
+            type="button"
             onClick={() => setMode(mode === 'signup' ? 'signin' : 'signup')}
             className="text-sm text-[#94A3B8]"
           >
@@ -126,4 +127,4 @@ export default function AuthPage() {
       </div>
     </div>
   );
-}
+          }
