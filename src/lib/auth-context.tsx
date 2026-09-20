@@ -57,10 +57,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     setError(null);
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const u = result.user;
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const u = result.user;
       await setDoc(
         doc(db, 'users', u.uid),
         {
@@ -73,18 +73,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
         { merge: true }
       );
-    } catch (err: any) {
-      setError(err?.message || 'Google sign-in failed');
-      throw err;
+    } catch {
+      // Firestore fail ಆದರೂ user login ಆಗಿರುತ್ತಾರೆ
     }
   };
 
   const signUpWithEmail = async (name: string, email: string, password: string) => {
     setError(null);
+    // ಮೊದಲು account create ಮಾಡಿ (ಇದು ಖಂಡಿತ ಆಗಬೇಕು)
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    const u = result.user;
+
+    // ಇವು fail ಆದರೂ ಪರ್ವಾಯಿಲ್ಲ — user ಈಗಾಗಲೇ authenticated
     try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      const u = result.user;
       await updateProfile(u, { displayName: name });
+    } catch {
+      // name update fail ಆದರೂ ಪರ್ವಾಯಿಲ್ಲ
+    }
+
+    try {
       await setDoc(
         doc(db, 'users', u.uid),
         {
@@ -97,20 +104,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
         { merge: true }
       );
-    } catch (err: any) {
-      setError(err?.message || 'Sign-up failed');
-      throw err;
+    } catch {
+      // Firestore fail ಆದರೂ ಪರ್ವಾಯಿಲ್ಲ
     }
   };
 
   const signInWithEmail = async (email: string, password: string) => {
     setError(null);
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (err: any) {
-      setError(err?.message || 'Sign-in failed');
-      throw err;
-    }
+    await signInWithEmailAndPassword(auth, email, password);
   };
 
   const signOut = async () => {
@@ -138,4 +139,4 @@ export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
-  }
+}
