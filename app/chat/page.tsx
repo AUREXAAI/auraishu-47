@@ -1,16 +1,43 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+} from 'react';
+
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
-import { Send, Sparkles, Loader2, Copy, Check, AlertCircle, ArrowLeft, Image as ImageIcon, X } from 'lucide-react';
+
+import {
+  Send,
+  Sparkles,
+  Loader2,
+  Copy,
+  Check,
+  AlertCircle,
+  ArrowLeft,
+  Image as ImageIcon,
+  X,
+  MessageCircle,
+  Plus,
+} from 'lucide-react';
+
 import Link from 'next/link';
+
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
 import { useAuth } from '@/lib/auth-context';
 import { db } from '@/lib/firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+
+import {
+  doc,
+  setDoc,
+  getDoc,
+} from 'firebase/firestore';
 
 type Message = {
   role: 'user' | 'assistant';
@@ -21,26 +48,60 @@ type Message = {
 
 type Tool = 'chat' | 'solve' | 'coding';
 
-function CodeBlock({ code, lang }: { code: string; lang: string }) {
+const CHAT_ID = 'default';
+const MAX_MESSAGES = 50;
+
+function CodeBlock({
+  code,
+  lang,
+}: {
+  code: string;
+  lang: string;
+}) {
   const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
   };
+
   return (
-    <div className="relative my-2 overflow-hidden rounded-xl border border-[#262640]">
-      <div className="flex items-center justify-between border-b border-[#262640] bg-[#0D0D18] px-3 py-1.5">
-        <span className="text-xs text-[#94A3B8]">{lang || 'code'}</span>
-        <button onClick={handleCopy} className="flex items-center gap-1 text-xs text-[#94A3B8] transition-colors hover:text-white">
-          {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+    <div className="my-3 overflow-hidden rounded-xl border border-[#262640]">
+      <div className="flex items-center justify-between border-b border-[#262640] bg-[#0D0D18] px-3 py-2">
+        <span className="text-xs text-[#94A3B8]">
+          {lang || 'code'}
+        </span>
+
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="flex items-center gap-1 text-xs text-[#94A3B8] hover:text-white"
+        >
+          {copied ? (
+            <Check className="h-3 w-3" />
+          ) : (
+            <Copy className="h-3 w-3" />
+          )}
+
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
+
       <SyntaxHighlighter
         language={lang || 'text'}
         style={vscDarkPlus}
-        customStyle={{ margin: 0, background: '#0D0D18', fontSize: '13px', padding: '12px' }}
+        customStyle={{
+          margin: 0,
+          background: '#0D0D18',
+          fontSize: '13px',
+          padding: '12px',
+          overflowX: 'auto',
+        }}
       >
         {code}
       </SyntaxHighlighter>
@@ -48,62 +109,60 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
   );
 }
 
-function SmartImage({ src }: { src: string }) {
-  const [useFallback, setUseFallback] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const prompt = src.includes('/prompt/')
-    ? decodeURIComponent(src.split('/prompt/')[1].split('?')[0])
-    : 'nature';
-  const keywords = (prompt.match(/[a-zA-Z0-9]+/g) || ['nature']).slice(0, 3).join(',');
-  const fallback = `https://loremflickr.com/768/768/${keywords}`;
-  return (
-    <div className="my-3 overflow-hidden rounded-xl border border-[#262640] bg-[#0D0D18]">
-      {!failed && (
-        <img
-          src={useFallback ? fallback : src}
-          alt={prompt}
-          referrerPolicy="no-referrer"
-          className={`w-full h-auto max-h-96 object-cover ${loaded ? 'opacity-100' : 'opacity-0'}`}
-          onLoad={() => setLoaded(true)}
-          onError={() => {
-            if (!useFallback) {
-              setUseFallback(true);
-              setLoaded(false);
-            } else {
-              setFailed(true);
-            }
-          }}
-        />
-      )}
-      {!loaded && !failed && (
-        <div className="flex items-center justify-center gap-2 py-10 text-xs text-[#94A3B8]">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Creating image... (10-60 seconds)
-        </div>
-      )}
-      {failed && (
-        <div className="py-6 text-center text-xs text-[#94A3B8]">
-          Image service unavailable. Please try again later.
-        </div>
-      )}
-    </div>
-  );
-}
-
-function MessageContent({ content, imageUrl }: { content: string; imageUrl?: string }) {
+function MessageContent({
+  content,
+  imageUrl,
+}: {
+  content: string;
+  imageUrl?: string;
+}) {
   const parts = content.split(/(```[\s\S]*?```)/g);
+
   return (
     <>
-      {imageUrl && <SmartImage src={imageUrl} />}
-      {parts.map((part, i) => {
-        if (part.startsWith('```') && part.endsWith('```')) {
+      {imageUrl && (
+        <div className="my-3 overflow-hidden rounded-xl border border-[#262640]">
+          <img
+            src={imageUrl}
+            alt="AI generated image"
+            loading="lazy"
+            className="h-auto max-h-96 w-full object-contain"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display =
+                'none';
+            }}
+          />
+
+          <a
+            href={imageUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="block px-3 py-2 text-xs text-violet-300"
+          >
+            Open image
+          </a>
+        </div>
+      )}
+
+      {parts.map((part, index) => {
+        if (
+          part.startsWith('```') &&
+          part.endsWith('```')
+        ) {
           const lines = part.slice(3, -3).split('\n');
           const lang = lines[0].trim();
           const code = lines.slice(1).join('\n');
-          return <CodeBlock key={i} code={code} lang={lang} />;
+
+          return (
+            <CodeBlock
+              key={index}
+              code={code}
+              lang={lang}
+            />
+          );
         }
-        return <span key={i}>{part}</span>;
+
+        return <span key={index}>{part}</span>;
       })}
     </>
   );
@@ -112,428 +171,656 @@ function MessageContent({ content, imageUrl }: { content: string; imageUrl?: str
 export default function ChatPage() {
   const t = useTranslations('nav');
   const tc = useTranslations('chat');
+
   const router = useRouter();
   const { user } = useAuth();
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+
   const [streaming, setStreaming] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
   const [usageLeft, setUsageLeft] = useState<number | null>(null);
   const [showLimitDialog, setShowLimitDialog] = useState(false);
+
   const [showImageModal, setShowImageModal] = useState(false);
   const [imagePrompt, setImagePrompt] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
+
   const [initialLoaded, setInitialLoaded] = useState(false);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const docRef = user ? doc(db, 'chats', user.uid) : null;
+  const messagesRef = useRef<Message[]>([]);
+  const sendingRef = useRef(false);
+  const loadedUserRef = useRef<string | null>(null);
+
+  const docRef = user
+    ? doc(db, 'chats', user.uid)
+    : null;
 
   useEffect(() => {
-    if (!docRef) {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  // Load history without blocking the chat interface.
+  useEffect(() => {
+    if (!user || !docRef) {
       setInitialLoaded(true);
+      setHistoryLoading(false);
       return;
     }
+
+    if (loadedUserRef.current === user.uid) {
+      return;
+    }
+
     let cancelled = false;
-    (async () => {
+
+    setHistoryLoading(true);
+
+    const loadHistory = async () => {
       try {
-        const snap = await getDoc(docRef);
+        const snapshot = await getDoc(docRef);
+
         if (cancelled) return;
-        if (snap.exists()) {
-          const data = snap.data();
-          if (Array.isArray(data?.messages) && data.messages.length > 0) {
-            setMessages(data.messages);
+
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+
+          if (Array.isArray(data.messages)) {
+            const safeMessages = data.messages
+              .filter(
+                (item: any) =>
+                  item &&
+                  (item.role === 'user' ||
+                    item.role === 'assistant') &&
+                  typeof item.content === 'string'
+              )
+              .slice(-MAX_MESSAGES) as Message[];
+
+            setMessages(safeMessages);
           }
         }
-      } catch (err) {
-        console.warn('Failed to load chat', err);
-      } finally {
-        if (!cancelled) setInitialLoaded(true);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [docRef]);
 
+        loadedUserRef.current = user.uid;
+      } catch (error) {
+        console.error('Chat history loading failed:', error);
+      } finally {
+        if (!cancelled) {
+          setHistoryLoading(false);
+          setInitialLoaded(true);
+        }
+      }
+    };
+
+    void loadHistory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, docRef]);
+
+  // Save chat history with a debounce.
   useEffect(() => {
-    if (!docRef || !initialLoaded) return;
-    const save = async () => {
+    if (!user || !docRef || !initialLoaded) return;
+
+    const timer = setTimeout(async () => {
       try {
         await setDoc(
           docRef,
-          { messages: messages.slice(-50), updatedAt: Date.now() },
+          {
+            messages: messages.slice(-MAX_MESSAGES),
+            updatedAt: Date.now(),
+          },
           { merge: true }
         );
-      } catch (err) {
-        console.warn('Failed to save chat', err);
+      } catch (error) {
+        console.error('Chat save failed:', error);
       }
-    };
-    const timer = setTimeout(save, 500);
-    return () => clearTimeout(timer);
-  }, [messages, docRef, initialLoaded]);
+    }, 900);
 
-  const clearChat = () => { setMessages([]); };
+    return () => clearTimeout(timer);
+  }, [messages, user, docRef, initialLoaded]);
 
   const scrollToBottom = useCallback(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    requestAnimationFrame(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop =
+          scrollRef.current.scrollHeight;
+      }
+    });
   }, []);
-
-  useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const initialMsg = params.get('q');
-      const tool = (params.get('tool') as Tool) || 'chat';
-      if (initialMsg) {
-        setInput(initialMsg);
-        sendMessage(initialMsg, tool);
-        window.history.replaceState({}, '', '/chat');
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  const sendMessage = useCallback(
+    async (
+      msgText: string,
+      tool: Tool = 'chat'
+    ) => {
+      if (!msgText.trim() || sendingRef.current) return;
+
+      sendingRef.current = true;
+      setStreaming(true);
+
+      const userMessage: Message = {
+        role: 'user',
+        content: msgText.trim(),
+      };
+
+      const assistantMessage: Message = {
+        role: 'assistant',
+        content: '',
+      };
+
+      const previousMessages = messagesRef.current;
+
+      const updatedMessages = [
+        ...previousMessages,
+        userMessage,
+        assistantMessage,
+      ];
+
+      messagesRef.current = updatedMessages;
+      setMessages(updatedMessages);
+      setInput('');
+
+      try {
+        const idToken = user
+          ? await user.getIdToken()
+          : null;
+
+        const history = previousMessages
+          .slice(-20)
+          .map((message) => ({
+            role: message.role,
+            content: message.content,
+          }));
+
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            idToken,
+            tool,
+            chatId: CHAT_ID,
+            message: msgText.trim(),
+            history,
+          }),
+        });
+
+        if (response.status === 429) {
+          const data = await response.json();
+
+          if (data.error === 'LIMIT_REACHED') {
+            setShowLimitDialog(true);
+
+            const rolledBack = messagesRef.current.slice(0, -2);
+            messagesRef.current = rolledBack;
+            setMessages(rolledBack);
+
+            return;
+          }
+        }
+
+        if (!response.ok || !response.body) {
+          throw new Error(
+            `Chat request failed (${response.status})`
+          );
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        let buffer = '';
+        let fullContent = '';
+
+        const updateAssistant = (content: string, error = false) => {
+          const current = messagesRef.current.slice();
+
+          current[current.length - 1] = {
+            role: 'assistant',
+            content,
+            ...(error ? { error: true } : {}),
+          };
+
+          messagesRef.current = current;
+          setMessages(current);
+        };
+
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) break;
+
+          buffer += decoder.decode(value, {
+            stream: true,
+          });
+
+          const events = buffer.split('\n\n');
+          buffer = events.pop() || '';
+
+          for (const event of events) {
+            const line = event
+              .split('\n')
+              .find((item) => item.startsWith('data:'));
+
+            if (!line) continue;
+
+            const data = line.slice(5).trim();
+
+            if (!data || data === '[DONE]') continue;
+
+            try {
+              const parsed = JSON.parse(data);
+
+              if (parsed.error) {
+                fullContent = String(parsed.error);
+                updateAssistant(
+                  `Error: ${fullContent}`,
+                  true
+                );
+                continue;
+              }
+
+              if (typeof parsed.token === 'string') {
+                fullContent += parsed.token;
+                updateAssistant(fullContent);
+              }
+            } catch {
+              // Ignore malformed streaming events.
+            }
+          }
+        }
+
+        if (!fullContent.trim()) {
+          updateAssistant(
+            'No response received. Please try again.',
+            true
+          );
+        }
+
+        setUsageLeft((current) =>
+          current !== null
+            ? Math.max(0, current - 1)
+            : null
+        );
+      } catch (error) {
+        console.error('AI chat error:', error);
+
+        const current = messagesRef.current.slice();
+
+        current[current.length - 1] = {
+          role: 'assistant',
+          content:
+            'Sorry, something went wrong. Please try again.',
+          error: true,
+        };
+
+        messagesRef.current = current;
+        setMessages(current);
+      } finally {
+        sendingRef.current = false;
+        setStreaming(false);
+        inputRef.current?.focus();
       }
-    }
-  }, []);
+    },
+    [user]
+  );
+
+  // Process an initial prompt once, after loading existing history.
+  useEffect(() => {
+    if (!initialLoaded) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const initialMessage = params.get('q');
+
+    if (!initialMessage) return;
+
+    const toolValue = params.get('tool');
+    const validTool: Tool =
+      toolValue === 'solve' || toolValue === 'coding'
+        ? toolValue
+        : 'chat';
+
+    window.history.replaceState({}, '', '/chat');
+
+    void sendMessage(initialMessage, validTool);
+  }, [initialLoaded, sendMessage]);
 
   const generateImage = async (prompt: string) => {
     if (!prompt.trim() || imageLoading) return;
-    const userMsg: Message = { role: 'user', content: `🎨 Image: ${prompt}` };
-    setMessages((prev) => [...prev, userMsg]);
-    setImagePrompt('');
-    setShowImageModal(false);
+
     setImageLoading(true);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?model=flux&width=768&height=768&nologo=true`;
-    const assistantMsg: Message = {
-      role: 'assistant',
-      content: `Here is your image: **${prompt}** 🎨`,
-      imageUrl,
-    };
-    setMessages((prev) => [...prev, assistantMsg]);
+    setShowImageModal(false);
+
+    const imageUrl =
+      `https://image.pollinations.ai/prompt/${encodeURIComponent(
+        prompt.trim()
+      )}?model=flux&width=768&height=768&nologo=true`;
+
+    const nextMessages = [
+      ...messagesRef.current,
+      {
+        role: 'user' as const,
+        content: `🎨 Image: ${prompt.trim()}`,
+      },
+      {
+        role: 'assistant' as const,
+        content: `Here is your image: ${prompt.trim()}`,
+        imageUrl,
+      },
+    ];
+
+    messagesRef.current = nextMessages;
+    setMessages(nextMessages);
+    setImagePrompt('');
     setImageLoading(false);
     inputRef.current?.focus();
   };
 
-  const sendMessage = async (msgText: string, tool: Tool = 'chat') => {
-    if (!msgText.trim() || streaming) return;
-    const userMsg: Message = { role: 'user', content: msgText };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput('');
-    setStreaming(true);
-    const assistantMsg: Message = { role: 'assistant', content: '' };
-    setMessages((prev) => [...prev, assistantMsg]);
-
-    try {
-      const idToken = await user?.getIdToken();
-      const history = messages.map((m) => ({ role: m.role, content: m.content }));
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken, tool, chatId: 'default', message: msgText, history }),
-      });
-
-      if (res.status === 429) {
-        const data = await res.json();
-        if (data.error === 'LIMIT_REACHED') {
-          setShowLimitDialog(true);
-          setMessages((prev) => prev.slice(0, -1));
-          setStreaming(false);
-          return;
-        }
-      }
-
-      if (!res.ok || !res.body) throw new Error('Request failed');
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let fullContent = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n\n');
-        buffer = lines.pop() || '';
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed.startsWith('data: ')) continue;
-          const data = trimmed.slice(6);
-          if (data === '[DONE]') continue;
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.error) {
-              fullContent = `Error: ${parsed.error}`;
-              setMessages((prev) => {
-                const copy = [...prev];
-                copy[copy.length - 1] = { role: 'assistant', content: fullContent, error: true };
-                return copy;
-              });
-              break;
-            }
-            if (parsed.token) {
-              fullContent += parsed.token;
-              setMessages((prev) => {
-                const copy = [...prev];
-                copy[copy.length - 1] = { role: 'assistant', content: fullContent };
-                return copy;
-              });
-            }
-          } catch {}
-        }
-      }
-      setUsageLeft((prev) => (prev !== null ? prev - 1 : null));
-    } catch {
-      setMessages((prev) => {
-        const copy = [...prev];
-        copy[copy.length - 1] = {
-          role: 'assistant',
-          content: 'Sorry, something went wrong. Please try again.',
-          error: true,
-        };
-        return copy;
-      });
-    } finally {
-      setStreaming(false);
-      inputRef.current?.focus();
-    }
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    void sendMessage(input);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    sendMessage(input);
+  const handleImageSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    void generateImage(imagePrompt);
   };
 
-  const handleImageSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    generateImage(imagePrompt);
-  };
+  const clearChat = () => {
+    if (sendingRef.current) return;
 
-  if (!initialLoaded && user) {
-    return (
-      <div className="flex h-[calc(100vh-180px)] items-center justify-center">
-        <div className="glass flex items-center gap-2 rounded-full px-4 py-2 text-sm text-[#94A3B8]">
-          <Loader2 className="h-4 w-4 animate-spin text-[#8B5CF6]" />
-          Loading chat...
-        </div>
-      </div>
-    );
-  }
+    messagesRef.current = [];
+    setMessages([]);
+  };
 
   return (
-    <div className="relative flex h-[calc(100vh-180px)] flex-col gap-3">
+    <div className="relative flex h-[calc(100dvh-120px)] min-h-[420px] flex-col gap-3 overflow-hidden">
       <div className="pointer-events-none absolute -top-8 -right-16 h-48 w-48 rounded-full bg-[#6366F1]/10 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 -left-16 h-48 w-48 rounded-full bg-[#8B5CF6]/10 blur-3xl" />
 
-      <div className="flex items-center justify-between">
-        <Link href="/" className="glass flex items-center gap-1 rounded-full px-3 py-1.5 text-sm text-[#94A3B8] transition-colors hover:text-white">
+      {/* Header */}
+      <header className="relative z-10 flex shrink-0 items-center justify-between">
+        <Link
+          href="/"
+          className="glass flex items-center gap-1 rounded-full px-3 py-2 text-sm text-[#94A3B8] hover:text-white"
+        >
           <ArrowLeft className="h-4 w-4" />
           {t('home')}
         </Link>
+
         <div className="flex items-center gap-2">
+          {historyLoading && (
+            <Loader2 className="h-4 w-4 animate-spin text-violet-400" />
+          )}
+
           {messages.length > 0 && (
             <button
+              type="button"
               onClick={clearChat}
-              className="glass rounded-full px-3.5 py-1.5 text-xs font-medium text-[#94A3B8] transition-colors hover:text-white"
+              className="glass flex items-center gap-1 rounded-full px-3 py-2 text-xs text-[#94A3B8] hover:text-white"
             >
+              <Plus className="h-3.5 w-3.5" />
               New Chat
             </button>
           )}
+
           {usageLeft !== null && (
-            <span className="glass rounded-full px-3 py-1.5 text-xs font-medium text-[#94A3B8]">
+            <span className="glass rounded-full px-3 py-2 text-xs text-[#94A3B8]">
               {usageLeft}/27 {tc('leftToday')}
             </span>
           )}
         </div>
-      </div>
+      </header>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide">
+      {/* Messages */}
+      <main
+        ref={scrollRef}
+        className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-hide"
+      >
         {messages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center gap-3">
+          <div className="flex min-h-full flex-col items-center justify-center gap-3 px-4 text-center">
             <motion.div
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="glow-pulse flex h-16 w-16 items-center justify-center rounded-3xl bg-brand-gradient glow-violet"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex h-16 w-16 items-center justify-center rounded-3xl bg-brand-gradient shadow-lg shadow-violet-500/20"
             >
               <Sparkles className="h-8 w-8 text-white" />
             </motion.div>
-            <p className="text-sm text-[#94A3B8]">{tc('emptyState')}</p>
+
+            <h2 className="text-lg font-bold text-white">
+              AUREXA AI 2.0
+            </h2>
+
+            <p className="max-w-xs text-sm text-[#94A3B8]">
+              {tc('emptyState')}
+            </p>
+
             <button
+              type="button"
               onClick={() => setShowImageModal(true)}
-              className="mt-2 flex items-center gap-2 rounded-full bg-brand-gradient px-4 py-2 text-sm font-medium text-white glow-violet"
+              className="mt-2 flex items-center gap-2 rounded-full bg-brand-gradient px-4 py-2.5 text-sm font-medium text-white"
             >
               <ImageIcon className="h-4 w-4" />
               Create Image
             </button>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {messages.map((msg, i) => (
+          <div className="flex flex-col gap-3 px-1 py-2">
+            {messages.map((message, index) => (
               <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
+                key={index}
+                initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className={msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'}
+                transition={{ duration: 0.15 }}
+                className={
+                  message.role === 'user'
+                    ? 'flex justify-end'
+                    : 'flex justify-start'
+                }
               >
-                {msg.role === 'user' ? (
-                  <div className="max-w-[80%] rounded-2xl rounded-br-md bg-brand-gradient px-4 py-2.5 text-sm text-white shadow-lg shadow-[#6366F1]/20">
-                    {msg.content}
-                  </div>
-                ) : (
-                  <div className={`max-w-[85%] rounded-2xl rounded-bl-md px-4 py-2.5 text-sm ${msg.error ? 'border border-red-500/30 bg-red-500/5 text-red-300' : 'glass text-white'}`}>
-                    {msg.content === '' && streaming ? (
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 animate-bounce rounded-full bg-[#8B5CF6]" style={{ animationDelay: '0ms' }} />
-                        <div className="h-2 w-2 animate-bounce rounded-full bg-[#6366F1]" style={{ animationDelay: '150ms' }} />
-                        <div className="h-2 w-2 animate-bounce rounded-full bg-[#3B82F6]" style={{ animationDelay: '300ms' }} />
-                      </div>
-                    ) : (
-                      <div className="whitespace-pre-wrap break-words">
-                        <MessageContent content={msg.content} imageUrl={msg.imageUrl} />
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div
+                  className={`max-w-[90%] break-words rounded-2xl px-4 py-3 text-sm ${
+                    message.role === 'user'
+                      ? 'rounded-br-md bg-gradient-to-r from-indigo-600 to-violet-600 text-white'
+                      : message.error
+                        ? 'rounded-bl-md border border-red-500/30 bg-red-500/5 text-red-300'
+                        : 'glass rounded-bl-md text-white'
+                  }`}
+                >
+                  {message.role === 'assistant' &&
+                  message.content === '' &&
+                  streaming ? (
+                    <div className="flex items-center gap-2 py-1">
+                      {[0, 1, 2].map((item) => (
+                        <span
+                          key={item}
+                          className="h-2 w-2 animate-bounce rounded-full bg-violet-400"
+                          style={{
+                            animationDelay: `${item * 120}ms`,
+                          }}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="whitespace-pre-wrap break-words">
+                      <MessageContent
+                        content={message.content}
+                        imageUrl={message.imageUrl}
+                      />
+                    </div>
+                  )}
+                </div>
               </motion.div>
             ))}
           </div>
         )}
-      </div>
+      </main>
 
-      <form onSubmit={handleSubmit} className="glass flex items-center gap-2 rounded-full px-4 py-2.5 transition-shadow focus-within:shadow-[0_0_25px_rgba(99,102,241,0.25)]">
-        <motion.button
+      {/* Input */}
+      <form
+        onSubmit={handleSubmit}
+        className="glass relative z-10 flex shrink-0 items-center gap-2 rounded-full px-3 py-2"
+      >
+        <button
           type="button"
           onClick={() => setShowImageModal(true)}
-          whileTap={{ scale: 0.88 }}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#262640] transition-colors hover:bg-[#363650]"
-          title="Create Image"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#262640]"
+          aria-label="Create image"
         >
-          <ImageIcon className="h-4 w-4 text-[#94A3B8]" />
-        </motion.button>
+          <ImageIcon className="h-4 w-4 text-violet-300" />
+        </button>
+
         <input
           ref={inputRef}
-          type="text"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(event) => setInput(event.target.value)}
           placeholder={tc('inputPlaceholder')}
           disabled={streaming}
-          className="flex-1 bg-transparent text-sm text-white placeholder:text-[#94A3B8] focus:outline-none disabled:opacity-50"
+          className="min-w-0 flex-1 bg-transparent px-1 text-sm text-white outline-none placeholder:text-[#94A3B8] disabled:opacity-50"
         />
-        <motion.button
+
+        <button
           type="submit"
-          whileTap={{ scale: 0.88 }}
           disabled={streaming || !input.trim()}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-gradient glow-violet disabled:opacity-50"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-gradient disabled:opacity-40"
+          aria-label="Send message"
         >
-          {streaming ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Send className="h-4 w-4 text-white" />}
-        </motion.button>
+          {streaming ? (
+            <Loader2 className="h-4 w-4 animate-spin text-white" />
+          ) : (
+            <Send className="h-4 w-4 text-white" />
+          )}
+        </button>
       </form>
 
+      {/* Daily limit dialog */}
       <AnimatePresence>
         {showLimitDialog && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-6"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-5"
             onClick={() => setShowLimitDialog(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(event) => event.stopPropagation()}
               className="glass w-full max-w-sm rounded-3xl p-6"
             >
               <div className="flex flex-col items-center gap-4 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/15">
-                  <AlertCircle className="h-6 w-6 text-red-400" />
-                </div>
-                <h3 className="font-heading text-lg font-bold text-white">{tc('limitTitle')}</h3>
-                <p className="text-sm text-[#94A3B8]">{tc('limitDesc')}</p>
-                <div className="flex w-full flex-col gap-2">
-                  <Link
-                    href="/pricing"
-                    className="rounded-xl bg-brand-gradient px-4 py-3 text-center font-heading text-sm font-semibold text-white glow-violet"
-                  >
-                    {tc('upgrade')} ₹57/{tc('month')}
-                  </Link>
-                  <button
-                    onClick={() => setShowLimitDialog(false)}
-                    className="rounded-xl border border-[#262640] px-4 py-3 text-sm text-[#94A3B8] transition-colors hover:text-white"
-                  >
-                    {tc('comeBackTomorrow')}
-                  </button>
-                </div>
+                <AlertCircle className="h-10 w-10 text-red-400" />
+
+                <h3 className="text-lg font-bold text-white">
+                  {tc('limitTitle')}
+                </h3>
+
+                <p className="text-sm text-[#94A3B8]">
+                  {tc('limitDesc')}
+                </p>
+
+                <Link
+                  href="/pricing"
+                  className="w-full rounded-xl bg-brand-gradient px-4 py-3 text-center text-sm font-bold text-white"
+                >
+                  {tc('upgrade')} ₹57/{tc('month')}
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => setShowLimitDialog(false)}
+                  className="w-full rounded-xl border border-[#262640] px-4 py-3 text-sm text-[#94A3B8]"
+                >
+                  {tc('comeBackTomorrow')}
+                </button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Image modal */}
       <AnimatePresence>
         {showImageModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-6"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-5"
             onClick={() => setShowImageModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="glass w-full max-w-sm rounded-3xl p-6"
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(event) => event.stopPropagation()}
+              className="glass w-full max-w-sm rounded-3xl p-5"
             >
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gradient">
-                      <ImageIcon className="h-5 w-5 text-white" />
-                    </div>
-                    <h3 className="font-heading text-lg font-bold text-white">Create Image</h3>
-                  </div>
-                  <button
-                    onClick={() => setShowImageModal(false)}
-                    className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[#262640]"
-                  >
-                    <X className="h-4 w-4 text-[#94A3B8]" />
-                  </button>
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5 text-violet-400" />
+                  <h3 className="font-bold text-white">
+                    Create Image
+                  </h3>
                 </div>
-                <p className="text-sm text-[#94A3B8]">Describe the image you want</p>
-                <form onSubmit={handleImageSubmit} className="flex flex-col gap-3">
-                  <textarea
-                    value={imagePrompt}
-                    onChange={(e) => setImagePrompt(e.target.value)}
-                    placeholder="Describe what you want..."
-                    rows={3}
-                    autoFocus
-                    className="w-full resize-none rounded-xl border border-[#262640] bg-[#0D0D18] px-4 py-3 text-sm text-white placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#6366F1]/30"
-                  />
-                  <motion.button
-                    type="submit"
-                    whileTap={{ scale: 0.97 }}
-                    disabled={imageLoading || !imagePrompt.trim()}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-brand-gradient px-4 py-3 font-heading text-sm font-semibold text-white glow-violet disabled:opacity-50"
-                  >
-                    {imageLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4" />
-                        Create Image
-                      </>
-                    )}
-                  </motion.button>
-                </form>
+
+                <button
+                  type="button"
+                  onClick={() => setShowImageModal(false)}
+                  aria-label="Close"
+                  className="rounded-full p-2 hover:bg-white/10"
+                >
+                  <X className="h-4 w-4 text-white" />
+                </button>
               </div>
+
+              <p className="mb-3 text-sm text-[#94A3B8]">
+                Describe the image you want.
+              </p>
+
+              <form
+                onSubmit={handleImageSubmit}
+                className="flex flex-col gap-3"
+              >
+                <textarea
+                  value={imagePrompt}
+                  onChange={(event) =>
+                    setImagePrompt(event.target.value)
+                  }
+                  placeholder="Describe your image..."
+                  rows={4}
+                  className="w-full resize-none rounded-xl border border-[#262640] bg-[#0D0D18] px-3 py-3 text-sm text-white outline-none focus:border-violet-500"
+                />
+
+                <button
+                  type="submit"
+                  disabled={!imagePrompt.trim() || imageLoading}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-brand-gradient px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
+                >
+                  {imageLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
+
+                  Create Image
+                </button>
+              </form>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
-                  }
+  }
