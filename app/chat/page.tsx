@@ -7,9 +7,8 @@ import {
   useCallback,
 } from 'react';
 
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslations } from 'next-intl';
 
 import {
   Send,
@@ -23,13 +22,16 @@ import {
   X,
   MessageCircle,
   Plus,
+  Code2,
+  Brain,
+  Trash2,
+  Menu,
+  Zap,
+  ChevronRight,
+  WandSparkles,
 } from 'lucide-react';
 
-import Link from 'next/link';
-
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/lib/auth-context';
 import { db } from '@/lib/firebase';
 
@@ -38,6 +40,16 @@ import {
   setDoc,
   getDoc,
 } from 'firebase/firestore';
+
+import {
+  Prism as SyntaxHighlighter,
+} from 'react-syntax-highlighter';
+
+import {
+  vscDarkPlus,
+} from 'react-syntax-highlighter/dist/esm/styles/prism';
+
+import './chat-3d.css';
 
 type Message = {
   role: 'user' | 'assistant';
@@ -50,6 +62,32 @@ type Tool = 'chat' | 'solve' | 'coding';
 
 const CHAT_ID = 'default';
 const MAX_MESSAGES = 50;
+
+const tools: {
+  id: Tool;
+  label: string;
+  description: string;
+  icon: typeof MessageCircle;
+}[] = [
+  {
+    id: 'chat',
+    label: 'AI Chat',
+    description: 'Ask anything',
+    icon: MessageCircle,
+  },
+  {
+    id: 'solve',
+    label: 'Solve',
+    description: 'Understand problems',
+    icon: Brain,
+  },
+  {
+    id: 'coding',
+    label: 'Coding',
+    description: 'Build with AI',
+    icon: Code2,
+  },
+];
 
 function CodeBlock({
   code,
@@ -64,28 +102,27 @@ function CodeBlock({
     try {
       await navigator.clipboard.writeText(code);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
+
+      window.setTimeout(() => setCopied(false), 1800);
     } catch {
       setCopied(false);
     }
   };
 
   return (
-    <div className="my-3 overflow-hidden rounded-xl border border-[#262640]">
-      <div className="flex items-center justify-between border-b border-[#262640] bg-[#0D0D18] px-3 py-2">
-        <span className="text-xs text-[#94A3B8]">
-          {lang || 'code'}
-        </span>
+    <div className="a3-codeblock">
+      <div className="a3-codehead">
+        <span>{lang || 'code'}</span>
 
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1 text-xs text-[#94A3B8] hover:text-white"
+          className="a3-copy"
         >
           {copied ? (
-            <Check className="h-3 w-3" />
+            <Check size={14} />
           ) : (
-            <Copy className="h-3 w-3" />
+            <Copy size={14} />
           )}
 
           {copied ? 'Copied' : 'Copy'}
@@ -97,9 +134,10 @@ function CodeBlock({
         style={vscDarkPlus}
         customStyle={{
           margin: 0,
-          background: '#0D0D18',
+          padding: '16px',
+          background: 'rgba(7, 7, 18, 0.96)',
           fontSize: '13px',
-          padding: '12px',
+          lineHeight: '1.75',
           overflowX: 'auto',
         }}
       >
@@ -121,15 +159,13 @@ function MessageContent({
   return (
     <>
       {imageUrl && (
-        <div className="my-3 overflow-hidden rounded-xl border border-[#262640]">
+        <div className="a3-generated-image">
           <img
             src={imageUrl}
-            alt="AI generated image"
+            alt="AI generated artwork"
             loading="lazy"
-            className="h-auto max-h-96 w-full object-contain"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display =
-                'none';
+            onError={(event) => {
+              event.currentTarget.style.display = 'none';
             }}
           />
 
@@ -137,9 +173,8 @@ function MessageContent({
             href={imageUrl}
             target="_blank"
             rel="noreferrer"
-            className="block px-3 py-2 text-xs text-violet-300"
           >
-            Open image
+            Open full image <ChevronRight size={14} />
           </a>
         </div>
       )}
@@ -150,6 +185,7 @@ function MessageContent({
           part.endsWith('```')
         ) {
           const lines = part.slice(3, -3).split('\n');
+
           const lang = lines[0].trim();
           const code = lines.slice(1).join('\n');
 
@@ -162,9 +198,57 @@ function MessageContent({
           );
         }
 
-        return <span key={index}>{part}</span>;
+        return (
+          <span
+            key={index}
+            className="whitespace-pre-wrap break-words"
+          >
+            {part}
+          </span>
+        );
       })}
     </>
+  );
+}
+
+function OrbScene({
+  active,
+  onClick,
+}: {
+  active: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label="Interactive AUREXA AI orb"
+      onClick={onClick}
+      className={`a3-orb-button ${active ? 'is-active' : ''}`}
+    >
+      <div className="a3-orb-scene">
+        <div className="a3-orb-aura" />
+
+        <div className="a3-orb-ring a3-ring-one" />
+        <div className="a3-orb-ring a3-ring-two" />
+        <div className="a3-orb-ring a3-ring-three" />
+
+        <div className="a3-orb-core">
+          <div className="a3-orb-core-inner">
+            <Sparkles size={30} strokeWidth={1.5} />
+          </div>
+        </div>
+
+        {Array.from({ length: 12 }).map((_, index) => (
+          <span
+            key={index}
+            className="a3-particle"
+            style={{
+              '--particle-index': index,
+            } as React.CSSProperties}
+          />
+        ))}
+      </div>
+    </button>
   );
 }
 
@@ -172,26 +256,29 @@ export default function ChatPage() {
   const t = useTranslations('nav');
   const tc = useTranslations('chat');
 
-  const router = useRouter();
   const { user } = useAuth();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
 
+  const [selectedTool, setSelectedTool] =
+    useState<Tool>('chat');
+
   const [streaming, setStreaming] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
-
-  const [usageLeft, setUsageLeft] = useState<number | null>(null);
-  const [showLimitDialog, setShowLimitDialog] = useState(false);
-
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [imagePrompt, setImagePrompt] = useState('');
-  const [imageLoading, setImageLoading] = useState(false);
-
   const [initialLoaded, setInitialLoaded] = useState(false);
 
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [showTools, setShowTools] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  const [imagePrompt, setImagePrompt] = useState('');
+  const [imageLoading, setImageLoading] = useState(false);
+  const [orbActive, setOrbActive] = useState(false);
+
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const messagesRef = useRef<Message[]>([]);
   const sendingRef = useRef(false);
@@ -205,7 +292,7 @@ export default function ChatPage() {
     messagesRef.current = messages;
   }, [messages]);
 
-  // Load history without blocking the chat interface.
+  // Load saved conversation.
   useEffect(() => {
     if (!user || !docRef) {
       setInitialLoaded(true);
@@ -221,9 +308,9 @@ export default function ChatPage() {
 
     setHistoryLoading(true);
 
-    const loadHistory = async () => {
+    async function loadHistory() {
       try {
-        const snapshot = await getDoc(docRef);
+        const snapshot = await getDoc(docRef!);
 
         if (cancelled) return;
 
@@ -235,12 +322,15 @@ export default function ChatPage() {
               .filter(
                 (item: any) =>
                   item &&
-                  (item.role === 'user' ||
-                    item.role === 'assistant') &&
+                  (
+                    item.role === 'user' ||
+                    item.role === 'assistant'
+                  ) &&
                   typeof item.content === 'string'
               )
               .slice(-MAX_MESSAGES) as Message[];
 
+            messagesRef.current = safeMessages;
             setMessages(safeMessages);
           }
         }
@@ -254,7 +344,7 @@ export default function ChatPage() {
           setInitialLoaded(true);
         }
       }
-    };
+    }
 
     void loadHistory();
 
@@ -263,11 +353,11 @@ export default function ChatPage() {
     };
   }, [user, docRef]);
 
-  // Save chat history with a debounce.
+  // Debounced Firebase history saving.
   useEffect(() => {
     if (!user || !docRef || !initialLoaded) return;
 
-    const timer = setTimeout(async () => {
+    const timer = window.setTimeout(async () => {
       try {
         await setDoc(
           docRef,
@@ -282,14 +372,16 @@ export default function ChatPage() {
       }
     }, 900);
 
-    return () => clearTimeout(timer);
+    return () => window.clearTimeout(timer);
   }, [messages, user, docRef, initialLoaded]);
 
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
       if (scrollRef.current) {
-        scrollRef.current.scrollTop =
-          scrollRef.current.scrollHeight;
+        scrollRef.current.scrollTo({
+          top: scrollRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
       }
     });
   }, []);
@@ -300,17 +392,20 @@ export default function ChatPage() {
 
   const sendMessage = useCallback(
     async (
-      msgText: string,
-      tool: Tool = 'chat'
+      messageText: string,
+      tool: Tool = selectedTool
     ) => {
-      if (!msgText.trim() || sendingRef.current) return;
+      if (!messageText.trim() || sendingRef.current) return;
 
       sendingRef.current = true;
       setStreaming(true);
+      setOrbActive(true);
+
+      const cleanText = messageText.trim();
 
       const userMessage: Message = {
         role: 'user',
-        content: msgText.trim(),
+        content: cleanText,
       };
 
       const assistantMessage: Message = {
@@ -351,18 +446,26 @@ export default function ChatPage() {
             idToken,
             tool,
             chatId: CHAT_ID,
-            message: msgText.trim(),
+            message: cleanText,
             history,
           }),
         });
 
         if (response.status === 429) {
-          const data = await response.json();
+          let data: any = {};
+
+          try {
+            data = await response.json();
+          } catch {
+            // The server may return a non-JSON error.
+          }
 
           if (data.error === 'LIMIT_REACHED') {
             setShowLimitDialog(true);
 
-            const rolledBack = messagesRef.current.slice(0, -2);
+            const rolledBack =
+              messagesRef.current.slice(0, -2);
+
             messagesRef.current = rolledBack;
             setMessages(rolledBack);
 
@@ -382,7 +485,10 @@ export default function ChatPage() {
         let buffer = '';
         let fullContent = '';
 
-        const updateAssistant = (content: string, error = false) => {
+        const updateAssistant = (
+          content: string,
+          error = false
+        ) => {
           const current = messagesRef.current.slice();
 
           current[current.length - 1] = {
@@ -423,10 +529,12 @@ export default function ChatPage() {
 
               if (parsed.error) {
                 fullContent = String(parsed.error);
+
                 updateAssistant(
                   `Error: ${fullContent}`,
                   true
                 );
+
                 continue;
               }
 
@@ -435,7 +543,7 @@ export default function ChatPage() {
                 updateAssistant(fullContent);
               }
             } catch {
-              // Ignore malformed streaming events.
+              // Ignore malformed SSE events.
             }
           }
         }
@@ -446,12 +554,6 @@ export default function ChatPage() {
             true
           );
         }
-
-        setUsageLeft((current) =>
-          current !== null
-            ? Math.max(0, current - 1)
-            : null
-        );
       } catch (error) {
         console.error('AI chat error:', error);
 
@@ -469,13 +571,14 @@ export default function ChatPage() {
       } finally {
         sendingRef.current = false;
         setStreaming(false);
+        setOrbActive(false);
         inputRef.current?.focus();
       }
     },
-    [user]
+    [user, selectedTool]
   );
 
-  // Process an initial prompt once, after loading existing history.
+  // Support opening the page with ?q=...&tool=...
   useEffect(() => {
     if (!initialLoaded) return;
 
@@ -485,10 +588,13 @@ export default function ChatPage() {
     if (!initialMessage) return;
 
     const toolValue = params.get('tool');
+
     const validTool: Tool =
       toolValue === 'solve' || toolValue === 'coding'
         ? toolValue
         : 'chat';
+
+    setSelectedTool(validTool);
 
     window.history.replaceState({}, '', '/chat');
 
@@ -506,14 +612,14 @@ export default function ChatPage() {
         prompt.trim()
       )}?model=flux&width=768&height=768&nologo=true`;
 
-    const nextMessages = [
+    const nextMessages: Message[] = [
       ...messagesRef.current,
       {
-        role: 'user' as const,
-        content: `🎨 Image: ${prompt.trim()}`,
+        role: 'user',
+        content: `Image: ${prompt.trim()}`,
       },
       {
-        role: 'assistant' as const,
+        role: 'assistant',
         content: `Here is your image: ${prompt.trim()}`,
         imageUrl,
       },
@@ -541,166 +647,570 @@ export default function ChatPage() {
 
     messagesRef.current = [];
     setMessages([]);
+    setShowMobileMenu(false);
   };
 
+  const activeTool =
+    tools.find((tool) => tool.id === selectedTool) || tools[0];
+
   return (
-    <div className="relative flex h-[calc(100dvh-120px)] min-h-[420px] flex-col gap-3 overflow-hidden">
-      <div className="pointer-events-none absolute -top-8 -right-16 h-48 w-48 rounded-full bg-[#6366F1]/10 blur-3xl" />
+    <div className="a3-page">
+      <div className="a3-ambient a3-ambient-one" />
+      <div className="a3-ambient a3-ambient-two" />
+      <div className="a3-grid" />
 
-      {/* Header */}
-      <header className="relative z-10 flex shrink-0 items-center justify-between">
-        <Link
-          href="/"
-          className="glass flex items-center gap-1 rounded-full px-3 py-2 text-sm text-[#94A3B8] hover:text-white"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {t('home')}
-        </Link>
+      {/* Top navigation */}
+      <header className="a3-header">
+        <div className="a3-brand">
+          <button
+            type="button"
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="a3-icon-button a3-mobile-menu"
+            aria-label="Toggle menu"
+          >
+            <Menu size={19} />
+          </button>
 
-        <div className="flex items-center gap-2">
-          {historyLoading && (
-            <Loader2 className="h-4 w-4 animate-spin text-violet-400" />
-          )}
-
-          {messages.length > 0 && (
-            <button
-              type="button"
-              onClick={clearChat}
-              className="glass flex items-center gap-1 rounded-full px-3 py-2 text-xs text-[#94A3B8] hover:text-white"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              New Chat
-            </button>
-          )}
-
-          {usageLeft !== null && (
-            <span className="glass rounded-full px-3 py-2 text-xs text-[#94A3B8]">
-              {usageLeft}/27 {tc('leftToday')}
+          <Link href="/" className="a3-logo">
+            <span className="a3-logo-symbol">
+              <Sparkles size={20} />
             </span>
+
+            <span className="a3-logo-text">
+              AUREXA
+              <span> AI 2.0</span>
+            </span>
+          </Link>
+
+          <span className="a3-header-divider" />
+
+          <span className="a3-workspace-label">
+            AI Workspace
+          </span>
+        </div>
+
+        <div className="a3-header-actions">
+          {historyLoading && (
+            <Loader2
+              size={16}
+              className="animate-spin text-violet-300"
+            />
           )}
+
+          <span className="a3-status">
+            <span className="a3-status-dot" />
+            AI Online
+          </span>
+
+          <Link
+            href="/pricing"
+            className="a3-upgrade-button"
+          >
+            <Zap size={14} />
+            <span>Upgrade</span>
+          </Link>
         </div>
       </header>
 
-      {/* Messages */}
-      <main
-        ref={scrollRef}
-        className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-hide"
-      >
-        {messages.length === 0 ? (
-          <div className="flex min-h-full flex-col items-center justify-center gap-3 px-4 text-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex h-16 w-16 items-center justify-center rounded-3xl bg-brand-gradient shadow-lg shadow-violet-500/20"
+      <div className="a3-layout">
+        {/* Sidebar */}
+        <AnimatePresence>
+          {(showMobileMenu || true) && (
+            <motion.aside
+              initial={false}
+              animate={{
+                x: 0,
+                opacity: 1,
+              }}
+              className={`a3-sidebar ${
+                showMobileMenu ? 'a3-sidebar-open' : ''
+              }`}
             >
-              <Sparkles className="h-8 w-8 text-white" />
-            </motion.div>
-
-            <h2 className="text-lg font-bold text-white">
-              AUREXA AI 2.0
-            </h2>
-
-            <p className="max-w-xs text-sm text-[#94A3B8]">
-              {tc('emptyState')}
-            </p>
-
-            <button
-              type="button"
-              onClick={() => setShowImageModal(true)}
-              className="mt-2 flex items-center gap-2 rounded-full bg-brand-gradient px-4 py-2.5 text-sm font-medium text-white"
-            >
-              <ImageIcon className="h-4 w-4" />
-              Create Image
-            </button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3 px-1 py-2">
-            {messages.map((message, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.15 }}
-                className={
-                  message.role === 'user'
-                    ? 'flex justify-end'
-                    : 'flex justify-start'
-                }
+              <button
+                type="button"
+                onClick={() => {
+                  clearChat();
+                  setShowMobileMenu(false);
+                }}
+                className="a3-new-chat"
               >
-                <div
-                  className={`max-w-[90%] break-words rounded-2xl px-4 py-3 text-sm ${
-                    message.role === 'user'
-                      ? 'rounded-br-md bg-gradient-to-r from-indigo-600 to-violet-600 text-white'
-                      : message.error
-                        ? 'rounded-bl-md border border-red-500/30 bg-red-500/5 text-red-300'
-                        : 'glass rounded-bl-md text-white'
-                  }`}
-                >
-                  {message.role === 'assistant' &&
-                  message.content === '' &&
-                  streaming ? (
-                    <div className="flex items-center gap-2 py-1">
-                      {[0, 1, 2].map((item) => (
-                        <span
-                          key={item}
-                          className="h-2 w-2 animate-bounce rounded-full bg-violet-400"
-                          style={{
-                            animationDelay: `${item * 120}ms`,
-                          }}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="whitespace-pre-wrap break-words">
-                      <MessageContent
-                        content={message.content}
-                        imageUrl={message.imageUrl}
-                      />
-                    </div>
-                  )}
+                <Plus size={17} />
+                New conversation
+              </button>
+
+              <div className="a3-sidebar-label">
+                WORKSPACE
+              </div>
+
+              <button
+                type="button"
+                className="a3-nav-item a3-nav-active"
+                onClick={() => setShowMobileMenu(false)}
+              >
+                <MessageCircle size={17} />
+                <span>AI Chat</span>
+                <span className="a3-nav-indicator" />
+              </button>
+
+              <button
+                type="button"
+                className="a3-nav-item"
+                onClick={() => {
+                  setSelectedTool('solve');
+                  setShowMobileMenu(false);
+                }}
+              >
+                <Brain size={17} />
+                <span>Problem Solver</span>
+              </button>
+
+              <button
+                type="button"
+                className="a3-nav-item"
+                onClick={() => {
+                  setSelectedTool('coding');
+                  setShowMobileMenu(false);
+                }}
+              >
+                <Code2 size={17} />
+                <span>Code Assistant</span>
+              </button>
+
+              <button
+                type="button"
+                className="a3-nav-item"
+                onClick={() => {
+                  setShowImageModal(true);
+                  setShowMobileMenu(false);
+                }}
+              >
+                <WandSparkles size={17} />
+                <span>Image Studio</span>
+              </button>
+
+              <div className="a3-sidebar-label a3-history-label">
+                CURRENT SESSION
+              </div>
+
+              <div className="a3-session-card">
+                <div className="a3-session-icon">
+                  <Sparkles size={16} />
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </main>
 
-      {/* Input */}
-      <form
-        onSubmit={handleSubmit}
-        className="glass relative z-10 flex shrink-0 items-center gap-2 rounded-full px-3 py-2"
-      >
-        <button
-          type="button"
-          onClick={() => setShowImageModal(true)}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#262640]"
-          aria-label="Create image"
-        >
-          <ImageIcon className="h-4 w-4 text-violet-300" />
-        </button>
+                <div className="a3-session-info">
+                  <strong>AI Conversation</strong>
+                  <span>
+                    {messages.length === 0
+                      ? 'Ready to explore'
+                      : `${messages.length} messages`}
+                  </span>
+                </div>
 
-        <input
-          ref={inputRef}
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          placeholder={tc('inputPlaceholder')}
-          disabled={streaming}
-          className="min-w-0 flex-1 bg-transparent px-1 text-sm text-white outline-none placeholder:text-[#94A3B8] disabled:opacity-50"
-        />
+                <button
+                  type="button"
+                  onClick={clearChat}
+                  aria-label="Clear chat"
+                  className="a3-small-icon"
+                  disabled={streaming}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
 
-        <button
-          type="submit"
-          disabled={streaming || !input.trim()}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-gradient disabled:opacity-40"
-          aria-label="Send message"
-        >
-          {streaming ? (
-            <Loader2 className="h-4 w-4 animate-spin text-white" />
-          ) : (
-            <Send className="h-4 w-4 text-white" />
+              <div className="a3-sidebar-spacer" />
+
+              <div className="a3-plan-card">
+                <div className="a3-plan-glow" />
+
+                <div className="a3-plan-icon">
+                  <Sparkles size={17} />
+                </div>
+
+                <strong>Your AI journey</strong>
+
+                <p>
+                  Unlock more possibilities with AUREXA Premium.
+                </p>
+
+                <Link href="/pricing">
+                  Explore Premium
+                  <ChevronRight size={15} />
+                </Link>
+              </div>
+
+              <Link href="/" className="a3-sidebar-home">
+                <ArrowLeft size={15} />
+                {t('home')}
+              </Link>
+            </motion.aside>
           )}
-        </button>
-      </form>
+        </AnimatePresence>
+
+        {showMobileMenu && (
+          <button
+            type="button"
+            aria-label="Close menu"
+            className="a3-mobile-overlay"
+            onClick={() => setShowMobileMenu(false)}
+          />
+        )}
+
+        {/* Main chat */}
+        <main className="a3-main">
+          <div className="a3-chat-toolbar">
+            <div className="a3-toolbar-title">
+              <span className="a3-toolbar-mark">
+                <Sparkles size={15} />
+              </span>
+
+              <div>
+                <strong>{activeTool.label}</strong>
+                <span>{activeTool.description}</span>
+              </div>
+            </div>
+
+            <div className="a3-toolbar-actions">
+              <span className="a3-model-pill">
+                <span className="a3-model-dot" />
+                AUREXA Engine
+              </span>
+
+              <button
+                type="button"
+                onClick={clearChat}
+                disabled={streaming || messages.length === 0}
+                className="a3-icon-button"
+                title="New conversation"
+                aria-label="New conversation"
+              >
+                <Plus size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Messages area */}
+          <section
+            ref={scrollRef}
+            className="a3-messages"
+          >
+            {messages.length === 0 ? (
+              <div className="a3-welcome">
+                <div className="a3-orb-stage">
+                  <div className="a3-stage-ring a3-stage-ring-one" />
+                  <div className="a3-stage-ring a3-stage-ring-two" />
+                  <div className="a3-stage-ring a3-stage-ring-three" />
+
+                  <OrbScene
+                    active={orbActive}
+                    onClick={() => {
+                      setOrbActive(!orbActive);
+                      window.setTimeout(
+                        () => setOrbActive(false),
+                        1500
+                      );
+                    }}
+                  />
+
+                  <span className="a3-orb-caption">
+                    INTELLIGENCE CORE
+                  </span>
+                </div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="a3-welcome-copy"
+                >
+                  <div className="a3-eyebrow">
+                    <span />
+                    YOUR INTELLIGENT ASSISTANT
+                  </div>
+
+                  <h1>
+                    Imagine beyond.
+                    <br />
+                    <span>Create with AUREXA.</span>
+                  </h1>
+
+                  <p>
+                    Explore ideas, solve complex problems,
+                    write code, and bring your imagination
+                    to life.
+                  </p>
+                </motion.div>
+
+                <div className="a3-tool-grid">
+                  {tools.map((tool, index) => {
+                    const Icon = tool.icon;
+
+                    return (
+                      <motion.button
+                        key={tool.id}
+                        type="button"
+                        initial={{
+                          opacity: 0,
+                          y: 12,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                        }}
+                        transition={{
+                          delay: 0.2 + index * 0.08,
+                        }}
+                        onClick={() => {
+                          setSelectedTool(tool.id);
+                          inputRef.current?.focus();
+                        }}
+                        className={`a3-tool-card ${
+                          selectedTool === tool.id
+                            ? 'a3-tool-selected'
+                            : ''
+                        }`}
+                      >
+                        <span className="a3-tool-icon">
+                          <Icon size={19} />
+                        </span>
+
+                        <span className="a3-tool-copy">
+                          <strong>{tool.label}</strong>
+                          <small>{tool.description}</small>
+                        </span>
+
+                        <ChevronRight
+                          size={15}
+                          className="a3-tool-arrow"
+                        />
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowImageModal(true)}
+                  className="a3-image-shortcut"
+                >
+                  <ImageIcon size={16} />
+                  Create something visual
+                  <Sparkles size={14} />
+                </button>
+              </div>
+            ) : (
+              <div className="a3-message-list">
+                {messages.map((message, index) => (
+                  <motion.article
+                    key={`${index}-${message.role}`}
+                    initial={{
+                      opacity: 0,
+                      y: 9,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    transition={{ duration: 0.2 }}
+                    className={`a3-message-row ${
+                      message.role === 'user'
+                        ? 'a3-user-row'
+                        : 'a3-assistant-row'
+                    }`}
+                  >
+                    {message.role === 'assistant' && (
+                      <div className="a3-avatar">
+                        <Sparkles size={17} />
+                      </div>
+                    )}
+
+                    <div
+                      className={`a3-message-content ${
+                        message.role === 'user'
+                          ? 'a3-user-message'
+                          : 'a3-assistant-message'
+                      } ${
+                        message.error
+                          ? 'a3-error-message'
+                          : ''
+                      }`}
+                    >
+                      {message.role === 'assistant' &&
+                      message.content === '' &&
+                      streaming &&
+                      index === messages.length - 1 ? (
+                        <div className="a3-thinking">
+                          <div className="a3-thinking-orb">
+                            <Sparkles size={16} />
+                          </div>
+
+                          <span>AUREXA is thinking</span>
+
+                          <div className="a3-thinking-dots">
+                            <i />
+                            <i />
+                            <i />
+                          </div>
+                        </div>
+                      ) : (
+                        <MessageContent
+                          content={message.content}
+                          imageUrl={message.imageUrl}
+                        />
+                      )}
+                    </div>
+                  </motion.article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Composer */}
+          <div className="a3-composer-wrap">
+            <AnimatePresence>
+              {showTools && (
+                <motion.div
+                  initial={{
+                    opacity: 0,
+                    y: 8,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    y: 8,
+                  }}
+                  className="a3-composer-tools"
+                >
+                  {tools.map((tool) => {
+                    const Icon = tool.icon;
+
+                    return (
+                      <button
+                        key={tool.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedTool(tool.id);
+                          setShowTools(false);
+                          inputRef.current?.focus();
+                        }}
+                        className={
+                          selectedTool === tool.id
+                            ? 'a3-composer-tool a3-composer-tool-active'
+                            : 'a3-composer-tool'
+                        }
+                      >
+                        <Icon size={16} />
+                        {tool.label}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowTools(false);
+                      setShowImageModal(true);
+                    }}
+                    className="a3-composer-tool"
+                  >
+                    <ImageIcon size={16} />
+                    Image
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <form
+              onSubmit={handleSubmit}
+              className="a3-composer"
+            >
+              <button
+                type="button"
+                onClick={() => setShowTools(!showTools)}
+                className={`a3-composer-add ${
+                  showTools ? 'a3-add-active' : ''
+                }`}
+                aria-label="Open AI tools"
+              >
+                {showTools ? (
+                  <X size={19} />
+                ) : (
+                  <Plus size={19} />
+                )}
+              </button>
+
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(event) =>
+                  setInput(event.target.value)
+                }
+                onKeyDown={(event) => {
+                  if (
+                    event.key === 'Enter' &&
+                    !event.shiftKey
+                  ) {
+                    event.preventDefault();
+
+                    if (!streaming && input.trim()) {
+                      void sendMessage(input);
+                    }
+                  }
+                }}
+                placeholder={
+                  selectedTool === 'coding'
+                    ? 'Describe what you want to build...'
+                    : selectedTool === 'solve'
+                      ? 'Tell me what you want to solve...'
+                      : 'Ask AUREXA anything...'
+                }
+                rows={1}
+                disabled={streaming}
+                className="a3-composer-input"
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowImageModal(true)}
+                className="a3-composer-image"
+                aria-label="Create image"
+                title="Create image"
+              >
+                <ImageIcon size={19} />
+              </button>
+
+              <button
+                type="submit"
+                disabled={streaming || !input.trim()}
+                className="a3-send-button"
+                aria-label="Send message"
+              >
+                {streaming ? (
+                  <Loader2
+                    size={19}
+                    className="animate-spin"
+                  />
+                ) : (
+                  <Send size={18} />
+                )}
+              </button>
+            </form>
+
+            <div className="a3-composer-footer">
+              <span>
+                <Sparkles size={12} />
+                Powered by AUREXA AI
+              </span>
+
+              <span>
+                Enter to send · Shift + Enter for new line
+              </span>
+            </div>
+          </div>
+        </main>
+      </div>
 
       {/* Daily limit dialog */}
       <AnimatePresence>
@@ -709,112 +1219,142 @@ export default function ChatPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-5"
+            className="a3-modal-backdrop"
             onClick={() => setShowLimitDialog(false)}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              initial={{
+                opacity: 0,
+                scale: 0.94,
+                y: 12,
+              }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                y: 0,
+              }}
+              exit={{
+                opacity: 0,
+                scale: 0.94,
+              }}
               onClick={(event) => event.stopPropagation()}
-              className="glass w-full max-w-sm rounded-3xl p-6"
+              className="a3-modal"
             >
-              <div className="flex flex-col items-center gap-4 text-center">
-                <AlertCircle className="h-10 w-10 text-red-400" />
-
-                <h3 className="text-lg font-bold text-white">
-                  {tc('limitTitle')}
-                </h3>
-
-                <p className="text-sm text-[#94A3B8]">
-                  {tc('limitDesc')}
-                </p>
-
-                <Link
-                  href="/pricing"
-                  className="w-full rounded-xl bg-brand-gradient px-4 py-3 text-center text-sm font-bold text-white"
-                >
-                  {tc('upgrade')} ₹57/{tc('month')}
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={() => setShowLimitDialog(false)}
-                  className="w-full rounded-xl border border-[#262640] px-4 py-3 text-sm text-[#94A3B8]"
-                >
-                  {tc('comeBackTomorrow')}
-                </button>
+              <div className="a3-modal-icon a3-modal-warning">
+                <AlertCircle size={26} />
               </div>
+
+              <h2>{tc('limitTitle')}</h2>
+
+              <p>{tc('limitDesc')}</p>
+
+              <Link
+                href="/pricing"
+                className="a3-modal-primary"
+              >
+                <Sparkles size={17} />
+                {tc('upgrade')}
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => setShowLimitDialog(false)}
+                className="a3-modal-secondary"
+              >
+                {tc('comeBackTomorrow')}
+              </button>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Image modal */}
+      {/* Image generation modal */}
       <AnimatePresence>
         {showImageModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-5"
+            className="a3-modal-backdrop"
             onClick={() => setShowImageModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              initial={{
+                opacity: 0,
+                scale: 0.95,
+                y: 12,
+              }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                y: 0,
+              }}
+              exit={{
+                opacity: 0,
+                scale: 0.95,
+              }}
               onClick={(event) => event.stopPropagation()}
-              className="glass w-full max-w-sm rounded-3xl p-5"
+              className="a3-modal a3-image-modal"
             >
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ImageIcon className="h-5 w-5 text-violet-400" />
-                  <h3 className="font-bold text-white">
-                    Create Image
-                  </h3>
+              <div className="a3-modal-heading">
+                <div className="a3-modal-icon">
+                  <WandSparkles size={23} />
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setShowImageModal(false)}
-                  aria-label="Close"
-                  className="rounded-full p-2 hover:bg-white/10"
+                  className="a3-icon-button"
+                  aria-label="Close image generator"
                 >
-                  <X className="h-4 w-4 text-white" />
+                  <X size={19} />
                 </button>
               </div>
 
-              <p className="mb-3 text-sm text-[#94A3B8]">
-                Describe the image you want.
-              </p>
+              <div className="a3-modal-title">
+                <h2>Image Studio</h2>
+
+                <p>
+                  Turn your imagination into a visual creation.
+                </p>
+              </div>
 
               <form
                 onSubmit={handleImageSubmit}
-                className="flex flex-col gap-3"
+                className="a3-image-form"
               >
+                <label htmlFor="aurexa-image-prompt">
+                  Describe your image
+                </label>
+
                 <textarea
+                  id="aurexa-image-prompt"
                   value={imagePrompt}
                   onChange={(event) =>
                     setImagePrompt(event.target.value)
                   }
-                  placeholder="Describe your image..."
+                  placeholder="A futuristic glass city floating among violet clouds..."
                   rows={4}
-                  className="w-full resize-none rounded-xl border border-[#262640] bg-[#0D0D18] px-3 py-3 text-sm text-white outline-none focus:border-violet-500"
+                  className="a3-image-textarea"
                 />
 
                 <button
                   type="submit"
-                  disabled={!imagePrompt.trim() || imageLoading}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-brand-gradient px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
+                  disabled={
+                    !imagePrompt.trim() || imageLoading
+                  }
+                  className="a3-modal-primary"
                 >
                   {imageLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2
+                      size={17}
+                      className="animate-spin"
+                    />
                   ) : (
-                    <Sparkles className="h-4 w-4" />
+                    <Sparkles size={17} />
                   )}
 
-                  Create Image
+                  Generate image
                 </button>
               </form>
             </motion.div>
