@@ -192,3 +192,30 @@
     animation: none !important;
   }
 }
+/* AUREXA AI — Keep chat layout at the bottom correctly */
+.a3-chat,
+.a3-chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.a3-messages,
+.a3-chat-messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.a3-composer,
+.a3-input-area,
+.a3-chat-input {
+  position: sticky;
+  bottom: 0;
+  flex-shrink: 0;
+  width: 100%;
+  margin-top: auto;
+  z-index: 20;
+}
