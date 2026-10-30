@@ -75,7 +75,7 @@ export default async function RootLayout({
         {/* Google Search Console Verification */}
         <meta
           name="google-site-verification"
-          content="uZ2KuRqwnIcii4YTquoMmV2g3TPzYHAHAQo48OjaZ2Q"
+          content="rwyrDiBpUxInetJQusIJMylWmgUStWwhpO9qQZPO938"
         />
 
         <link rel="manifest" href="/manifest.webmanifest" />
