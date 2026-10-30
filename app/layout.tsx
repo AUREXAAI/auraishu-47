@@ -1,6 +1,12 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter, Poppins, Noto_Sans_Kannada, Noto_Sans_Devanagari } from 'next/font/google';
+import {
+  Inter,
+  Poppins,
+  Noto_Sans_Kannada,
+  Noto_Sans_Devanagari,
+} from 'next/font/google';
+
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { AuthProvider } from '@/lib/auth-context';
@@ -33,7 +39,8 @@ const notoDevanagari = Noto_Sans_Devanagari({
 
 export const metadata: Metadata = {
   title: 'AUREXA AI — One AI. Everything you need.',
-  description: 'A freemium all-in-one AI web app for chat, coding, images, video, and courses.',
+  description:
+    'A freemium all-in-one AI web app for chat, coding, images, video, and courses.',
   themeColor: '#05050D',
   viewport: {
     width: 'device-width',
@@ -60,23 +67,46 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${inter.variable} ${poppins.variable} ${notoKannada.variable} ${notoDevanagari.variable}`}>
+    <html
+      lang={locale}
+      className={`${inter.variable} ${poppins.variable} ${notoKannada.variable} ${notoDevanagari.variable}`}
+    >
       <head>
+        {/* Google Search Console Verification */}
+        <meta
+          name="google-site-verification"
+          content="uZ2KuRqwnIcii4YTquoMmV2g3TPzYHAHAQo48OjaZ2Q"
+        />
+
         <link rel="manifest" href="/manifest.webmanifest" />
-        <link rel="apple-touch-icon" href="/17465db46-683e-487b-9fc6-edfcbdfc3934-1_1.png" />
+
+        <link
+          rel="apple-touch-icon"
+          href="/17465db46-683e-487b-9fc6-edfcbdfc3934-1_1.png"
+        />
+
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
         <meta name="apple-mobile-web-app-title" content="AUREXA AI" />
       </head>
+
       <body className="font-body antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AuthProvider>
             <AppShell>{children}</AppShell>
           </AuthProvider>
         </NextIntlClientProvider>
+
         <script
           dangerouslySetInnerHTML={{
-            __html: `if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js'); }); }`,
+            __html: `if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js');
+              });
+            }`,
           }}
         />
       </body>
