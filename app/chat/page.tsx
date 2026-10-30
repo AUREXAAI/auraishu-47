@@ -5,6 +5,12 @@ import {
   useRef,
   useEffect,
   useCallback,
+  useMemo,
+} from 'react';
+
+import type {
+  FormEvent,
+  CSSProperties,
 } from 'react';
 
 import Link from 'next/link';
@@ -244,7 +250,7 @@ function OrbScene({
             className="a3-particle"
             style={{
               '--particle-index': index,
-            } as React.CSSProperties}
+            } as CSSProperties}
           />
         ))}
       </div>
@@ -257,6 +263,15 @@ export default function ChatPage() {
   const tc = useTranslations('chat');
 
   const { user } = useAuth();
+
+  const userId = user?.uid ?? null;
+
+  const docRef = useMemo(
+    () => userId
+      ? doc(db, 'chats', userId)
+      : null,
+    [userId]
+  );
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -284,33 +299,36 @@ export default function ChatPage() {
   const sendingRef = useRef(false);
   const loadedUserRef = useRef<string | null>(null);
 
-  const docRef = user
-    ? doc(db, 'chats', user.uid)
-    : null;
-
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
 
   // Load saved conversation.
   useEffect(() => {
-    if (!user || !docRef) {
+    if (!userId || !docRef) {
+      loadedUserRef.current = null;
       setInitialLoaded(true);
       setHistoryLoading(false);
       return;
     }
 
-    if (loadedUserRef.current === user.uid) {
-      return;
-    }
+    const currentUserId = userId;
+    const currentDocRef = docRef;
 
     let cancelled = false;
 
+    setInitialLoaded(false);
     setHistoryLoading(true);
+
+    if (loadedUserRef.current === currentUserId) {
+      setHistoryLoading(false);
+      setInitialLoaded(true);
+      return;
+    }
 
     async function loadHistory() {
       try {
-        const snapshot = await getDoc(docRef!);
+        const snapshot = await getDoc(currentDocRef);
 
         if (cancelled) return;
 
@@ -332,12 +350,23 @@ export default function ChatPage() {
 
             messagesRef.current = safeMessages;
             setMessages(safeMessages);
+          } else {
+            messagesRef.current = [];
+            setMessages([]);
           }
+        } else {
+          messagesRef.current = [];
+          setMessages([]);
         }
 
-        loadedUserRef.current = user.uid;
+        loadedUserRef.current = currentUserId;
+
       } catch (error) {
-        console.error('Chat history loading failed:', error);
+        console.error(
+          'Chat history loading failed:',
+          error
+        );
+
       } finally {
         if (!cancelled) {
           setHistoryLoading(false);
@@ -351,16 +380,25 @@ export default function ChatPage() {
     return () => {
       cancelled = true;
     };
-  }, [user, docRef]);
+  }, [userId, docRef]);
 
   // Debounced Firebase history saving.
   useEffect(() => {
-    if (!user || !docRef || !initialLoaded) return;
+    if (
+      !userId ||
+      !docRef ||
+      !initialLoaded ||
+      loadedUserRef.current !== userId
+    ) {
+      return;
+    }
+
+    const currentDocRef = docRef;
 
     const timer = window.setTimeout(async () => {
       try {
         await setDoc(
-          docRef,
+          currentDocRef,
           {
             messages: messages.slice(-MAX_MESSAGES),
             updatedAt: Date.now(),
@@ -373,7 +411,7 @@ export default function ChatPage() {
     }, 900);
 
     return () => window.clearTimeout(timer);
-  }, [messages, user, docRef, initialLoaded]);
+  }, [messages, userId, docRef, initialLoaded]);
 
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
@@ -554,6 +592,7 @@ export default function ChatPage() {
             true
           );
         }
+
       } catch (error) {
         console.error('AI chat error:', error);
 
@@ -568,6 +607,7 @@ export default function ChatPage() {
 
         messagesRef.current = current;
         setMessages(current);
+
       } finally {
         sendingRef.current = false;
         setStreaming(false);
@@ -632,12 +672,12 @@ export default function ChatPage() {
     inputRef.current?.focus();
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     void sendMessage(input);
   };
 
-  const handleImageSubmit = (event: React.FormEvent) => {
+  const handleImageSubmit = (event: FormEvent) => {
     event.preventDefault();
     void generateImage(imagePrompt);
   };
