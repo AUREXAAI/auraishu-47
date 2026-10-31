@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import {
   Sparkles,
   Send,
@@ -133,6 +133,7 @@ export default function HomeScreen() {
   const t = useTranslations('home');
   const tf = useTranslations('features');
   const tp = useTranslations('pro');
+  const locale = useLocale();
   const { user } = useAuth();
 
   const [prompt, setPrompt] = useState('');
@@ -141,6 +142,47 @@ export default function HomeScreen() {
   const carouselRef = useRef<HTMLDivElement>(null);
 
   const displayName = user?.displayName || t('username');
+
+  // Automatic greeting based on India Standard Time
+  function getGreeting() {
+    const hour = Number(
+      new Intl.DateTimeFormat('en-IN', {
+        hour: 'numeric',
+        hour12: false,
+        timeZone: 'Asia/Kolkata',
+      }).format(new Date()),
+    );
+
+    const greetings: Record<string, string[]> = {
+      en: [
+        'Good Morning,',
+        'Good Afternoon,',
+        'Good Evening,',
+        'Good Night,',
+      ],
+      kn: [
+        'ಶುಭೋದಯ,',
+        'ಶುಭ ಮಧ್ಯಾಹ್ನ,',
+        'ಶುಭ ಸಂಜೆ,',
+        'ಶುಭ ರಾತ್ರಿ,',
+      ],
+      hi: [
+        'सुप्रभात,',
+        'शुभ दोपहर,',
+        'शुभ संध्या,',
+        'शुभ रात्रि,',
+      ],
+    };
+
+    const index =
+      hour >= 5 && hour < 12 ? 0 :
+      hour >= 12 && hour < 17 ? 1 :
+      hour >= 17 && hour < 21 ? 2 : 3;
+
+    const language = locale.split('-')[0].toLowerCase();
+
+    return (greetings[language] || greetings.en)[index];
+  }
 
   function handleAsk() {
     if (!prompt.trim()) return;
@@ -352,7 +394,7 @@ export default function HomeScreen() {
             </div>
 
             <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">
-              {t('greeting')}{' '}
+              {getGreeting()}{' '}
               <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-indigo-300 bg-clip-text text-transparent">
                 {displayName}
               </span>
@@ -693,4 +735,4 @@ export default function HomeScreen() {
       )}
     </main>
   );
-  }
+    }
