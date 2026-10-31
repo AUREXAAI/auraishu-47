@@ -427,8 +427,7 @@ export default function ChatPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
-
-  const sendMessage = useCallback(
+    const sendMessage = useCallback(
     async (
       messageText: string,
       tool: Tool = selectedTool
@@ -704,9 +703,29 @@ export default function ChatPage() {
         <div className="a3-brand">
           <button
             type="button"
+            className="a3-back-button"
+            aria-label="Go back"
+            onClick={() => {
+              const previousPageIsInternal =
+                document.referrer.startsWith(window.location.origin);
+
+              if (window.history.length > 1 && previousPageIsInternal) {
+                window.history.back();
+              } else {
+                window.location.assign('/');
+              }
+            }}
+          >
+            <ArrowLeft size={17} />
+            <span>Back</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setShowMobileMenu(!showMobileMenu)}
             className="a3-icon-button a3-mobile-menu"
             aria-label="Toggle menu"
+            aria-expanded={showMobileMenu}
           >
             <Menu size={19} />
           </button>
@@ -753,137 +772,128 @@ export default function ChatPage() {
 
       <div className="a3-layout">
         {/* Sidebar */}
-        <AnimatePresence>
-          {(showMobileMenu || true) && (
-            <motion.aside
-              initial={false}
-              animate={{
-                x: 0,
-                opacity: 1,
-              }}
-              className={`a3-sidebar ${
-                showMobileMenu ? 'a3-sidebar-open' : ''
-              }`}
+        <aside
+          className={`a3-sidebar ${
+            showMobileMenu ? 'a3-sidebar-open' : ''
+          }`}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              clearChat();
+              setShowMobileMenu(false);
+            }}
+            className="a3-new-chat"
+          >
+            <Plus size={17} />
+            New conversation
+          </button>
+
+          <div className="a3-sidebar-label">
+            WORKSPACE
+          </div>
+
+          <button
+            type="button"
+            className="a3-nav-item a3-nav-active"
+            onClick={() => setShowMobileMenu(false)}
+          >
+            <MessageCircle size={17} />
+            <span>AI Chat</span>
+            <span className="a3-nav-indicator" />
+          </button>
+
+          <button
+            type="button"
+            className="a3-nav-item"
+            onClick={() => {
+              setSelectedTool('solve');
+              setShowMobileMenu(false);
+            }}
+          >
+            <Brain size={17} />
+            <span>Problem Solver</span>
+          </button>
+
+          <button
+            type="button"
+            className="a3-nav-item"
+            onClick={() => {
+              setSelectedTool('coding');
+              setShowMobileMenu(false);
+            }}
+          >
+            <Code2 size={17} />
+            <span>Code Assistant</span>
+          </button>
+
+          <button
+            type="button"
+            className="a3-nav-item"
+            onClick={() => {
+              setShowImageModal(true);
+              setShowMobileMenu(false);
+            }}
+          >
+            <WandSparkles size={17} />
+            <span>Image Studio</span>
+          </button>
+
+          <div className="a3-sidebar-label a3-history-label">
+            CURRENT SESSION
+          </div>
+
+          <div className="a3-session-card">
+            <div className="a3-session-icon">
+              <Sparkles size={16} />
+            </div>
+
+            <div className="a3-session-info">
+              <strong>AI Conversation</strong>
+              <span>
+                {messages.length === 0
+                  ? 'Ready to explore'
+                  : `${messages.length} messages`}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={clearChat}
+              aria-label="Clear chat"
+              className="a3-small-icon"
+              disabled={streaming}
             >
-              <button
-                type="button"
-                onClick={() => {
-                  clearChat();
-                  setShowMobileMenu(false);
-                }}
-                className="a3-new-chat"
-              >
-                <Plus size={17} />
-                New conversation
-              </button>
+              <Trash2 size={14} />
+            </button>
+          </div>
 
-              <div className="a3-sidebar-label">
-                WORKSPACE
-              </div>
+          <div className="a3-sidebar-spacer" />
 
-              <button
-                type="button"
-                className="a3-nav-item a3-nav-active"
-                onClick={() => setShowMobileMenu(false)}
-              >
-                <MessageCircle size={17} />
-                <span>AI Chat</span>
-                <span className="a3-nav-indicator" />
-              </button>
+          <div className="a3-plan-card">
+            <div className="a3-plan-glow" />
 
-              <button
-                type="button"
-                className="a3-nav-item"
-                onClick={() => {
-                  setSelectedTool('solve');
-                  setShowMobileMenu(false);
-                }}
-              >
-                <Brain size={17} />
-                <span>Problem Solver</span>
-              </button>
+            <div className="a3-plan-icon">
+              <Sparkles size={17} />
+            </div>
 
-              <button
-                type="button"
-                className="a3-nav-item"
-                onClick={() => {
-                  setSelectedTool('coding');
-                  setShowMobileMenu(false);
-                }}
-              >
-                <Code2 size={17} />
-                <span>Code Assistant</span>
-              </button>
+            <strong>Your AI journey</strong>
 
-              <button
-                type="button"
-                className="a3-nav-item"
-                onClick={() => {
-                  setShowImageModal(true);
-                  setShowMobileMenu(false);
-                }}
-              >
-                <WandSparkles size={17} />
-                <span>Image Studio</span>
-              </button>
+            <p>
+              Unlock more possibilities with AUREXA Premium.
+            </p>
 
-              <div className="a3-sidebar-label a3-history-label">
-                CURRENT SESSION
-              </div>
+            <Link href="/pricing">
+              Explore Premium
+              <ChevronRight size={15} />
+            </Link>
+          </div>
 
-              <div className="a3-session-card">
-                <div className="a3-session-icon">
-                  <Sparkles size={16} />
-                </div>
-
-                <div className="a3-session-info">
-                  <strong>AI Conversation</strong>
-                  <span>
-                    {messages.length === 0
-                      ? 'Ready to explore'
-                      : `${messages.length} messages`}
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={clearChat}
-                  aria-label="Clear chat"
-                  className="a3-small-icon"
-                  disabled={streaming}
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-
-              <div className="a3-sidebar-spacer" />
-
-              <div className="a3-plan-card">
-                <div className="a3-plan-glow" />
-
-                <div className="a3-plan-icon">
-                  <Sparkles size={17} />
-                </div>
-
-                <strong>Your AI journey</strong>
-
-                <p>
-                  Unlock more possibilities with AUREXA Premium.
-                </p>
-
-                <Link href="/pricing">
-                  Explore Premium
-                  <ChevronRight size={15} />
-                </Link>
-              </div>
-
-              <Link href="/" className="a3-sidebar-home">
-                <ArrowLeft size={15} />
-                {t('home')}
-              </Link>
-            </motion.aside>
-          )}
-        </AnimatePresence>
+          <Link href="/" className="a3-sidebar-home">
+            <ArrowLeft size={15} />
+            {t('home')}
+          </Link>
+        </aside>
 
         {showMobileMenu && (
           <button
