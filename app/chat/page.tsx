@@ -717,8 +717,7 @@ export default function ChatPage() {
             </span>
 
             <span className="a3-logo-text">
-              AUREXA
-              <span> AI 2.0</span>
+              AUREXA AI
             </span>
           </Link>
 
@@ -1403,4 +1402,4 @@ export default function ChatPage() {
       </AnimatePresence>
     </div>
   );
-  }
+}
