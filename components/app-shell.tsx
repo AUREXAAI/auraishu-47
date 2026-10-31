@@ -24,6 +24,7 @@ import ProPill from './pro-pill';
 import Avatar from './avatar';
 import BottomNav from './bottom-nav';
 import ProfileSheet from './profile-sheet';
+
 import { useAuth } from '@/lib/auth-context';
 
 const publicPaths = ['/auth', '/welcome'];
@@ -60,6 +61,7 @@ export default function AppShell({
 
   const isPublicPath = publicPaths.includes(pathname);
 
+  // Authentication redirect
   useEffect(() => {
     if (loading) return;
 
@@ -72,10 +74,12 @@ export default function AppShell({
     }
   }, [user, loading, isPublicPath, router]);
 
+  // Public pages
   if (isPublicPath) {
     return <>{children}</>;
   }
 
+  // Authentication loading
   if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#101012]">
@@ -84,6 +88,12 @@ export default function AppShell({
     );
   }
 
+  // Chat page uses its own layout
+  if (pathname === '/chat' || pathname.endsWith('/chat')) {
+    return <>{children}</>;
+  }
+
+  // Normal app layout
   return (
     <div className="min-h-screen bg-[#101012] text-[#F5F1E8]">
       <div className="mx-auto flex min-h-screen max-w-md flex-col">
@@ -92,7 +102,10 @@ export default function AppShell({
         <header className="sticky top-0 z-50 flex items-center justify-between border-b border-[#343438]/50 bg-[#101012]/80 px-4 py-3 backdrop-blur-xl">
 
           {/* Menu */}
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <Sheet
+            open={sheetOpen}
+            onOpenChange={setSheetOpen}
+          >
             <SheetTrigger asChild>
               <button
                 aria-label="Open menu"
@@ -200,4 +213,4 @@ export default function AppShell({
 
     </div>
   );
-         }
+}
