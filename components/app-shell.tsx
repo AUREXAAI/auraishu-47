@@ -59,7 +59,13 @@ export default function AppShell({
 
   const { user, loading } = useAuth();
 
-  const isPublicPath = publicPaths.includes(pathname);
+  const normalizedPathname = pathname.replace(/\/+$/, '');
+
+  const isPublicPath = publicPaths.includes(normalizedPathname);
+
+  const isChatPage =
+    normalizedPathname === '/chat' ||
+    normalizedPathname.endsWith('/chat');
 
   // Authentication redirect
   useEffect(() => {
@@ -88,9 +94,13 @@ export default function AppShell({
     );
   }
 
-  // Chat page uses its own layout
-  if (pathname === '/chat' || pathname.endsWith('/chat')) {
-    return <>{children}</>;
+  // Chat page uses its own independent layout
+  if (isChatPage) {
+    return (
+      <div className="min-h-[100dvh] w-full overflow-hidden">
+        {children}
+      </div>
+    );
   }
 
   // Normal app layout
@@ -100,8 +110,6 @@ export default function AppShell({
 
         {/* Header */}
         <header className="sticky top-0 z-50 flex items-center justify-between border-b border-[#343438]/50 bg-[#101012]/80 px-4 py-3 backdrop-blur-xl">
-
-          {/* Menu */}
           <Sheet
             open={sheetOpen}
             onOpenChange={setSheetOpen}
@@ -120,7 +128,6 @@ export default function AppShell({
               className="w-[280px] border-[#343438] bg-[#1C1C20] text-[#F5F1E8]"
             >
               <div className="mt-6 flex flex-col gap-4">
-
                 <Logo />
 
                 <p className="text-sm text-[#B7B2A8]">
@@ -129,7 +136,6 @@ export default function AppShell({
 
                 <div className="my-2 border-t border-[#343438]" />
 
-                {/* Social Links */}
                 <p className="text-xs font-semibold uppercase tracking-widest text-[#D6BC86]">
                   Connect with Founder
                 </p>
@@ -164,7 +170,6 @@ export default function AppShell({
                   )}
                 </div>
 
-                {/* Founder Information */}
                 <div className="mt-3 border-t border-[#343438] pt-4">
                   <p className="text-xs text-[#8D887F]">
                     AUREXA AI
@@ -174,17 +179,14 @@ export default function AppShell({
                     Built by Ishant V Naik
                   </p>
                 </div>
-
               </div>
             </SheetContent>
           </Sheet>
 
-          {/* Logo */}
           <div className="flex items-center gap-2">
             <Logo />
           </div>
 
-          {/* User Actions */}
           <div className="flex items-center gap-2">
             <ProPill />
 
@@ -192,7 +194,6 @@ export default function AppShell({
               onClick={() => setProfileOpen(true)}
             />
           </div>
-
         </header>
 
         {/* Main Content */}
@@ -202,15 +203,12 @@ export default function AppShell({
 
         {/* Bottom Navigation */}
         <BottomNav />
-
       </div>
 
-      {/* Profile Sheet */}
       <ProfileSheet
         open={profileOpen}
         onClose={() => setProfileOpen(false)}
       />
-
     </div>
   );
 }
