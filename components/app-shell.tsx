@@ -94,10 +94,10 @@ export default function AppShell({
     );
   }
 
-  // Chat page uses its own independent layout
+  // Independent full-screen AUREXA AI chat layout
   if (isChatPage) {
     return (
-      <div className="min-h-[100dvh] w-full overflow-hidden">
+      <div className="h-[100dvh] w-full overflow-hidden">
         {children}
       </div>
     );
@@ -171,7 +171,7 @@ export default function AppShell({
                 </div>
 
                 <div className="mt-3 border-t border-[#343438] pt-4">
-                  <p className="text-xs text-[#8D887F]">
+                  <p className="text-xs font-semibold text-[#8D887F]">
                     AUREXA AI
                   </p>
 
