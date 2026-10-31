@@ -1686,3 +1686,112 @@
     transition-duration: 0.01ms !important;
   }
   }
+/* =========================================
+   AUREXA AI 2.0
+   MOBILE CHAT SCROLL + COMPOSER FIX
+========================================= */
+
+/* Main chat workspace */
+.a3-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Header must not shrink */
+.a3-header {
+  flex: 0 0 auto;
+}
+
+/* Layout takes remaining space */
+.a3-layout {
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Main chat area */
+.a3-main {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Toolbar stays visible */
+.a3-chat-toolbar {
+  flex: 0 0 auto;
+}
+
+/* Only messages area scrolls */
+.a3-messages {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
+}
+
+/* Composer stays at bottom of chat */
+.a3-composer-wrap {
+  position: relative;
+  z-index: 30;
+  flex: 0 0 auto;
+  width: 100%;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+/* Input should not shrink */
+.a3-composer {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+/* Mobile fixes */
+@media (max-width: 640px) {
+  .a3-page {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .a3-layout,
+  .a3-main {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .a3-messages {
+    flex: 1 1 0;
+    min-height: 0;
+    padding: 13px 11px 25px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .a3-composer-wrap {
+    flex-shrink: 0;
+    padding: 9px 9px max(12px, env(safe-area-inset-bottom));
+    background: rgba(8, 7, 17, 0.98);
+  }
+
+  .a3-composer {
+    min-height: 53px;
+  }
+
+  .a3-composer-input {
+    min-width: 0;
+  }
+}
