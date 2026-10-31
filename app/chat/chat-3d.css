@@ -1719,3 +1719,117 @@
   }
 }
    }
+/* AUREXA AI — Professional ChatGPT-style Typography */
+
+.a3-message-content {
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 14.5px;
+  line-height: 1.8;
+  letter-spacing: 0;
+  color: #e9e7f2;
+  overflow-wrap: anywhere;
+  -webkit-font-smoothing: antialiased;
+}
+
+.a3-assistant-message p {
+  margin: 0 0 14px;
+}
+
+.a3-assistant-message p:last-child {
+  margin-bottom: 0;
+}
+
+.a3-assistant-message h1,
+.a3-assistant-message h2,
+.a3-assistant-message h3 {
+  margin: 22px 0 10px;
+  color: #ffffff;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.3px;
+}
+
+.a3-assistant-message h1 { font-size: 22px; }
+.a3-assistant-message h2 { font-size: 19px; }
+.a3-assistant-message h3 { font-size: 16px; }
+
+.a3-assistant-message strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.a3-assistant-message ul,
+.a3-assistant-message ol {
+  margin: 10px 0 16px;
+  padding-left: 25px;
+}
+
+.a3-assistant-message li {
+  margin: 7px 0;
+  padding-left: 4px;
+  line-height: 1.75;
+}
+
+.a3-assistant-message li::marker {
+  color: #b69aff;
+  font-weight: 700;
+}
+
+.a3-assistant-message blockquote {
+  margin: 14px 0;
+  padding: 10px 15px;
+  border-left: 3px solid #a78bfa;
+  border-radius: 4px;
+  color: #c9c1db;
+  background: rgba(167,139,250,.08);
+}
+
+.a3-assistant-message a {
+  color: #bba2ff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.a3-assistant-message code {
+  padding: 2px 6px;
+  border: 1px solid rgba(167,139,250,.18);
+  border-radius: 5px;
+  color: #d8b4fe;
+  background: rgba(124,58,237,.14);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: .9em;
+}
+
+.a3-assistant-message pre {
+  overflow-x: auto;
+  margin: 14px 0;
+  padding: 15px;
+  border: 1px solid rgba(167,139,250,.2);
+  border-radius: 12px;
+  background: #090815;
+  line-height: 1.65;
+}
+
+.a3-assistant-message pre code {
+  padding: 0;
+  border: 0;
+  color: #e9e7f2;
+  background: transparent;
+}
+
+.a3-assistant-message hr {
+  margin: 18px 0;
+  border: 0;
+  border-top: 1px solid rgba(181,154,255,.18);
+}
+
+@media (max-width: 640px) {
+  .a3-message-content {
+    font-size: 13.5px;
+    line-height: 1.8;
+  }
+
+  .a3-assistant-message h1 { font-size: 19px; }
+  .a3-assistant-message h2 { font-size: 17px; }
+  .a3-assistant-message h3 { font-size: 15px; }
+     }
