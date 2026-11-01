@@ -15,7 +15,8 @@ import type {
 
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   Send,
   Sparkles,
