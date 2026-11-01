@@ -179,7 +179,7 @@ function MessageContent({
           <a
             href={imageUrl}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
           >
             Open full image <ChevronRight size={14} />
           </a>
@@ -192,7 +192,6 @@ function MessageContent({
           part.endsWith('```')
         ) {
           const lines = part.slice(3, -3).split('\n');
-
           const lang = lines[0].trim();
           const code = lines.slice(1).join('\n');
 
@@ -206,19 +205,32 @@ function MessageContent({
         }
 
         return (
-          <span
+          <div
             key={index}
-            className="whitespace-pre-wrap break-words"
+            className="a3-markdown-content"
           >
-            {part}
-          </span>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                a: ({ children, ...props }) => (
+                  <a
+                    {...props}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {children}
+                  </a>
+                ),
+              }}
+            >
+              {part}
+            </ReactMarkdown>
+          </div>
         );
       })}
     </>
   );
 }
-
-function OrbScene({
   active,
   onClick,
 }: {
