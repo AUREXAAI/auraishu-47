@@ -417,6 +417,43 @@ export default function HomeScreen() {
           </motion.div>
         </section>
 
+        {/* Early Access Stats */}
+        <section className="mx-auto mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:mt-10">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="relative overflow-hidden rounded-3xl border border-[#d9bd7e]/60 bg-white/65 p-5 text-center shadow-[0_12px_35px_rgba(150,112,43,0.10)] backdrop-blur-2xl"
+          >
+            <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#e8c879]/30 blur-3xl" />
+
+            <p className="relative bg-gradient-to-r from-[#9c6b18] via-[#d5ad55] to-[#a77722] bg-clip-text text-3xl font-extrabold text-transparent sm:text-4xl">
+              13K+
+            </p>
+
+            <p className="relative mt-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#80683e] sm:text-xs">
+              Early Access Trials
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.12 }}
+            className="relative overflow-hidden rounded-3xl border border-[#d9bd7e]/60 bg-white/65 p-5 text-center shadow-[0_12px_35px_rgba(150,112,43,0.10)] backdrop-blur-2xl"
+          >
+            <div className="pointer-events-none absolute -left-8 -bottom-8 h-24 w-24 rounded-full bg-[#e8c879]/30 blur-3xl" />
+
+            <p className="relative text-2xl font-extrabold text-[#b78a36] sm:text-3xl">
+              EARLY
+            </p>
+
+            <p className="relative mt-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#80683e] sm:text-xs">
+              Testing Stage
+            </p>
+          </motion.div>
+        </section>
+
         {/* Features */}
         <section className="mt-12 sm:mt-16">
           <div className="mb-5 flex items-end justify-between gap-3">
