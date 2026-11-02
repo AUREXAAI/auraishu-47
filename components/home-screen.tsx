@@ -34,48 +34,13 @@ type Feature = {
 };
 
 const features: Feature[] = [
-  {
-    key: 'chat',
-    icon: MessageCircle,
-    tool: 'chat',
-    accent: 'from-violet-500 to-purple-700',
-  },
-  {
-    key: 'solve',
-    icon: Lightbulb,
-    tool: 'solve',
-    accent: 'from-fuchsia-500 to-pink-600',
-  },
-  {
-    key: 'coding',
-    icon: Code2,
-    tool: 'coding',
-    accent: 'from-blue-500 to-indigo-600',
-  },
-  {
-    key: 'image',
-    icon: ImageIcon,
-    accent: 'from-pink-500 to-rose-600',
-    comingSoon: true,
-  },
-  {
-    key: 'video',
-    icon: Video,
-    accent: 'from-cyan-400 to-blue-600',
-    comingSoon: true,
-  },
-  {
-    key: 'editor',
-    icon: Scissors,
-    accent: 'from-orange-400 to-rose-500',
-    comingSoon: true,
-  },
-  {
-    key: 'courses',
-    icon: GraduationCap,
-    accent: 'from-emerald-400 to-teal-600',
-    comingSoon: true,
-  },
+  { key: 'chat', icon: MessageCircle, tool: 'chat', accent: 'from-amber-300 to-yellow-600' },
+  { key: 'solve', icon: Lightbulb, tool: 'solve', accent: 'from-yellow-300 to-amber-600' },
+  { key: 'coding', icon: Code2, tool: 'coding', accent: 'from-amber-400 to-orange-600' },
+  { key: 'image', icon: ImageIcon, accent: 'from-yellow-300 to-amber-500', comingSoon: true },
+  { key: 'video', icon: Video, accent: 'from-amber-300 to-yellow-600', comingSoon: true },
+  { key: 'editor', icon: Scissors, accent: 'from-orange-300 to-amber-600', comingSoon: true },
+  { key: 'courses', icon: GraduationCap, accent: 'from-yellow-400 to-amber-700', comingSoon: true },
 ];
 
 const chips = [
@@ -143,7 +108,6 @@ export default function HomeScreen() {
 
   const displayName = user?.displayName || t('username');
 
-  // Automatic greeting based on India Standard Time
   function getGreeting() {
     const hour = Number(
       new Intl.DateTimeFormat('en-IN', {
@@ -154,24 +118,9 @@ export default function HomeScreen() {
     );
 
     const greetings: Record<string, string[]> = {
-      en: [
-        'Good Morning,',
-        'Good Afternoon,',
-        'Good Evening,',
-        'Good Night,',
-      ],
-      kn: [
-        'ಶುಭೋದಯ,',
-        'ಶುಭ ಮಧ್ಯಾಹ್ನ,',
-        'ಶುಭ ಸಂಜೆ,',
-        'ಶುಭ ರಾತ್ರಿ,',
-      ],
-      hi: [
-        'सुप्रभात,',
-        'शुभ दोपहर,',
-        'शुभ संध्या,',
-        'शुभ रात्रि,',
-      ],
+      en: ['Good Morning,', 'Good Afternoon,', 'Good Evening,', 'Good Night,'],
+      kn: ['ಶುಭೋದಯ,', 'ಶುಭ ಮಧ್ಯಾಹ್ನ,', 'ಶುಭ ಸಂಜೆ,', 'ಶುಭ ರಾತ್ರಿ,'],
+      hi: ['सुप्रभात,', 'शुभ दोपहर,', 'शुभ संध्या,', 'शुभ रात्रि,'],
     };
 
     const index =
@@ -195,7 +144,7 @@ export default function HomeScreen() {
       return;
     }
 
-    setNotice(`${feature.key}`);
+    setNotice(feature.key);
   }
 
   function handleChipClick(chip: (typeof chips)[number]) {
@@ -257,27 +206,28 @@ export default function HomeScreen() {
           : '';
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#090711] text-white">
-      {/* Background */}
+    <main className="relative min-h-screen overflow-hidden bg-[#fbf9f5] text-[#241d14]">
+      {/* Background decoration */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"
       >
-        <div className="absolute -left-36 top-24 h-80 w-80 rounded-full bg-violet-700/15 blur-[120px]" />
-        <div className="absolute -right-36 top-80 h-80 w-80 rounded-full bg-fuchsia-600/10 blur-[120px]" />
-        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-indigo-600/10 blur-[120px]" />
+        <div className="absolute -left-32 top-20 h-80 w-80 rounded-full bg-[#f2dcae]/40 blur-[110px]" />
+        <div className="absolute -right-32 top-72 h-96 w-96 rounded-full bg-[#e8c879]/25 blur-[120px]" />
+        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-[#f5e8ce]/50 blur-[110px]" />
 
         <div
-          className="absolute inset-0 opacity-[0.035]"
+          className="absolute inset-0 opacity-[0.16]"
           style={{
             backgroundImage:
-              'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
-            backgroundSize: '42px 42px',
+              'linear-gradient(rgba(190,145,65,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(190,145,65,0.12) 1px, transparent 1px)',
+            backgroundSize: '48px 48px',
           }}
         />
       </div>
 
       <div className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-12 pt-5 sm:px-6 sm:pt-8 lg:px-8">
+
         {/* Header */}
         <header className="flex items-center justify-between gap-3">
           <button
@@ -286,16 +236,16 @@ export default function HomeScreen() {
             aria-label="AUREXA AI home"
             className="group flex items-center gap-3"
           >
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl border border-violet-300/20 bg-gradient-to-br from-violet-500/30 to-fuchsia-500/10 shadow-lg shadow-violet-950/40">
-              <Sparkles className="h-5 w-5 text-violet-200" />
+            <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-[#dfc184]/60 bg-white/80 shadow-[0_8px_25px_rgba(171,128,48,0.15)] backdrop-blur-xl">
+              <Sparkles className="h-5 w-5 text-[#bd8627]" />
             </div>
 
             <div className="text-left">
-              <p className="text-base font-bold tracking-[0.16em] text-white sm:text-lg">
-                AUREXA<span className="text-violet-400"> AI</span>
+              <p className="text-base font-bold tracking-[0.16em] text-[#211b14] sm:text-lg">
+                AUREXA<span className="text-[#bd8627]"> AI</span>
               </p>
-              <p className="text-[9px] font-medium uppercase tracking-[0.23em] text-white/40">
-                Intelligence, reimagined
+              <p className="text-[9px] font-medium uppercase tracking-[0.23em] text-[#98866b]">
+                Imagine · Create · Innovate
               </p>
             </div>
           </button>
@@ -303,7 +253,7 @@ export default function HomeScreen() {
           <button
             type="button"
             onClick={() => router.push('/pricing')}
-            className="flex shrink-0 items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/[0.08] px-3.5 py-2.5 text-xs font-semibold text-amber-200 transition hover:bg-amber-300/[0.13]"
+            className="flex shrink-0 items-center gap-2 rounded-full border border-[#d9b96e] bg-gradient-to-r from-[#f5dfa8] to-[#c79535] px-3.5 py-2.5 text-xs font-semibold text-[#4c3510] shadow-[0_6px_18px_rgba(181,132,39,0.2)] transition hover:brightness-105"
           >
             <Crown className="h-4 w-4" />
             <span>PRO</span>
@@ -314,9 +264,10 @@ export default function HomeScreen() {
         {/* Hero */}
         <section className="relative mx-auto mt-7 max-w-3xl text-center sm:mt-10">
           <div className="relative mx-auto mb-1 flex h-44 w-44 items-center justify-center sm:h-56 sm:w-56">
+
             <motion.div
               aria-hidden="true"
-              className="absolute h-36 w-36 rounded-full bg-violet-600/25 blur-[45px] sm:h-48 sm:w-48"
+              className="absolute h-36 w-36 rounded-full bg-[#e7c36e]/35 blur-[45px] sm:h-48 sm:w-48"
               animate={{
                 scale: [0.9, 1.15, 0.9],
                 opacity: [0.5, 0.9, 0.5],
@@ -330,28 +281,20 @@ export default function HomeScreen() {
 
             <motion.div
               aria-hidden="true"
-              className="absolute h-32 w-32 rounded-full border border-violet-300/20 sm:h-40 sm:w-40"
+              className="absolute h-32 w-32 rounded-full border border-[#c69b49]/40 sm:h-40 sm:w-40"
               animate={{ rotate: 360 }}
-              transition={{
-                duration: 24,
-                repeat: Infinity,
-                ease: 'linear',
-              }}
+              transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
             />
 
             <motion.div
               aria-hidden="true"
-              className="absolute h-28 w-28 rounded-full border border-fuchsia-300/20 sm:h-36 sm:w-36"
+              className="absolute h-28 w-28 rounded-full border border-[#e2c783]/60 sm:h-36 sm:w-36"
               animate={{ rotate: -360 }}
-              transition={{
-                duration: 18,
-                repeat: Infinity,
-                ease: 'linear',
-              }}
+              transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
             />
 
             <motion.div
-              className="relative flex h-24 w-24 items-center justify-center rounded-full border border-white/20 bg-gradient-to-br from-[#b7a2ff] via-[#8050ed] to-[#35105f] shadow-[0_0_45px_rgba(139,92,246,0.45)] sm:h-32 sm:w-32"
+              className="relative flex h-24 w-24 items-center justify-center rounded-full border border-white bg-gradient-to-br from-white via-[#fff7e5] to-[#e9ca7d] shadow-[0_0_45px_rgba(190,145,48,0.35)] sm:h-32 sm:w-32"
               animate={{
                 y: [0, -7, 0],
                 rotate: [0, 4, -4, 0],
@@ -362,20 +305,20 @@ export default function HomeScreen() {
                 ease: 'easeInOut',
               }}
             >
-              <div className="absolute inset-[7px] rounded-full border border-white/20 bg-gradient-to-br from-white/15 to-transparent" />
-              <Sparkles className="relative z-10 h-10 w-10 text-white sm:h-12 sm:w-12" />
+              <div className="absolute inset-[7px] rounded-full border border-[#d4ae60]/40 bg-gradient-to-br from-white/80 to-transparent" />
+              <Sparkles className="relative z-10 h-10 w-10 text-[#b98222] sm:h-12 sm:w-12" />
             </motion.div>
 
             <motion.div
               aria-hidden="true"
-              className="absolute left-5 top-10 h-2 w-2 rounded-full bg-fuchsia-300"
+              className="absolute left-5 top-10 h-2 w-2 rounded-full bg-[#c99b3d]"
               animate={{ y: [0, -12, 0], opacity: [0.4, 1, 0.4] }}
               transition={{ duration: 3.5, repeat: Infinity }}
             />
 
             <motion.div
               aria-hidden="true"
-              className="absolute right-5 top-16 h-1.5 w-1.5 rounded-full bg-violet-200"
+              className="absolute right-5 top-16 h-1.5 w-1.5 rounded-full bg-[#e0bd71]"
               animate={{ y: [0, 10, 0], opacity: [0.3, 1, 0.3] }}
               transition={{ duration: 4, repeat: Infinity }}
             />
@@ -386,26 +329,26 @@ export default function HomeScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-300/20 bg-violet-400/[0.07] px-3 py-1.5">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.19em] text-violet-200/90">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#e4d2a9] bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur-xl">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.19em] text-[#8a7040]">
                 Your AI workspace
               </span>
             </div>
 
-            <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">
+            <h1 className="text-3xl font-semibold leading-tight tracking-tight text-[#211b14] sm:text-5xl">
               {getGreeting()}{' '}
-              <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-indigo-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#986514] via-[#d5ad55] to-[#a77722] bg-clip-text text-transparent">
                 {displayName}
               </span>
             </h1>
 
-            <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-white/50 sm:text-base">
+            <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-[#817565] sm:text-base">
               {t('sub')}
             </p>
           </motion.div>
 
-          {/* Prompt */}
+          {/* Prompt box */}
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
@@ -417,37 +360,37 @@ export default function HomeScreen() {
                 event.preventDefault();
                 handleAsk();
               }}
-              className="group relative rounded-[24px] border border-white/[0.12] bg-[#15121f]/90 p-2 shadow-[0_20px_70px_rgba(0,0,0,0.3)] transition focus-within:border-violet-400/40"
+              className="group relative rounded-[24px] border border-[#e6d6b5] bg-white/75 p-2 shadow-[0_15px_45px_rgba(143,105,43,0.12)] backdrop-blur-2xl transition focus-within:border-[#c49a48] focus-within:shadow-[0_15px_45px_rgba(143,105,43,0.18)]"
             >
               <div className="flex items-center gap-2 px-2 pt-2">
-                <Sparkles className="h-5 w-5 shrink-0 text-violet-300" />
+                <Sparkles className="h-5 w-5 shrink-0 text-[#bd8627]" />
 
                 <input
                   value={prompt}
                   onChange={(event) => setPrompt(event.target.value)}
                   placeholder={t('askPlaceholder')}
                   aria-label={t('askPlaceholder')}
-                  className="min-w-0 flex-1 bg-transparent py-3 text-sm text-white outline-none placeholder:text-white/35 sm:text-base"
+                  className="min-w-0 flex-1 bg-transparent py-3 text-sm text-[#241d14] outline-none placeholder:text-[#a99b84] sm:text-base"
                 />
 
                 <button
                   type="submit"
                   disabled={!prompt.trim()}
                   aria-label="Send prompt"
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white shadow-lg transition hover:scale-[1.04] disabled:opacity-40"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e8c875] to-[#bd8627] text-white shadow-lg shadow-[#b98222]/20 transition hover:scale-[1.04] disabled:opacity-40"
                 >
                   <Send className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="mt-1 flex items-center justify-between gap-2 border-t border-white/[0.07] px-2 pb-1 pt-2">
-                <div className="flex items-center gap-1.5 text-[10px] text-white/35">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-400/70" />
+              <div className="mt-1 flex items-center justify-between gap-2 border-t border-[#eee4d1] px-2 pb-1 pt-2">
+                <div className="flex items-center gap-1.5 text-[10px] text-[#94866f]">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
                   <span>Ready when you are</span>
                 </div>
 
-                <div className="flex items-center gap-1.5 rounded-full bg-white/[0.04] px-2 py-1 text-[10px] text-white/45">
-                  <Zap className="h-3 w-3 text-violet-300" />
+                <div className="flex items-center gap-1.5 rounded-full bg-[#f8f1e4] px-2 py-1 text-[10px] text-[#92733c]">
+                  <Zap className="h-3 w-3 text-[#bd8627]" />
                   <span>AI powered</span>
                 </div>
               </div>
@@ -463,9 +406,9 @@ export default function HomeScreen() {
                     key={chip.key}
                     type="button"
                     onClick={() => handleChipClick(chip)}
-                    className="flex shrink-0 items-center gap-2 rounded-full border border-white/[0.09] bg-white/[0.035] px-3.5 py-2.5 text-xs text-white/65 transition hover:border-violet-300/30 hover:bg-violet-400/10 hover:text-white"
+                    className="flex shrink-0 items-center gap-2 rounded-full border border-[#e8dcc5] bg-white/65 px-3.5 py-2.5 text-xs text-[#76664c] shadow-sm backdrop-blur-xl transition hover:border-[#cda34d] hover:bg-[#fff8e9] hover:text-[#805b19]"
                   >
-                    <Icon className="h-3.5 w-3.5 text-violet-300" />
+                    <Icon className="h-3.5 w-3.5 text-[#bd8627]" />
                     {t(`chips.${chip.key}`)}
                   </button>
                 );
@@ -479,18 +422,18 @@ export default function HomeScreen() {
           <div className="mb-5 flex items-end justify-between gap-3">
             <div>
               <div className="mb-2 flex items-center gap-2">
-                <div className="h-5 w-1 rounded-full bg-gradient-to-b from-violet-300 to-fuchsia-500" />
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-violet-300">
+                <div className="h-5 w-1 rounded-full bg-gradient-to-b from-[#f0d48f] to-[#bd8627]" />
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#a17a35]">
                   Explore
                 </p>
               </div>
 
-              <h2 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
+              <h2 className="text-xl font-semibold tracking-tight text-[#241d14] sm:text-2xl">
                 {t('explore')}
               </h2>
             </div>
 
-            <div className="flex items-center gap-1.5 pb-1 text-[10px] text-white/35 sm:text-xs">
+            <div className="flex items-center gap-1.5 pb-1 text-[10px] text-[#a39782] sm:text-xs">
               <span>Swipe to explore</span>
               <ChevronRight className="h-3.5 w-3.5" />
             </div>
@@ -515,47 +458,47 @@ export default function HomeScreen() {
                     duration: 0.35,
                     delay: Math.min(index * 0.05, 0.25),
                   }}
-                  className={`group relative min-h-[178px] w-[72%] max-w-[270px] shrink-0 snap-start overflow-hidden rounded-[24px] border border-white/[0.09] bg-[#14111e] p-4 text-left transition duration-300 sm:min-h-[190px] sm:w-[31%] ${
+                  className={`group relative min-h-[178px] w-[72%] max-w-[270px] shrink-0 snap-start overflow-hidden rounded-[24px] border border-[#e7d9bd] bg-white/65 p-4 text-left shadow-[0_12px_32px_rgba(129,94,35,0.08)] backdrop-blur-2xl transition duration-300 sm:min-h-[190px] sm:w-[31%] ${
                     feature.tool
-                      ? 'hover:-translate-y-1 hover:border-violet-300/30 hover:bg-[#1b1628]'
-                      : 'hover:border-white/20'
+                      ? 'hover:-translate-y-1 hover:border-[#cda34d] hover:bg-white/90'
+                      : 'hover:border-[#d7c08f]'
                   }`}
                 >
                   <div
                     aria-hidden="true"
-                    className={`absolute -right-10 -top-12 h-32 w-32 rounded-full bg-gradient-to-br ${feature.accent} opacity-[0.13] blur-3xl transition group-hover:opacity-25`}
+                    className={`absolute -right-10 -top-12 h-32 w-32 rounded-full bg-gradient-to-br ${feature.accent} opacity-[0.16] blur-3xl transition group-hover:opacity-30`}
                   />
 
                   <div className="relative flex h-full flex-col">
                     <div className="flex items-start justify-between gap-2">
                       <div
-                        className={`flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br ${feature.accent} shadow-lg`}
+                        className={`flex h-11 w-11 items-center justify-center rounded-2xl border border-white/80 bg-gradient-to-br ${feature.accent} shadow-lg shadow-[#bd8627]/15`}
                       >
                         <Icon className="h-5 w-5 text-white" />
                       </div>
 
                       {feature.comingSoon ? (
-                        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-1 text-[9px] text-white/45">
+                        <span className="rounded-full border border-[#e8d8b6] bg-[#fbf5e9] px-2 py-1 text-[9px] text-[#9a7c45]">
                           Soon
                         </span>
                       ) : (
-                        <div className="flex h-7 w-7 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.03] text-white/40 transition group-hover:text-violet-200">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full border border-[#e8dcc5] bg-white/70 text-[#a58a58] transition group-hover:text-[#966718]">
                           <ArrowUpRight className="h-3.5 w-3.5" />
                         </div>
                       )}
                     </div>
 
                     <div className="mt-5">
-                      <h3 className="text-sm font-semibold text-white sm:text-base">
+                      <h3 className="text-sm font-semibold text-[#292116] sm:text-base">
                         {tf(`${feature.key}.title`)}
                       </h3>
 
-                      <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45 sm:text-sm">
+                      <p className="mt-2 line-clamp-2 text-xs leading-5 text-[#8c806c] sm:text-sm">
                         {tf(`${feature.key}.desc`)}
                       </p>
                     </div>
 
-                    <div className="mt-auto flex items-center gap-1 pt-4 text-[10px] font-medium text-violet-300/75">
+                    <div className="mt-auto flex items-center gap-1 pt-4 text-[10px] font-medium text-[#a47b32]">
                       <span>
                         {feature.comingSoon ? 'Coming Soon' : t('explore')}
                       </span>
@@ -577,8 +520,8 @@ export default function HomeScreen() {
                 onClick={() => goToSlide(index)}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
                   activeSlide === index
-                    ? 'w-6 bg-violet-400'
-                    : 'w-1.5 bg-white/20 hover:bg-white/40'
+                    ? 'w-6 bg-[#bd8627]'
+                    : 'w-1.5 bg-[#dfd2b9] hover:bg-[#c5a45f]'
                 }`}
               />
             ))}
@@ -590,38 +533,38 @@ export default function HomeScreen() {
           <button
             type="button"
             onClick={() => router.push('/pricing')}
-            className="group relative w-full overflow-hidden rounded-[24px] border border-violet-300/20 bg-gradient-to-r from-[#21153a] via-[#20162f] to-[#171124] p-5 text-left transition hover:border-violet-300/35 sm:p-6"
+            className="group relative w-full overflow-hidden rounded-[24px] border border-[#ddc28a] bg-gradient-to-r from-[#fffaf0] via-[#f8edcf] to-[#f1dfb5] p-5 text-left shadow-[0_12px_35px_rgba(156,113,35,0.12)] transition hover:border-[#c49a48] sm:p-6"
           >
             <div
               aria-hidden="true"
-              className="absolute -right-10 -top-20 h-52 w-52 rounded-full bg-violet-500/15 blur-[65px]"
+              className="absolute -right-10 -top-20 h-52 w-52 rounded-full bg-[#dfbd70]/25 blur-[65px]"
             />
 
             <div className="relative flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-amber-200/20 bg-gradient-to-br from-amber-300/20 to-orange-500/10">
-                <Crown className="h-6 w-6 text-amber-200" />
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#e2c783] bg-gradient-to-br from-[#f7df9f] to-[#bd8627] shadow-md">
+                <Crown className="h-6 w-6 text-white" />
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/80">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#a47a2e]">
                   AUREXA AI PRO
                 </p>
 
-                <h3 className="mt-1 text-base font-semibold text-white sm:text-lg">
+                <h3 className="mt-1 text-base font-semibold text-[#342613] sm:text-lg">
                   {tp('title')}
                 </h3>
 
-                <p className="mt-1 text-xs leading-5 text-white/45 sm:text-sm">
+                <p className="mt-1 text-xs leading-5 text-[#897653] sm:text-sm">
                   {tp('desc')}
                 </p>
 
-                <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-violet-200">
+                <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#986b1d]">
                   {tp('cta')}
                   <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
                 </span>
               </div>
 
-              <ArrowUpRight className="h-5 w-5 shrink-0 text-white/40 transition group-hover:text-violet-200" />
+              <ArrowUpRight className="h-5 w-5 shrink-0 text-[#a17b3b] transition group-hover:text-[#805514]" />
             </div>
           </button>
         </section>
@@ -630,8 +573,8 @@ export default function HomeScreen() {
         <section className="mt-8">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <Clock3 className="h-4 w-4 text-violet-300" />
-              <h2 className="text-sm font-semibold text-white">
+              <Clock3 className="h-4 w-4 text-[#bd8627]" />
+              <h2 className="text-sm font-semibold text-[#302619]">
                 {t('recent')}
               </h2>
             </div>
@@ -639,7 +582,7 @@ export default function HomeScreen() {
             <button
               type="button"
               onClick={() => router.push('/chat')}
-              className="flex items-center gap-1 text-xs text-violet-300 transition hover:text-violet-200"
+              className="flex items-center gap-1 text-xs text-[#a47b32] transition hover:text-[#805514]"
             >
               {t('viewAll')}
               <ChevronRight className="h-3.5 w-3.5" />
@@ -649,35 +592,35 @@ export default function HomeScreen() {
           <button
             type="button"
             onClick={() => router.push('/chat')}
-            className="group flex w-full items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 text-left transition hover:border-violet-300/20 hover:bg-white/[0.045]"
+            className="group flex w-full items-center gap-3 rounded-2xl border border-[#e8dcc5] bg-white/65 p-4 text-left shadow-sm backdrop-blur-xl transition hover:border-[#cda34d] hover:bg-white/90"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-300/15 bg-violet-400/[0.08]">
-              <MessageCircle className="h-5 w-5 text-violet-300" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ead9b4] bg-[#fbf3e3]">
+              <MessageCircle className="h-5 w-5 text-[#bd8627]" />
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-white/85">
+              <p className="truncate text-sm font-medium text-[#342b1e]">
                 {t('recentNewChat')}
               </p>
-              <p className="mt-1 truncate text-xs text-white/40">
+              <p className="mt-1 truncate text-xs text-[#978a75]">
                 {t('recentChatDesc')}
               </p>
             </div>
 
-            <ChevronRight className="h-4 w-4 shrink-0 text-white/30 transition group-hover:translate-x-0.5 group-hover:text-violet-300" />
+            <ChevronRight className="h-4 w-4 shrink-0 text-[#b29a6d] transition group-hover:translate-x-0.5 group-hover:text-[#986b1d]" />
           </button>
         </section>
 
         {/* Footer */}
-        <footer className="mt-10 border-t border-white/[0.07] pt-5 text-center">
+        <footer className="mt-10 border-t border-[#e8dcc5] pt-5 text-center">
           <div className="flex items-center justify-center gap-2">
-            <Sparkles className="h-3.5 w-3.5 text-violet-400" />
-            <span className="text-[10px] font-semibold tracking-[0.2em] text-white/45">
+            <Sparkles className="h-3.5 w-3.5 text-[#bd8627]" />
+            <span className="text-[10px] font-semibold tracking-[0.2em] text-[#9b896b]">
               AUREXA AI
             </span>
           </div>
 
-          <p className="mt-2 text-[10px] text-white/25">
+          <p className="mt-2 text-[10px] text-[#a69a86]">
             Built for ideas. Designed for possibilities.
           </p>
         </footer>
@@ -686,26 +629,26 @@ export default function HomeScreen() {
       {/* Coming soon notification */}
       {notice && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-5 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#3b2d17]/25 p-5 backdrop-blur-md"
           onClick={() => setNotice('')}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="coming-soon-title"
-            className="w-full max-w-sm rounded-3xl border border-violet-300/20 bg-[#15121f] p-6 shadow-2xl shadow-violet-950/30"
+            className="w-full max-w-sm rounded-3xl border border-[#e4d1a6] bg-white/90 p-6 shadow-2xl shadow-[#8f6a2c]/20 backdrop-blur-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-violet-300/20 bg-violet-400/10">
-                <Sparkles className="h-6 w-6 text-violet-300" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#ead7ad] bg-[#fbf3e3]">
+                <Sparkles className="h-6 w-6 text-[#bd8627]" />
               </div>
 
               <button
                 type="button"
                 aria-label="Close notification"
                 onClick={() => setNotice('')}
-                className="rounded-xl p-2 text-white/50 hover:bg-white/10 hover:text-white"
+                className="rounded-xl p-2 text-[#98866b] transition hover:bg-[#f7efdf] hover:text-[#604719]"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -713,12 +656,12 @@ export default function HomeScreen() {
 
             <h2
               id="coming-soon-title"
-              className="mt-5 text-xl font-semibold text-white"
+              className="mt-5 text-xl font-semibold text-[#302619]"
             >
               Coming Soon
             </h2>
 
-            <p className="mt-2 text-sm leading-6 text-white/60">
+            <p className="mt-2 text-sm leading-6 text-[#84745c]">
               {noticeText} We are working to bring more creative tools to
               AUREXA AI.
             </p>
@@ -726,7 +669,7 @@ export default function HomeScreen() {
             <button
               type="button"
               onClick={() => setNotice('')}
-              className="mt-5 w-full rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-600 px-4 py-3 text-sm font-semibold text-white transition hover:brightness-110"
+              className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#e8c875] to-[#bd8627] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-[#bd8627]/20 transition hover:brightness-105"
             >
               Got it
             </button>
@@ -735,4 +678,4 @@ export default function HomeScreen() {
       )}
     </main>
   );
-    }
+}
