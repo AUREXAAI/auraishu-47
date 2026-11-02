@@ -1396,4 +1396,37 @@ export default function ChatPage() {
               </div>
 
               <div className="a3-modal-title">
-                <h2
+  <h2>Create with imagination</h2>
+  <p>Describe the image you want AUREXA AI to create.</p>
+</div>
+
+<form onSubmit={handleImageSubmit} className="a3-image-form">
+  <textarea
+    value={imagePrompt}
+    onChange={(event) => setImagePrompt(event.target.value)}
+    placeholder="Describe your image..."
+    rows={4}
+    className="a3-composer-input"
+    disabled={imageLoading}
+  />
+
+  <button
+    type="submit"
+    disabled={!imagePrompt.trim() || imageLoading}
+    className="a3-modal-primary"
+  >
+    {imageLoading ? (
+      <Loader2 size={17} className="animate-spin" />
+    ) : (
+      <WandSparkles size={17} />
+    )}
+    {imageLoading ? 'Creating...' : 'Generate Image'}
+  </button>
+</form>
+</motion.div>
+</motion.div>
+)}
+</AnimatePresence>
+</div>
+);
+}
