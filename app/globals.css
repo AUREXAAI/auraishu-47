@@ -318,3 +318,64 @@
     scroll-behavior: auto !important;
   }
 }
+/* AUREXA AI - Premium Glass Stats */
+
+.aurexa-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  width: 100%;
+  max-width: 600px;
+  margin: 28px auto;
+}
+
+.aurexa-stat-card {
+  padding: 22px 12px;
+  text-align: center;
+  border: 1px solid rgba(201, 164, 92, 0.3);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 8px 28px rgba(160, 125, 60, 0.09);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.aurexa-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(160, 125, 60, 0.16);
+}
+
+.aurexa-stat-icon {
+  font-size: 25px;
+  margin-bottom: 8px;
+}
+
+.aurexa-stat-card h2 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 800;
+  color: #b18a43;
+  letter-spacing: -1px;
+}
+
+.aurexa-stat-card p {
+  margin: 6px 0 0;
+  color: #777064;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 380px) {
+  .aurexa-stats {
+    gap: 9px;
+  }
+
+  .aurexa-stat-card {
+    padding: 18px 8px;
+  }
+
+  .aurexa-stat-card h2 {
+    font-size: 25px;
+  }
+}
