@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+
 import {
   Send,
   Sparkles,
@@ -96,6 +97,8 @@ const tools: {
   },
 ];
 
+/* CODE BLOCK */
+
 function CodeBlock({
   code,
   lang,
@@ -153,6 +156,8 @@ function CodeBlock({
     </div>
   );
 }
+
+/* MESSAGE CONTENT */
 
 function MessageContent({
   content,
@@ -231,6 +236,10 @@ function MessageContent({
     </>
   );
 }
+
+/* ORB SCENE — SYNTAX ERROR FIXED */
+
+function OrbScene({
   active,
   onClick,
 }: {
@@ -271,6 +280,8 @@ function MessageContent({
   );
 }
 
+/* MAIN CHAT PAGE */
+
 export default function ChatPage() {
   const t = useTranslations('nav');
   const tc = useTranslations('chat');
@@ -280,9 +291,10 @@ export default function ChatPage() {
   const userId = user?.uid ?? null;
 
   const docRef = useMemo(
-    () => userId
-      ? doc(db, 'chats', userId)
-      : null,
+    () =>
+      userId
+        ? doc(db, 'chats', userId)
+        : null,
     [userId]
   );
 
@@ -316,7 +328,8 @@ export default function ChatPage() {
     messagesRef.current = messages;
   }, [messages]);
 
-  // Load saved conversation.
+  /* LOAD CHAT HISTORY */
+
   useEffect(() => {
     if (!userId || !docRef) {
       loadedUserRef.current = null;
@@ -373,13 +386,11 @@ export default function ChatPage() {
         }
 
         loadedUserRef.current = currentUserId;
-
       } catch (error) {
         console.error(
           'Chat history loading failed:',
           error
         );
-
       } finally {
         if (!cancelled) {
           setHistoryLoading(false);
@@ -395,7 +406,8 @@ export default function ChatPage() {
     };
   }, [userId, docRef]);
 
-  // Debounced Firebase history saving.
+  /* SAVE CHAT HISTORY */
+
   useEffect(() => {
     if (
       !userId ||
@@ -426,6 +438,8 @@ export default function ChatPage() {
     return () => window.clearTimeout(timer);
   }, [messages, userId, docRef, initialLoaded]);
 
+  /* SCROLL */
+
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
       if (scrollRef.current) {
@@ -440,7 +454,10 @@ export default function ChatPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
-    const sendMessage = useCallback(
+
+  /* SEND MESSAGE */
+
+  const sendMessage = useCallback(
     async (
       messageText: string,
       tool: Tool = selectedTool
@@ -604,7 +621,6 @@ export default function ChatPage() {
             true
           );
         }
-
       } catch (error) {
         console.error('AI chat error:', error);
 
@@ -619,7 +635,6 @@ export default function ChatPage() {
 
         messagesRef.current = current;
         setMessages(current);
-
       } finally {
         sendingRef.current = false;
         setStreaming(false);
@@ -630,7 +645,8 @@ export default function ChatPage() {
     [user, selectedTool]
   );
 
-  // Support opening the page with ?q=...&tool=...
+  /* URL QUERY SUPPORT */
+
   useEffect(() => {
     if (!initialLoaded) return;
 
@@ -652,6 +668,8 @@ export default function ChatPage() {
 
     void sendMessage(initialMessage, validTool);
   }, [initialLoaded, sendMessage]);
+
+  /* IMAGE GENERATION */
 
   const generateImage = async (prompt: string) => {
     if (!prompt.trim() || imageLoading) return;
@@ -684,6 +702,8 @@ export default function ChatPage() {
     inputRef.current?.focus();
   };
 
+  /* FORM HANDLERS */
+
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     void sendMessage(input);
@@ -693,6 +713,8 @@ export default function ChatPage() {
     event.preventDefault();
     void generateImage(imagePrompt);
   };
+
+  /* CLEAR CHAT */
 
   const clearChat = () => {
     if (sendingRef.current) return;
@@ -705,13 +727,16 @@ export default function ChatPage() {
   const activeTool =
     tools.find((tool) => tool.id === selectedTool) || tools[0];
 
+  /* UI */
+
   return (
     <div className="a3-page">
       <div className="a3-ambient a3-ambient-one" />
       <div className="a3-ambient a3-ambient-two" />
       <div className="a3-grid" />
 
-      {/* Top navigation */}
+      {/* TOP NAVIGATION */}
+
       <header className="a3-header">
         <div className="a3-brand">
           <button
@@ -784,7 +809,9 @@ export default function ChatPage() {
       </header>
 
       <div className="a3-layout">
-        {/* Sidebar */}
+
+        {/* SIDEBAR */}
+
         <aside
           className={`a3-sidebar ${
             showMobileMenu ? 'a3-sidebar-open' : ''
@@ -863,6 +890,7 @@ export default function ChatPage() {
 
             <div className="a3-session-info">
               <strong>AI Conversation</strong>
+
               <span>
                 {messages.length === 0
                   ? 'Ready to explore'
@@ -917,8 +945,10 @@ export default function ChatPage() {
           />
         )}
 
-        {/* Main chat */}
+        {/* MAIN CHAT */}
+
         <main className="a3-main">
+
           <div className="a3-chat-toolbar">
             <div className="a3-toolbar-title">
               <span className="a3-toolbar-mark">
@@ -950,13 +980,15 @@ export default function ChatPage() {
             </div>
           </div>
 
-          {/* Messages area */}
+          {/* MESSAGES */}
+
           <section
             ref={scrollRef}
             className="a3-messages"
           >
             {messages.length === 0 ? (
               <div className="a3-welcome">
+
                 <div className="a3-orb-stage">
                   <div className="a3-stage-ring a3-stage-ring-one" />
                   <div className="a3-stage-ring a3-stage-ring-two" />
@@ -966,6 +998,7 @@ export default function ChatPage() {
                     active={orbActive}
                     onClick={() => {
                       setOrbActive(!orbActive);
+
                       window.setTimeout(
                         () => setOrbActive(false),
                         1500
@@ -1126,7 +1159,8 @@ export default function ChatPage() {
             )}
           </section>
 
-          {/* Composer */}
+          {/* COMPOSER */}
+
           <div className="a3-composer-wrap">
             <AnimatePresence>
               {showTools && (
@@ -1274,7 +1308,8 @@ export default function ChatPage() {
         </main>
       </div>
 
-      {/* Daily limit dialog */}
+      {/* DAILY LIMIT DIALOG */}
+
       <AnimatePresence>
         {showLimitDialog && (
           <motion.div
@@ -1330,7 +1365,8 @@ export default function ChatPage() {
         )}
       </AnimatePresence>
 
-      {/* Image generation modal */}
+      {/* IMAGE GENERATION MODAL */}
+
       <AnimatePresence>
         {showImageModal && (
           <motion.div
@@ -1425,4 +1461,4 @@ export default function ChatPage() {
       </AnimatePresence>
     </div>
   );
-}
+  }
