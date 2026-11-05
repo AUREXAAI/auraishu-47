@@ -43,6 +43,7 @@ import {
   ArrowUp,
   RefreshCw,
   Download,
+  Languages,
 } from 'lucide-react';
 
 import { useAuth } from '@/lib/auth-context';
@@ -128,7 +129,7 @@ function CodeBlock({ children }: { children: string }) {
   return (
     <div className="a3-code-block">
       <div className="a3-code-header">
-        <span>Code</span>
+        <span>CODE / SOURCE</span>
 
         <button type="button" onClick={() => void copyCode()}>
           {copied ? <Check size={14} /> : <Copy size={14} />}
@@ -207,7 +208,9 @@ function GeneratedImage({ src }: { src: string }) {
       {failed ? (
         <div className="a3-image-error">
           <AlertCircle size={18} />
-          <span>Image could not be loaded. Please try again.</span>
+          <span>
+            Image could not be loaded. Please try again.
+          </span>
         </div>
       ) : (
         <img
@@ -240,7 +243,7 @@ function GeneratedImage({ src }: { src: string }) {
 /* MAIN CHAT */
 
 export default function ChatPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -283,80 +286,85 @@ export default function ChatPage() {
 
   /* LOAD FIREBASE HISTORY */
 
-useEffect(() => {
-  let cancelled = false;
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  useEffect(() => {
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-  const loadHistory = async () => {
-    if (!userId) {
-      setMessages([]);
-      setHistoryLoading(false);
-      return;
-    }
+    const loadHistory = async () => {
+      // Wait until Firebase authentication is initialized.
+      if (authLoading) return;
 
-    setHistoryLoading(true);
-
-    try {
-      const snapshot = await Promise.race([
-        getDoc(doc(db, 'chats', userId)),
-        new Promise<never>((_, reject) => {
-          timeoutId = setTimeout(() => {
-            reject(new Error('Firebase history loading timed out.'));
-          }, 10000);
-        }),
-      ]);
-
-      if (cancelled) return;
-
-      if (snapshot.exists()) {
-        const stored = snapshot.data().messages;
-
-        const validMessages: Message[] = Array.isArray(stored)
-          ? stored
-              .filter(
-                (message: any) =>
-                  (message.role === 'user' ||
-                    message.role === 'assistant') &&
-                  typeof message.content === 'string',
-              )
-              .slice(-MAX_MESSAGES)
-              .map((message: any) => ({
-                role: message.role,
-                content: message.content,
-                imageUrl:
-                  typeof message.imageUrl === 'string'
-                    ? message.imageUrl
-                    : undefined,
-              }))
-          : [];
-
-        setMessages(validMessages);
-      } else {
+      if (!userId) {
         setMessages([]);
-      }
-    } catch (error) {
-      console.error('History loading error:', error);
-    } finally {
-      if (timeoutId) clearTimeout(timeoutId);
-
-      if (!cancelled) {
         setHistoryLoading(false);
+        return;
       }
-    }
-  };
 
-  void loadHistory();
+      setHistoryLoading(true);
 
-  return () => {
-    cancelled = true;
-    if (timeoutId) clearTimeout(timeoutId);
-  };
-}, [userId]);
-  
+      try {
+        const snapshot = await Promise.race([
+          getDoc(doc(db, 'chats', userId)),
+          new Promise<never>((_, reject) => {
+            timeoutId = setTimeout(() => {
+              reject(new Error('Firebase history loading timed out.'));
+            }, 10000);
+          }),
+        ]);
+
+        if (cancelled) return;
+
+        if (snapshot.exists()) {
+          const stored = snapshot.data().messages;
+
+          const validMessages: Message[] = Array.isArray(stored)
+            ? stored
+                .filter(
+                  (message: any) =>
+                    (message.role === 'user' ||
+                      message.role === 'assistant') &&
+                    typeof message.content === 'string',
+                )
+                .slice(-MAX_MESSAGES)
+                .map((message: any) => ({
+                  role: message.role,
+                  content: message.content,
+                  imageUrl:
+                    typeof message.imageUrl === 'string'
+                      ? message.imageUrl
+                      : undefined,
+                  error: Boolean(message.error),
+                  id: createId(),
+                }))
+            : [];
+
+          setMessages(validMessages);
+        } else {
+          setMessages([]);
+        }
+      } catch (error) {
+        console.error('History loading error:', error);
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+
+        if (!cancelled) {
+          setHistoryLoading(false);
+        }
+      }
+    };
+
+    void loadHistory();
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [userId, authLoading]);
+
   /* SAVE FIREBASE HISTORY */
 
   useEffect(() => {
-    if (!userId || historyLoading) return;
+    if (authLoading || !userId || historyLoading) return;
 
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -382,9 +390,9 @@ useEffect(() => {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [messages, userId, historyLoading]);
+  }, [messages, userId, historyLoading, authLoading]);
 
-  /* SIMPLE AUTO SCROLL */
+  /* AUTO SCROLL */
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -403,13 +411,16 @@ useEffect(() => {
       setSelectedTool(tool);
     }
 
-    if (query) setInput(query);
+    if (query) {
+      setInput(query);
+    }
   }, [searchParams]);
 
   /* TEXTAREA SIZE */
 
   useEffect(() => {
     const textarea = textareaRef.current;
+
     if (!textarea) return;
 
     textarea.style.height = 'auto';
@@ -527,7 +538,7 @@ useEffect(() => {
 
     const cleanInput = input.trim();
 
-    if (!cleanInput || sending) return;
+    if (!cleanInput || sending || historyLoading) return;
 
     setErrorMessage('');
     setVoiceError('');
@@ -720,28 +731,21 @@ useEffect(() => {
 
     const assistantId = createId();
 
-    setMessages((previous) => [
-      ...previous,
-      userMessage,
-      {
-        role: 'assistant',
-        content: 'Your image is being prepared. Loading may take some time.',
-        id: assistantId,
-      },
-    ]);
-
     const imageUrl =
       `https://image.pollinations.ai/prompt/` +
       `${encodeURIComponent(cleanPrompt)}` +
       `?model=flux&width=1024&height=1024&nologo=true`;
 
-    setMessages((previous) =>
-      previous.map((message) =>
-        message.id === assistantId
-          ? { ...message, imageUrl }
-          : message,
-      ),
-    );
+    setMessages((previous) => [
+      ...previous,
+      userMessage,
+      {
+        role: 'assistant',
+        content: 'Your image is being prepared.',
+        imageUrl,
+        id: assistantId,
+      },
+    ]);
 
     setImageLoading(false);
   };
@@ -769,6 +773,7 @@ useEffect(() => {
     setMessages([]);
     setErrorMessage('');
     setSidebarOpen(false);
+    setInput('');
 
     if (userId) {
       try {
@@ -827,8 +832,13 @@ useEffect(() => {
 
   return (
     <main className="a3-page">
+
+      {/* HEADER */}
+
       <header className="a3-header">
+
         <div className="a3-header-left">
+
           <button
             type="button"
             className="a3-icon-button a3-mobile-menu"
@@ -839,6 +849,7 @@ useEffect(() => {
           </button>
 
           <Link href="/" className="a3-brand">
+
             <span className="a3-brand-mark">
               <Sparkles size={19} />
             </span>
@@ -846,18 +857,26 @@ useEffect(() => {
             <span className="a3-brand-name">
               AUREXA <small>AI</small>
             </span>
+
           </Link>
+
         </div>
 
         <div className="a3-header-center">
           <span className="a3-status-dot" />
-          AI Assistant
+          INTELLIGENCE / WORKSPACE
         </div>
 
-        <span className="a3-early-badge">EARLY ACCESS</span>
+        <span className="a3-early-badge">
+          EARLY ACCESS
+        </span>
+
       </header>
 
       <div className="a3-layout">
+
+        {/* SIDEBAR BACKDROP */}
+
         {sidebarOpen && (
           <button
             type="button"
@@ -867,8 +886,16 @@ useEffect(() => {
           />
         )}
 
-        <aside className={`a3-sidebar ${sidebarOpen ? 'a3-sidebar-open' : ''}`}>
+        {/* SIDEBAR */}
+
+        <aside
+          className={`a3-sidebar ${
+            sidebarOpen ? 'a3-sidebar-open' : ''
+          }`}
+        >
+
           <div className="a3-sidebar-top">
+
             <button
               type="button"
               className="a3-new-chat"
@@ -886,10 +913,14 @@ useEffect(() => {
             >
               <X size={18} />
             </button>
+
           </div>
 
           <div className="a3-sidebar-section">
-            <span className="a3-sidebar-label">WORKSPACE</span>
+
+            <span className="a3-sidebar-label">
+              / WORKSPACE
+            </span>
 
             {TOOL_OPTIONS.map((tool) => {
               const Icon = tool.icon;
@@ -923,14 +954,19 @@ useEffect(() => {
               <ImageIcon size={17} />
               <span>Image Studio</span>
             </button>
+
           </div>
 
           <div className="a3-sidebar-section">
-            <span className="a3-sidebar-label">RECENT CHAT</span>
+
+            <span className="a3-sidebar-label">
+              / RECENT CHAT
+            </span>
 
             {messages.some((message) => message.role === 'user') ? (
               <div className="a3-sidebar-item a3-history-preview">
                 <MessageSquare size={16} />
+
                 <span>
                   {messages.find((message) => message.role === 'user')
                     ?.content.slice(0, 30)}
@@ -941,18 +977,27 @@ useEffect(() => {
                 Your recent conversations appear here.
               </p>
             )}
+
           </div>
 
           <div className="a3-sidebar-bottom">
+
             <div className="a3-sidebar-user">
+
               <div className="a3-user-avatar">
                 {user?.email?.charAt(0).toUpperCase() || 'A'}
               </div>
 
               <div className="a3-user-info">
-                <strong>{user?.displayName || 'AUREXA User'}</strong>
-                <small>{user?.email || 'Guest session'}</small>
+                <strong>
+                  {user?.displayName || 'AUREXA User'}
+                </strong>
+
+                <small>
+                  {user?.email || 'Guest session'}
+                </small>
               </div>
+
             </div>
 
             <button
@@ -963,13 +1008,23 @@ useEffect(() => {
               <Trash2 size={16} />
               Clear conversation
             </button>
+
           </div>
+
         </aside>
 
+        {/* MAIN */}
+
         <section className="a3-main">
+
+          {/* TOOLBAR */}
+
           <div className="a3-chat-toolbar">
+
             <div className="a3-chat-toolbar-left">
+
               <div className="a3-tool-selector-wrap">
+
                 <button
                   type="button"
                   className="a3-tool-selector"
@@ -982,6 +1037,7 @@ useEffect(() => {
 
                 {toolMenuOpen && (
                   <div className="a3-tool-dropdown">
+
                     {TOOL_OPTIONS.map((tool) => {
                       const Icon = tool.icon;
 
@@ -989,26 +1045,34 @@ useEffect(() => {
                         <button
                           type="button"
                           key={tool.id}
-                          className={selectedTool === tool.id ? 'active' : ''}
+                          className={
+                            selectedTool === tool.id ? 'active' : ''
+                          }
                           onClick={() => {
                             setSelectedTool(tool.id);
                             setToolMenuOpen(false);
                           }}
                         >
                           <Icon size={17} />
+
                           <span>
                             <strong>{tool.label}</strong>
                             <small>{tool.description}</small>
                           </span>
+
                         </button>
                       );
                     })}
+
                   </div>
                 )}
+
               </div>
+
             </div>
 
             <div className="a3-chat-toolbar-right">
+
               <button
                 type="button"
                 className="a3-icon-button"
@@ -1028,38 +1092,49 @@ useEffect(() => {
               >
                 <RefreshCw size={17} />
               </button>
+
             </div>
+
           </div>
 
+          {/* MESSAGES */}
+
           <div className="a3-messages">
-            {historyLoading ? (
+
+            {authLoading || historyLoading ? (
+
               <div className="a3-loading-state">
                 <Loader2 size={24} />
-                <span>Loading your workspace...</span>
+                <span>Preparing your workspace...</span>
               </div>
+
             ) : messages.length === 0 ? (
+
               <div className="a3-welcome">
+
                 <div className="a3-welcome-icon">
                   <Sparkles size={30} />
                 </div>
 
                 <div className="a3-welcome-content">
+
                   <span className="a3-welcome-eyebrow">
-                    INTELLIGENCE, REIMAGINED
+                    AUREXA / INTELLIGENCE
                   </span>
 
                   <h1>
-                    What can I help
+                    THINK.
                     <br />
-                    <span>you create today?</span>
+                    <span>CREATE. BUILD.</span>
                   </h1>
 
                   <p>
-                    Meet AUREXA AI — your multilingual assistant
-                    for learning, ideas and development.
+                    Your multilingual AI workspace for learning,
+                    ideas, problem solving and development.
                   </p>
 
                   <div className="a3-tool-grid">
+
                     {TOOL_OPTIONS.map((tool) => {
                       const Icon = tool.icon;
 
@@ -1075,14 +1150,18 @@ useEffect(() => {
                           <span className="a3-tool-card-icon">
                             <Icon size={20} />
                           </span>
+
                           <strong>{tool.label}</strong>
+
                           <small>{tool.description}</small>
                         </button>
                       );
                     })}
+
                   </div>
 
                   <div className="a3-upcoming-section">
+
                     <div className="a3-upcoming-heading">
                       <Sparkles size={15} />
                       UPCOMING FEATURES
@@ -1090,32 +1169,46 @@ useEffect(() => {
                     </div>
 
                     <div className="a3-upcoming-grid">
+
                       <div className="a3-upcoming-card">
                         <WandSparkles size={19} />
                         <strong>Video AI</strong>
                         <p>AI-powered video creation</p>
-                        <span className="a3-coming-badge">COMING SOON</span>
+                        <span className="a3-coming-badge">
+                          COMING SOON
+                        </span>
                       </div>
 
                       <div className="a3-upcoming-card">
                         <Code2 size={19} />
                         <strong>AI Editor</strong>
                         <p>Build and edit projects</p>
-                        <span className="a3-coming-badge">COMING SOON</span>
+                        <span className="a3-coming-badge">
+                          IN DEVELOPMENT
+                        </span>
                       </div>
 
                       <div className="a3-upcoming-card">
-                        <MessageSquare size={19} />
+                        <GraduationCapIcon />
                         <strong>AI Courses</strong>
                         <p>Learn with AI assistance</p>
-                        <span className="a3-coming-badge">COMING SOON</span>
+                        <span className="a3-coming-badge">
+                          COMING SOON
+                        </span>
                       </div>
+
                     </div>
+
                   </div>
+
                 </div>
+
               </div>
+
             ) : (
+
               <div className="a3-message-list">
+
                 {messages.map((message, index) => {
                   const messageId = message.id || `message-${index}`;
 
@@ -1128,6 +1221,7 @@ useEffect(() => {
                           : 'a3-assistant-row'
                       }`}
                     >
+
                       {message.role === 'assistant' && (
                         <div className="a3-message-avatar">
                           <Sparkles size={16} />
@@ -1139,8 +1233,11 @@ useEffect(() => {
                           message.role === 'user'
                             ? 'a3-user-message'
                             : 'a3-assistant-message'
-                        } ${message.error ? 'a3-message-error' : ''}`}
+                        } ${
+                          message.error ? 'a3-message-error' : ''
+                        }`}
                       >
+
                         {message.role === 'assistant' ? (
                           <>
                             {message.content && (
@@ -1155,31 +1252,40 @@ useEffect(() => {
                           <p>{message.content}</p>
                         )}
 
-                        {message.role === 'assistant' && message.content && (
-                          <div className="a3-message-actions">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                void copyMessage(message.content, messageId)
-                              }
-                              title="Copy response"
-                            >
-                              {copiedMessage === messageId ? (
-                                <Check size={14} />
-                              ) : (
-                                <Copy size={14} />
-                              )}
-                            </button>
+                        {message.role === 'assistant' &&
+                          message.content && (
+                            <div className="a3-message-actions">
 
-                            <button
-                              type="button"
-                              onClick={() => speakMessage(message.content)}
-                              title="Read aloud"
-                            >
-                              <Volume2 size={14} />
-                            </button>
-                          </div>
-                        )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  void copyMessage(
+                                    message.content,
+                                    messageId,
+                                  )
+                                }
+                                title="Copy response"
+                              >
+                                {copiedMessage === messageId ? (
+                                  <Check size={14} />
+                                ) : (
+                                  <Copy size={14} />
+                                )}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  speakMessage(message.content)
+                                }
+                                title="Read aloud"
+                              >
+                                <Volume2 size={14} />
+                              </button>
+
+                            </div>
+                          )}
+
                       </div>
 
                       {message.role === 'user' && (
@@ -1187,6 +1293,7 @@ useEffect(() => {
                           {user?.email?.charAt(0).toUpperCase() || 'U'}
                         </div>
                       )}
+
                     </div>
                   );
                 })}
@@ -1196,19 +1303,25 @@ useEffect(() => {
                     <span />
                     <span />
                     <span />
-                    <small>AUREXA is thinking</small>
+                    <small>AUREXA / THINKING</small>
                   </div>
                 )}
 
                 <div ref={messagesEndRef} />
+
               </div>
+
             )}
+
           </div>
+
+          {/* VOICE ERROR */}
 
           {voiceError && (
             <div className="a3-voice-error" role="alert">
               <AlertCircle size={15} />
               <span>{voiceError}</span>
+
               <button
                 type="button"
                 onClick={() => setVoiceError('')}
@@ -1219,10 +1332,13 @@ useEffect(() => {
             </div>
           )}
 
+          {/* CHAT ERROR */}
+
           {errorMessage && (
             <div className="a3-error-banner" role="alert">
               <AlertCircle size={16} />
               <span>{errorMessage}</span>
+
               <button
                 type="button"
                 onClick={() => setErrorMessage('')}
@@ -1233,18 +1349,27 @@ useEffect(() => {
             </div>
           )}
 
+          {/* COMPOSER */}
+
           <div className="a3-composer-wrap">
+
             <div className="a3-voice-controls">
+
               <select
                 className="a3-voice-language"
                 value={voiceLanguage}
                 onChange={(event) =>
-                  setVoiceLanguage(event.target.value as VoiceLanguage)
+                  setVoiceLanguage(
+                    event.target.value as VoiceLanguage,
+                  )
                 }
                 aria-label="Voice language"
               >
                 {VOICE_LANGUAGES.map((language) => (
-                  <option key={language.value} value={language.value}>
+                  <option
+                    key={language.value}
+                    value={language.value}
+                  >
                     {language.label}
                   </option>
                 ))}
@@ -1252,25 +1377,44 @@ useEffect(() => {
 
               <button
                 type="button"
-                className={`a3-voice-button ${listening ? 'active' : ''}`}
+                className={`a3-voice-button ${
+                  listening ? 'active' : ''
+                }`}
                 onClick={startVoiceInput}
               >
-                {listening ? <MicOff size={16} /> : <Mic size={16} />}
+                {listening ? (
+                  <MicOff size={16} />
+                ) : (
+                  <Mic size={16} />
+                )}
+
                 {listening ? 'Listening...' : 'Voice input'}
               </button>
 
               <button
                 type="button"
-                className={`a3-voice-button ${speaking ? 'active' : ''}`}
+                className={`a3-voice-button ${
+                  speaking ? 'active' : ''
+                }`}
                 onClick={stopSpeaking}
                 disabled={!speaking}
               >
-                {speaking ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                {speaking ? (
+                  <VolumeX size={16} />
+                ) : (
+                  <Volume2 size={16} />
+                )}
+
                 {speaking ? 'Stop voice' : 'Voice output'}
               </button>
+
             </div>
 
-            <form className="a3-composer" onSubmit={sendMessage}>
+            <form
+              className="a3-composer"
+              onSubmit={sendMessage}
+            >
+
               <button
                 type="button"
                 className="a3-composer-action"
@@ -1295,7 +1439,7 @@ useEffect(() => {
                       : 'Message AUREXA AI...'
                 }
                 rows={1}
-                disabled={sending}
+                disabled={sending || historyLoading || authLoading}
               />
 
               {sending ? (
@@ -1311,19 +1455,27 @@ useEffect(() => {
                 <button
                   type="submit"
                   className="a3-send-button"
-                  disabled={!input.trim()}
+                  disabled={!input.trim() || historyLoading || authLoading}
                   title="Send message"
                 >
-                  {input.trim() ? <ArrowUp size={20} /> : <Send size={18} />}
+                  {input.trim() ? (
+                    <ArrowUp size={20} />
+                  ) : (
+                    <Send size={18} />
+                  )}
                 </button>
               )}
+
             </form>
 
             <p className="a3-composer-disclaimer">
-              AUREXA AI can make mistakes. Verify important information.
+              AUREXA AI / AI can make mistakes. Verify important information.
             </p>
+
           </div>
+
         </section>
+
       </div>
 
       {/* IMAGE MODAL */}
@@ -1343,13 +1495,21 @@ useEffect(() => {
             aria-modal="true"
             aria-labelledby="a3-image-title"
           >
+
             <div className="a3-modal-header">
+
               <div>
                 <span className="a3-modal-eyebrow">
-                  AUREXA CREATIVE STUDIO
+                  AUREXA / CREATIVE STUDIO
                 </span>
-                <h2 id="a3-image-title">Create an image</h2>
-                <p>Describe the image you want to create.</p>
+
+                <h2 id="a3-image-title">
+                  Create an image
+                </h2>
+
+                <p>
+                  Describe the image you want to create.
+                </p>
               </div>
 
               <button
@@ -1360,9 +1520,11 @@ useEffect(() => {
               >
                 <X size={19} />
               </button>
+
             </div>
 
             <div className="a3-image-form">
+
               <label htmlFor="a3-image-prompt">
                 Describe your image
               </label>
@@ -1371,14 +1533,16 @@ useEffect(() => {
                 id="a3-image-prompt"
                 className="a3-image-textarea"
                 value={imagePrompt}
-                onChange={(event) => setImagePrompt(event.target.value)}
+                onChange={(event) =>
+                  setImagePrompt(event.target.value)
+                }
                 placeholder="Example: A futuristic city at sunset, cinematic lighting..."
                 rows={5}
               />
 
               <p className="a3-image-note">
-                Image generation depends on the availability of the
-                external image service.
+                Image generation depends on the availability of
+                the external image service.
               </p>
 
               <button
@@ -1392,14 +1556,24 @@ useEffect(() => {
                 ) : (
                   <WandSparkles size={17} />
                 )}
+
                 Generate image
               </button>
+
             </div>
+
           </section>
         </div>
       )}
+
     </main>
   );
+}
+
+/* SMALL ICON COMPONENT */
+
+function GraduationCapIcon() {
+  return <Languages size={19} />;
 }
 
 /* SPEECH RECOGNITION TYPES */
@@ -1418,13 +1592,17 @@ declare global {
     start(): void;
     stop(): void;
     abort(): void;
+
     onstart: ((this: SpeechRecognition, event: Event) => any) | null;
+
     onresult:
       | ((this: SpeechRecognition, event: SpeechRecognitionEvent) => any)
       | null;
+
     onerror:
       | ((this: SpeechRecognition, event: SpeechRecognitionErrorEvent) => any)
       | null;
+
     onend: ((this: SpeechRecognition, event: Event) => any) | null;
   }
 
