@@ -8,10 +8,7 @@ import {
   useMemo,
 } from 'react';
 
-import type {
-  FormEvent,
-  CSSProperties,
-} from 'react';
+import type { FormEvent, CSSProperties } from 'react';
 
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -37,6 +34,14 @@ import {
   Zap,
   ChevronRight,
   WandSparkles,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  Video,
+  Monitor,
+  FileText,
+  Languages,
 } from 'lucide-react';
 
 import { useTranslations } from 'next-intl';
@@ -70,6 +75,37 @@ type Message = {
 
 type Tool = 'chat' | 'solve' | 'coding';
 
+type VoiceLanguage = 'en-IN' | 'hi-IN' | 'kn-IN';
+
+type SpeechRecognitionResult = {
+  transcript: string;
+};
+
+type SpeechRecognitionEventLike = {
+  results: ArrayLike<ArrayLike<SpeechRecognitionResult>>;
+};
+
+type SpeechRecognitionLike = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+};
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
+
 const CHAT_ID = 'default';
 const MAX_MESSAGES = 50;
 
@@ -99,6 +135,24 @@ const tools: {
   },
 ];
 
+const upcomingFeatures = [
+  {
+    title: 'Video Generation',
+    description: 'Create videos from text prompts.',
+    icon: Video,
+  },
+  {
+    title: 'Screen Assistance',
+    description: 'Get help understanding your screen.',
+    icon: Monitor,
+  },
+  {
+    title: 'Document AI',
+    description: 'Understand and work with documents.',
+    icon: FileText,
+  },
+];
+
 /* CODE BLOCK */
 
 function CodeBlock({
@@ -115,9 +169,7 @@ function CodeBlock({
       await navigator.clipboard.writeText(code);
       setCopied(true);
 
-      window.setTimeout(() => {
-        setCopied(false);
-      }, 1800);
+      window.setTimeout(() => setCopied(false), 1800);
     } catch {
       setCopied(false);
     }
@@ -161,9 +213,11 @@ function CodeBlock({
 function MessageContent({
   content,
   imageUrl,
+  onSpeak,
 }: {
   content: string;
   imageUrl?: string;
+  onSpeak?: () => void;
 }) {
   const parts = content.split(/(```[\s\S]*?```)/g);
 
@@ -176,6 +230,16 @@ function MessageContent({
             alt="AI generated artwork"
             loading="lazy"
             onError={(event) => {
+              const parent = event.currentTarget.parentElement;
+
+              if (parent) {
+                const error = document.createElement('p');
+                error.className = 'a3-image-error';
+                error.textContent =
+                  'Image could not be loaded. Please try generating it again.';
+                parent.appendChild(error);
+              }
+
               event.currentTarget.style.display = 'none';
             }}
           />
@@ -198,9 +262,11 @@ function MessageContent({
           const lines = part.slice(3, -3).split('\n');
           const firstLine = lines[0].trim();
 
-          const hasLanguage = /^[a-zA-Z0-9+#.-]+$/.test(firstLine);
+          const hasLanguage =
+            /^[a-zA-Z0-9+#.-]+$/.test(firstLine);
 
           const lang = hasLanguage ? firstLine : 'text';
+
           const code = hasLanguage
             ? lines.slice(1).join('\n')
             : lines.join('\n');
@@ -238,6 +304,19 @@ function MessageContent({
           </div>
         );
       })}
+
+      {content.trim() && onSpeak && (
+        <button
+          type="button"
+          className="a3-message-speak"
+          onClick={onSpeak}
+          aria-label="Read response aloud"
+          title="Read response aloud"
+        >
+          <Volume2 size={15} />
+          Listen
+        </button>
+      )}
     </>
   );
 }
@@ -317,7 +396,16 @@ export default function ChatPage() {
 
   const [imagePrompt, setImagePrompt] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
+
   const [orbActive, setOrbActive] = useState(false);
+
+  const [voiceLanguage, setVoiceLanguage] =
+    useState<VoiceLanguage>('en-IN');
+
+  const [isListening, setIsListening] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const [voiceAutoRead, setVoiceAutoRead] = useState(false);
+  const [voiceError, setVoiceError] = useState('');
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -325,6 +413,149 @@ export default function ChatPage() {
   const messagesRef = useRef<Message[]>([]);
   const sendingRef = useRef(false);
   const loadedUserRef = useRef<string | null>(null);
+
+  const recognitionRef =
+    useRef<SpeechRecognitionLike | null>(null);
+
+  const autoReadRef = useRef(false);
+
+  useEffect(() => {
+    autoReadRef.current = voiceAutoRead;
+  }, [voiceAutoRead]);
+
+  /* VOICE SUPPORT */
+
+  useEffect(() => {
+    const supported =
+      typeof window !== 'undefined' &&
+      !!(
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition
+      );
+
+    setVoiceSupported(supported);
+
+    return () => {
+      recognitionRef.current?.abort();
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  /* VOICE OUTPUT */
+
+  const speakText = useCallback(
+    (text: string) => {
+      if (
+        typeof window === 'undefined' ||
+        !('speechSynthesis' in window)
+      ) {
+        setVoiceError(
+          'Speech output is not supported in this browser.'
+        );
+        return;
+      }
+
+      const cleanText = text
+        .replace(/```[\s\S]*?```/g, ' Code block omitted. ')
+        .replace(/[#*_`>]/g, '')
+        .trim();
+
+      if (!cleanText) return;
+
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(
+        cleanText.slice(0, 5000)
+      );
+
+      utterance.lang = voiceLanguage;
+      utterance.rate = 1;
+      utterance.pitch = 1;
+
+      utterance.onerror = () => {
+        setVoiceError('Could not play voice response.');
+      };
+
+      window.speechSynthesis.speak(utterance);
+    },
+    [voiceLanguage]
+  );
+
+  /* VOICE INPUT */
+
+  const startVoiceInput = useCallback(() => {
+    const Recognition =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
+
+    if (!Recognition) {
+      setVoiceError(
+        'Voice input is not supported in this browser. Try a supported browser.'
+      );
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    setVoiceError('');
+
+    try {
+      const recognition = new Recognition();
+
+      recognition.lang = voiceLanguage;
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onresult = (event) => {
+        const transcript =
+          event.results[0]?.[0]?.transcript ?? '';
+
+        if (transcript.trim()) {
+          setInput((previous) =>
+            previous.trim()
+              ? `${previous.trim()} ${transcript.trim()}`
+              : transcript.trim()
+          );
+        }
+      };
+
+      recognition.onerror = (event) => {
+        if (event.error === 'not-allowed') {
+          setVoiceError(
+            'Microphone permission was denied. Allow microphone access in browser settings.'
+          );
+        } else if (event.error !== 'no-speech') {
+          setVoiceError(
+            `Voice input error: ${event.error}`
+          );
+        }
+
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+
+      recognition.start();
+      setIsListening(true);
+    } catch (error) {
+      console.error('Voice recognition error:', error);
+      setIsListening(false);
+      setVoiceError('Unable to start voice input.');
+    }
+  }, [voiceLanguage, isListening]);
+
+  /* LOAD MESSAGE REF */
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -366,7 +597,8 @@ export default function ChatPage() {
               .filter(
                 (item: any) =>
                   item &&
-                  (item.role === 'user' || item.role === 'assistant') &&
+                  (item.role === 'user' ||
+                    item.role === 'assistant') &&
                   typeof item.content === 'string'
               )
               .slice(-MAX_MESSAGES) as Message[];
@@ -384,7 +616,10 @@ export default function ChatPage() {
 
         loadedUserRef.current = currentUserId;
       } catch (error) {
-        console.error('Chat history loading failed:', error);
+        console.error(
+          'Chat history loading failed:',
+          error
+        );
       } finally {
         if (!cancelled) {
           setHistoryLoading(false);
@@ -458,6 +693,7 @@ export default function ChatPage() {
       const lastIndex = current.length - 1;
 
       current[lastIndex] = {
+        ...current[lastIndex],
         role: 'assistant',
         content,
         ...(error ? { error: true } : {}),
@@ -479,7 +715,7 @@ export default function ChatPage() {
       if (!messageText.trim() || sendingRef.current) return;
 
       if (!user) {
-        console.error('User is not authenticated.');
+        setVoiceError('Please sign in to use AUREXA AI.');
         return;
       }
 
@@ -541,13 +777,14 @@ export default function ChatPage() {
           try {
             data = await response.json();
           } catch {
-            // Ignore non-JSON response.
+            // Ignore invalid JSON.
           }
 
           if (data.error === 'LIMIT_REACHED') {
             setShowLimitDialog(true);
 
-            const rolledBack = messagesRef.current.slice(0, -2);
+            const rolledBack =
+              messagesRef.current.slice(0, -2);
 
             messagesRef.current = rolledBack;
             setMessages(rolledBack);
@@ -602,8 +839,6 @@ export default function ChatPage() {
           }
         };
 
-        /* STREAM WITH FINAL BUFFER FLUSH */
-
         while (true) {
           const { done, value } = await reader.read();
 
@@ -625,8 +860,6 @@ export default function ChatPage() {
           if (done) break;
         }
 
-        /* PROCESS REMAINING EVENT */
-
         if (buffer.trim()) {
           processEvent(buffer);
         }
@@ -636,6 +869,8 @@ export default function ChatPage() {
             'No response received. Please try again.',
             true
           );
+        } else if (autoReadRef.current) {
+          speakText(fullContent);
         }
       } catch (error) {
         console.error('AI chat error:', error);
@@ -651,7 +886,7 @@ export default function ChatPage() {
         inputRef.current?.focus();
       }
     },
-    [user, selectedTool, updateAssistantMessage]
+    [user, selectedTool, updateAssistantMessage, speakText]
   );
 
   /* URL QUERY SUPPORT */
@@ -681,26 +916,29 @@ export default function ChatPage() {
   /* IMAGE GENERATION */
 
   const generateImage = async (prompt: string) => {
-    if (!prompt.trim() || imageLoading) return;
+    const cleanPrompt = prompt.trim();
+
+    if (!cleanPrompt || imageLoading) return;
 
     setImageLoading(true);
+    setVoiceError('');
     setShowImageModal(false);
 
     try {
       const imageUrl =
         `https://image.pollinations.ai/prompt/${encodeURIComponent(
-          prompt.trim()
+          cleanPrompt
         )}?model=flux&width=768&height=768&nologo=true`;
 
       const nextMessages: Message[] = [
         ...messagesRef.current,
         {
           role: 'user',
-          content: `Image: ${prompt.trim()}`,
+          content: `Image: ${cleanPrompt}`,
         },
         {
           role: 'assistant',
-          content: `Here is your image: ${prompt.trim()}`,
+          content: `Your image request: ${cleanPrompt}`,
           imageUrl,
         },
       ];
@@ -710,6 +948,9 @@ export default function ChatPage() {
       setImagePrompt('');
     } catch (error) {
       console.error('Image generation failed:', error);
+      setVoiceError(
+        'Image generation could not be started. Please try again.'
+      );
     } finally {
       setImageLoading(false);
       inputRef.current?.focus();
@@ -736,6 +977,10 @@ export default function ChatPage() {
     messagesRef.current = [];
     setMessages([]);
     setShowMobileMenu(false);
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
   };
 
   const activeTool =
@@ -749,7 +994,7 @@ export default function ChatPage() {
       <div className="a3-ambient a3-ambient-two" />
       <div className="a3-grid" />
 
-      {/* TOP NAVIGATION */}
+      {/* HEADER */}
 
       <header className="a3-header">
         <div className="a3-brand">
@@ -759,7 +1004,9 @@ export default function ChatPage() {
             aria-label="Go back"
             onClick={() => {
               const previousPageIsInternal =
-                document.referrer.startsWith(window.location.origin);
+                document.referrer.startsWith(
+                  window.location.origin
+                );
 
               if (
                 window.history.length > 1 &&
@@ -777,7 +1024,9 @@ export default function ChatPage() {
 
           <button
             type="button"
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            onClick={() =>
+              setShowMobileMenu(!showMobileMenu)
+            }
             className="a3-icon-button a3-mobile-menu"
             aria-label="Toggle menu"
             aria-expanded={showMobileMenu}
@@ -806,7 +1055,7 @@ export default function ChatPage() {
           {historyLoading && (
             <Loader2
               size={16}
-              className="animate-spin text-violet-300"
+              className="animate-spin"
             />
           )}
 
@@ -849,42 +1098,32 @@ export default function ChatPage() {
             WORKSPACE
           </div>
 
-          <button
-            type="button"
-            className="a3-nav-item a3-nav-active"
-            onClick={() => {
-              setSelectedTool('chat');
-              setShowMobileMenu(false);
-            }}
-          >
-            <MessageCircle size={17} />
-            <span>AI Chat</span>
-            <span className="a3-nav-indicator" />
-          </button>
+          {tools.map((tool) => {
+            const Icon = tool.icon;
 
-          <button
-            type="button"
-            className="a3-nav-item"
-            onClick={() => {
-              setSelectedTool('solve');
-              setShowMobileMenu(false);
-            }}
-          >
-            <Brain size={17} />
-            <span>Problem Solver</span>
-          </button>
+            return (
+              <button
+                key={tool.id}
+                type="button"
+                className={`a3-nav-item ${
+                  selectedTool === tool.id
+                    ? 'a3-nav-active'
+                    : ''
+                }`}
+                onClick={() => {
+                  setSelectedTool(tool.id);
+                  setShowMobileMenu(false);
+                }}
+              >
+                <Icon size={17} />
+                <span>{tool.id === 'solve' ? 'Problem Solver' : tool.id === 'coding' ? 'Code Assistant' : 'AI Chat'}</span>
 
-          <button
-            type="button"
-            className="a3-nav-item"
-            onClick={() => {
-              setSelectedTool('coding');
-              setShowMobileMenu(false);
-            }}
-          >
-            <Code2 size={17} />
-            <span>Code Assistant</span>
-          </button>
+                {selectedTool === tool.id && (
+                  <span className="a3-nav-indicator" />
+                )}
+              </button>
+            );
+          })}
 
           <button
             type="button"
@@ -897,6 +1136,26 @@ export default function ChatPage() {
             <WandSparkles size={17} />
             <span>Image Studio</span>
           </button>
+
+          <div className="a3-sidebar-label">
+            COMING SOON
+          </div>
+
+          {upcomingFeatures.map((feature) => {
+            const Icon = feature.icon;
+
+            return (
+              <div
+                key={feature.title}
+                className="a3-upcoming-nav"
+                title={feature.description}
+              >
+                <Icon size={16} />
+                <span>{feature.title}</span>
+                <small>SOON</small>
+              </div>
+            );
+          })}
 
           <div className="a3-sidebar-label a3-history-label">
             CURRENT SESSION
@@ -1016,9 +1275,10 @@ export default function ChatPage() {
                     onClick={() => {
                       setOrbActive(true);
 
-                      window.setTimeout(() => {
-                        setOrbActive(false);
-                      }, 1500);
+                      window.setTimeout(
+                        () => setOrbActive(false),
+                        1500
+                      );
                     }}
                   />
 
@@ -1045,9 +1305,8 @@ export default function ChatPage() {
                   </h1>
 
                   <p>
-                    Explore ideas, solve complex problems,
-                    write code, and bring your imagination
-                    to life.
+                    Explore ideas, solve problems, write code,
+                    and bring your imagination to life.
                   </p>
                 </motion.div>
 
@@ -1101,6 +1360,39 @@ export default function ChatPage() {
                   Create something visual
                   <Sparkles size={14} />
                 </button>
+
+                {/* UPCOMING FEATURES */}
+
+                <div className="a3-upcoming-section">
+                  <div className="a3-upcoming-heading">
+                    <Sparkles size={15} />
+                    <span>MORE FROM AUREXA</span>
+                    <small>COMING SOON</small>
+                  </div>
+
+                  <div className="a3-upcoming-grid">
+                    {upcomingFeatures.map((feature) => {
+                      const Icon = feature.icon;
+
+                      return (
+                        <div
+                          key={feature.title}
+                          className="a3-upcoming-card"
+                        >
+                          <span className="a3-upcoming-icon">
+                            <Icon size={19} />
+                          </span>
+
+                          <strong>{feature.title}</strong>
+                          <p>{feature.description}</p>
+                          <span className="a3-coming-badge">
+                            COMING SOON
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="a3-message-list">
@@ -1154,6 +1446,11 @@ export default function ChatPage() {
                         <MessageContent
                           content={message.content}
                           imageUrl={message.imageUrl}
+                          onSpeak={
+                            message.role === 'assistant'
+                              ? () => speakText(message.content)
+                              : undefined
+                          }
                         />
                       )}
                     </div>
@@ -1213,6 +1510,87 @@ export default function ChatPage() {
               )}
             </AnimatePresence>
 
+            {/* VOICE CONTROLS */}
+
+            <div className="a3-voice-controls">
+              <div className="a3-voice-language">
+                <Languages size={15} />
+
+                <select
+                  value={voiceLanguage}
+                  onChange={(event) => {
+                    setVoiceLanguage(
+                      event.target.value as VoiceLanguage
+                    );
+                  }}
+                  aria-label="Voice language"
+                >
+                  <option value="en-IN">English</option>
+                  <option value="hi-IN">हिन्दी</option>
+                  <option value="kn-IN">ಕನ್ನಡ</option>
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={startVoiceInput}
+                disabled={!voiceSupported || streaming}
+                className={`a3-voice-button ${
+                  isListening ? 'a3-voice-listening' : ''
+                }`}
+                title={
+                  voiceSupported
+                    ? 'Speak your message'
+                    : 'Voice input not supported'
+                }
+              >
+                {isListening ? (
+                  <MicOff size={16} />
+                ) : (
+                  <Mic size={16} />
+                )}
+
+                {isListening ? 'Listening...' : 'Voice input'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setVoiceAutoRead(!voiceAutoRead);
+
+                  if (voiceAutoRead && 'speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                  }
+                }}
+                className={`a3-voice-button ${
+                  voiceAutoRead ? 'a3-voice-enabled' : ''
+                }`}
+                title="Toggle automatic spoken responses"
+              >
+                {voiceAutoRead ? (
+                  <Volume2 size={16} />
+                ) : (
+                  <VolumeX size={16} />
+                )}
+
+                {voiceAutoRead ? 'Voice ON' : 'Voice OFF'}
+              </button>
+            </div>
+
+            {voiceError && (
+              <div className="a3-voice-error">
+                <AlertCircle size={14} />
+                <span>{voiceError}</span>
+                <button
+                  type="button"
+                  onClick={() => setVoiceError('')}
+                  aria-label="Dismiss voice message"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            )}
+
             <form
               onSubmit={handleSubmit}
               className="a3-composer"
@@ -1231,7 +1609,9 @@ export default function ChatPage() {
               <textarea
                 ref={inputRef}
                 value={input}
-                onChange={(event) => setInput(event.target.value)}
+                onChange={(event) =>
+                  setInput(event.target.value)
+                }
                 onKeyDown={(event) => {
                   if (
                     event.key === 'Enter' &&
@@ -1273,7 +1653,10 @@ export default function ChatPage() {
                 aria-label="Send message"
               >
                 {streaming ? (
-                  <Loader2 size={19} className="animate-spin" />
+                  <Loader2
+                    size={19}
+                    className="animate-spin"
+                  />
                 ) : (
                   <Send size={18} />
                 )}
@@ -1294,7 +1677,7 @@ export default function ChatPage() {
         </main>
       </div>
 
-      {/* DAILY LIMIT DIALOG */}
+      {/* DAILY LIMIT */}
 
       <AnimatePresence>
         {showLimitDialog && (
@@ -1396,37 +1779,62 @@ export default function ChatPage() {
               </div>
 
               <div className="a3-modal-title">
-  <h2>Create with imagination</h2>
-  <p>Describe the image you want AUREXA AI to create.</p>
-</div>
+                <h2>Create with imagination</h2>
 
-<form onSubmit={handleImageSubmit} className="a3-image-form">
-  <textarea
-    value={imagePrompt}
-    onChange={(event) => setImagePrompt(event.target.value)}
-    placeholder="Describe your image..."
-    rows={4}
-    className="a3-composer-input"
-    disabled={imageLoading}
-  />
+                <p>
+                  Describe the image you want AUREXA AI to create.
+                </p>
+              </div>
 
-  <button
-    type="submit"
-    disabled={!imagePrompt.trim() || imageLoading}
-    className="a3-modal-primary"
-  >
-    {imageLoading ? (
-      <Loader2 size={17} className="animate-spin" />
-    ) : (
-      <WandSparkles size={17} />
-    )}
-    {imageLoading ? 'Creating...' : 'Generate Image'}
-  </button>
-</form>
-</motion.div>
-</motion.div>
-)}
-</AnimatePresence>
-</div>
-);
+              <form
+                onSubmit={handleImageSubmit}
+                className="a3-image-form"
+              >
+                <label htmlFor="a3-image-prompt">
+                  Image description
+                </label>
+
+                <textarea
+                  id="a3-image-prompt"
+                  value={imagePrompt}
+                  onChange={(event) =>
+                    setImagePrompt(event.target.value)
+                  }
+                  placeholder="Example: A futuristic golden city at sunset, cinematic lighting..."
+                  rows={4}
+                  className="a3-image-textarea"
+                  disabled={imageLoading}
+                />
+
+                <button
+                  type="submit"
+                  disabled={
+                    !imagePrompt.trim() || imageLoading
+                  }
+                  className="a3-modal-primary"
+                >
+                  {imageLoading ? (
+                    <Loader2
+                      size={17}
+                      className="animate-spin"
+                    />
+                  ) : (
+                    <WandSparkles size={17} />
+                  )}
+
+                  {imageLoading
+                    ? 'Preparing...'
+                    : 'Generate Image'}
+                </button>
+
+                <p className="a3-image-note">
+                  Image generation depends on the external image service.
+                </p>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
