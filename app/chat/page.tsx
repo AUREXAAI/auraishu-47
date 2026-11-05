@@ -15,7 +15,6 @@ import type {
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -42,11 +41,8 @@ import {
   WandSparkles,
   AlertCircle,
   ArrowUp,
-  PanelLeftClose,
-  PanelLeftOpen,
   RefreshCw,
   Download,
-  Monitor,
 } from 'lucide-react';
 
 import { useAuth } from '@/lib/auth-context';
@@ -61,9 +57,7 @@ import {
 import './chat-3d.css';
 
 type Role = 'user' | 'assistant';
-
 type Tool = 'chat' | 'solve' | 'coding';
-
 type VoiceLanguage = 'en-IN' | 'hi-IN' | 'kn-IN';
 
 type Message = {
@@ -74,8 +68,8 @@ type Message = {
   id?: string;
 };
 
-const CHAT_ID = 'default';
 const MAX_MESSAGES = 50;
+const CHAT_ID = 'default';
 
 const VOICE_LANGUAGES: {
   label: string;
@@ -101,7 +95,7 @@ const TOOL_OPTIONS: {
   {
     id: 'solve',
     label: 'AI Solver',
-    description: 'Solve step by step',
+    description: 'Step-by-step solutions',
     icon: Calculator,
   },
   {
@@ -116,20 +110,16 @@ function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-/* ---------------- CODE BLOCK ---------------- */
+/* CODE BLOCK */
 
-function CodeBlock({
-  children,
-}: {
-  children: string;
-}) {
+function CodeBlock({ children }: { children: string }) {
   const [copied, setCopied] = useState(false);
 
   const copyCode = async () => {
     try {
       await navigator.clipboard.writeText(children);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
+      window.setTimeout(() => setCopied(false), 1500);
     } catch {
       setCopied(false);
     }
@@ -140,7 +130,7 @@ function CodeBlock({
       <div className="a3-code-header">
         <span>Code</span>
 
-        <button onClick={copyCode} type="button">
+        <button type="button" onClick={() => void copyCode()}>
           {copied ? <Check size={14} /> : <Copy size={14} />}
           {copied ? 'Copied' : 'Copy'}
         </button>
@@ -153,13 +143,9 @@ function CodeBlock({
   );
 }
 
-/* ---------------- MARKDOWN MESSAGE ---------------- */
+/* MARKDOWN */
 
-function MessageContent({
-  content,
-}: {
-  content: string;
-}) {
+function MessageContent({ content }: { content: string }) {
   return (
     <div className="a3-message-content">
       <ReactMarkdown
@@ -203,39 +189,9 @@ function MessageContent({
   );
 }
 
-/* ---------------- ORB ---------------- */
+/* GENERATED IMAGE */
 
-function OrbScene() {
-  return (
-    <div className="a3-orb-scene">
-      <motion.div
-        className="a3-orb"
-        animate={{
-          y: [0, -10, 0],
-          rotate: [0, 4, -4, 0],
-        }}
-        transition={{
-          duration: 7,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-      >
-        <div className="a3-orb-core" />
-        <div className="a3-orb-ring a3-orb-ring-one" />
-        <div className="a3-orb-ring a3-orb-ring-two" />
-        <div className="a3-orb-glow" />
-      </motion.div>
-    </div>
-  );
-}
-
-/* ---------------- IMAGE MESSAGE ---------------- */
-
-function GeneratedImage({
-  src,
-}: {
-  src: string;
-}) {
+function GeneratedImage({ src }: { src: string }) {
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
@@ -243,14 +199,14 @@ function GeneratedImage({
     <div className="a3-generated-image">
       {loading && !failed && (
         <div className="a3-image-loading">
-          <Loader2 className="animate-spin" size={24} />
-          <span>Loading generated image...</span>
+          <Loader2 size={22} />
+          <span>Loading image...</span>
         </div>
       )}
 
       {failed ? (
         <div className="a3-image-error">
-          <AlertCircle size={20} />
+          <AlertCircle size={18} />
           <span>Image could not be loaded. Please try again.</span>
         </div>
       ) : (
@@ -266,12 +222,11 @@ function GeneratedImage({
         />
       )}
 
-      {!failed && !loading && (
+      {!loading && !failed && (
         <a
           href={src}
           target="_blank"
           rel="noopener noreferrer"
-          download="aurexa-generated-image"
           className="a3-image-download"
         >
           <Download size={15} />
@@ -282,7 +237,7 @@ function GeneratedImage({
   );
 }
 
-/* ---------------- MAIN PAGE ---------------- */
+/* MAIN CHAT */
 
 export default function ChatPage() {
   const { user } = useAuth();
@@ -290,13 +245,14 @@ export default function ChatPage() {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-
   const [selectedTool, setSelectedTool] = useState<Tool>('chat');
 
   const [sending, setSending] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(true);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [toolMenuOpen, setToolMenuOpen] = useState(false);
+
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [imagePrompt, setImagePrompt] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
@@ -306,12 +262,10 @@ export default function ChatPage() {
 
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
-  const [voiceError, setVoiceError] = useState('');
 
+  const [voiceError, setVoiceError] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [copiedMessage, setCopiedMessage] = useState<string | null>(null);
-
-  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -327,7 +281,7 @@ export default function ChatPage() {
     [selectedTool],
   );
 
-  /* ---------------- FIRESTORE HISTORY ---------------- */
+  /* LOAD FIREBASE HISTORY */
 
   useEffect(() => {
     if (!userId) {
@@ -338,47 +292,41 @@ export default function ChatPage() {
     let cancelled = false;
 
     const loadHistory = async () => {
+      setHistoryLoading(true);
+
       try {
-        setHistoryLoading(true);
+        const snapshot = await getDoc(doc(db, 'chats', userId));
 
-        const chatRef = doc(db, 'chats', userId);
-        const snapshot = await getDoc(chatRef);
+        if (!snapshot.exists() || cancelled) return;
 
-        if (!snapshot.exists() || cancelled) {
-          return;
-        }
+        const stored = snapshot.data().messages;
 
-        const data = snapshot.data();
-        const storedMessages = Array.isArray(data.messages)
-          ? data.messages
+        const validMessages: Message[] = Array.isArray(stored)
+          ? stored
+              .filter(
+                (message: any) =>
+                  (message.role === 'user' ||
+                    message.role === 'assistant') &&
+                  typeof message.content === 'string',
+              )
+              .slice(-MAX_MESSAGES)
+              .map((message: any) => ({
+                role: message.role,
+                content: message.content,
+                imageUrl:
+                  typeof message.imageUrl === 'string'
+                    ? message.imageUrl
+                    : undefined,
+              }))
           : [];
-
-        const validMessages: Message[] = storedMessages
-          .filter(
-            (message: any) =>
-              (message.role === 'user' ||
-                message.role === 'assistant') &&
-              typeof message.content === 'string',
-          )
-          .slice(-MAX_MESSAGES)
-          .map((message: any) => ({
-            role: message.role,
-            content: message.content,
-            imageUrl:
-              typeof message.imageUrl === 'string'
-                ? message.imageUrl
-                : undefined,
-          }));
 
         if (!cancelled) {
           setMessages(validMessages);
         }
       } catch (error) {
-        console.error('Chat history load error:', error);
+        console.error('History loading error:', error);
       } finally {
-        if (!cancelled) {
-          setHistoryLoading(false);
-        }
+        if (!cancelled) setHistoryLoading(false);
       }
     };
 
@@ -389,7 +337,7 @@ export default function ChatPage() {
     };
   }, [userId]);
 
-  /* ---------------- SAVE HISTORY ---------------- */
+  /* SAVE FIREBASE HISTORY */
 
   useEffect(() => {
     if (!userId || historyLoading) return;
@@ -400,10 +348,8 @@ export default function ChatPage() {
 
     saveTimeoutRef.current = setTimeout(async () => {
       try {
-        const chatRef = doc(db, 'chats', userId);
-
         await setDoc(
-          chatRef,
+          doc(db, 'chats', userId),
           {
             messages: messages.slice(-MAX_MESSAGES),
             updatedAt: new Date().toISOString(),
@@ -411,9 +357,9 @@ export default function ChatPage() {
           { merge: true },
         );
       } catch (error) {
-        console.error('Chat history save error:', error);
+        console.error('History saving error:', error);
       }
-    }, 900);
+    }, 800);
 
     return () => {
       if (saveTimeoutRef.current) {
@@ -422,16 +368,16 @@ export default function ChatPage() {
     };
   }, [messages, userId, historyLoading]);
 
-  /* ---------------- AUTO SCROLL ---------------- */
+  /* SIMPLE AUTO SCROLL */
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
-      behavior: 'smooth',
+      behavior: 'auto',
       block: 'end',
     });
   }, [messages, sending]);
 
-  /* ---------------- QUERY PROMPT ---------------- */
+  /* URL PROMPT */
 
   useEffect(() => {
     const query = searchParams.get('q');
@@ -441,22 +387,20 @@ export default function ChatPage() {
       setSelectedTool(tool);
     }
 
-    if (query) {
-      setInput(query);
-    }
+    if (query) setInput(query);
   }, [searchParams]);
 
-  /* ---------------- TEXTAREA RESIZE ---------------- */
+  /* TEXTAREA SIZE */
 
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
     textarea.style.height = 'auto';
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
   }, [input]);
 
-  /* ---------------- STOP SPEECH ---------------- */
+  /* VOICE OUTPUT */
 
   const stopSpeaking = useCallback(() => {
     if (typeof window === 'undefined') return;
@@ -465,21 +409,21 @@ export default function ChatPage() {
     setSpeaking(false);
   }, []);
 
-  /* ---------------- SPEAK MESSAGE ---------------- */
-
   const speakMessage = useCallback(
-    (text: string) => {
-      if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    (content: string) => {
+      if (
+        typeof window === 'undefined' ||
+        !('speechSynthesis' in window)
+      ) {
         setVoiceError('Voice output is not supported in this browser.');
         return;
       }
 
       stopSpeaking();
 
-      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(content);
       utterance.lang = voiceLanguage;
       utterance.rate = 1;
-      utterance.pitch = 1;
 
       utterance.onstart = () => setSpeaking(true);
       utterance.onend = () => setSpeaking(false);
@@ -490,21 +434,18 @@ export default function ChatPage() {
     [voiceLanguage, stopSpeaking],
   );
 
-  /* ---------------- VOICE INPUT ---------------- */
+  /* VOICE INPUT */
 
   const startVoiceInput = () => {
     setVoiceError('');
 
     if (typeof window === 'undefined') return;
 
-    const SpeechRecognitionAPI =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
+    const SpeechAPI =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if (!SpeechRecognitionAPI) {
-      setVoiceError(
-        'Speech recognition is not supported in this browser. Try Chrome.',
-      );
+    if (!SpeechAPI) {
+      setVoiceError('Voice input is not supported. Try Chrome.');
       return;
     }
 
@@ -515,18 +456,16 @@ export default function ChatPage() {
     }
 
     try {
-      const recognition = new SpeechRecognitionAPI();
+      const recognition = new SpeechAPI();
 
       recognition.lang = voiceLanguage;
       recognition.continuous = false;
       recognition.interimResults = true;
       recognition.maxAlternatives = 1;
 
-      recognition.onstart = () => {
-        setListening(true);
-      };
+      recognition.onstart = () => setListening(true);
 
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
+      recognition.onresult = (event) => {
         let transcript = '';
 
         for (
@@ -540,32 +479,30 @@ export default function ChatPage() {
         setInput(transcript);
       };
 
-      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      recognition.onerror = (event) => {
         setListening(false);
 
         if (event.error === 'not-allowed') {
           setVoiceError('Microphone permission was denied.');
         } else if (event.error === 'no-speech') {
-          setVoiceError('No speech detected. Please try again.');
+          setVoiceError('No speech detected. Try again.');
         } else {
-          setVoiceError(`Voice input error: ${event.error}`);
+          setVoiceError(`Voice error: ${event.error}`);
         }
       };
 
-      recognition.onend = () => {
-        setListening(false);
-      };
+      recognition.onend = () => setListening(false);
 
       recognitionRef.current = recognition;
       recognition.start();
     } catch (error) {
-      console.error('Voice recognition error:', error);
+      console.error(error);
       setListening(false);
       setVoiceError('Could not start voice recognition.');
     }
   };
 
-  /* ---------------- SEND CHAT ---------------- */
+  /* SEND MESSAGE */
 
   const sendMessage = async (
     event?: FormEvent<HTMLFormElement>,
@@ -586,19 +523,10 @@ export default function ChatPage() {
     };
 
     const updatedMessages = [...messages, userMessage];
-
-    setMessages(updatedMessages);
-    setInput('');
-    setSending(true);
-
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
-
     const assistantId = createId();
 
-    setMessages((previous) => [
-      ...previous,
+    setMessages([
+      ...updatedMessages,
       {
         role: 'assistant',
         content: '',
@@ -606,13 +534,18 @@ export default function ChatPage() {
       },
     ]);
 
+    setInput('');
+    setSending(true);
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
     try {
-      const idToken = user
-        ? await user.getIdToken()
-        : null;
+      const idToken = user ? await user.getIdToken() : null;
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -627,12 +560,10 @@ export default function ChatPage() {
           tool: selectedTool,
           chatId: CHAT_ID,
           message: cleanInput,
-          history: updatedMessages
-            .slice(-20)
-            .map((message) => ({
-              role: message.role,
-              content: message.content,
-            })),
+          history: updatedMessages.slice(-20).map((message) => ({
+            role: message.role,
+            content: message.content,
+          })),
         }),
         signal: controller.signal,
       });
@@ -640,19 +571,9 @@ export default function ChatPage() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
 
-        if (
-          response.status === 429 ||
-          errorData?.code === 'LIMIT_REACHED'
-        ) {
-          throw new Error(
-            errorData?.message ||
-              'You have reached the current usage limit.',
-          );
-        }
-
         throw new Error(
-          errorData?.error ||
-            errorData?.message ||
+          errorData?.message ||
+            errorData?.error ||
             `Request failed (${response.status})`,
         );
       }
@@ -667,60 +588,44 @@ export default function ChatPage() {
       let buffer = '';
       let assistantText = '';
 
-      const processSSE = (chunk: string) => {
-        const lines = chunk.split('\n');
+      const updateAssistant = (text: string) => {
+        setMessages((previous) =>
+          previous.map((message) =>
+            message.id === assistantId
+              ? { ...message, content: text }
+              : message,
+          ),
+        );
+      };
 
-        for (const line of lines) {
+      const processEvent = (eventText: string) => {
+        for (const line of eventText.split('\n')) {
           const trimmed = line.trim();
 
           if (!trimmed.startsWith('data:')) continue;
 
-          const rawData = trimmed.slice(5).trim();
+          const raw = trimmed.slice(5).trim();
 
-          if (!rawData || rawData === '[DONE]') continue;
+          if (!raw || raw === '[DONE]') continue;
+
+          let parsed: any;
 
           try {
-            const parsed = JSON.parse(rawData);
+            parsed = JSON.parse(raw);
+          } catch {
+            continue;
+          }
 
-            if (parsed.error) {
-              throw new Error(parsed.error);
-            }
+          if (parsed.error) {
+            throw new Error(parsed.error);
+          }
 
-            if (parsed.token) {
-              assistantText += parsed.token;
-
-              setMessages((previous) =>
-                previous.map((message) =>
-                  message.id === assistantId
-                    ? {
-                        ...message,
-                        content: assistantText,
-                      }
-                    : message,
-                ),
-              );
-            }
-
-            if (parsed.content) {
-              assistantText += parsed.content;
-
-              setMessages((previous) =>
-                previous.map((message) =>
-                  message.id === assistantId
-                    ? {
-                        ...message,
-                        content: assistantText,
-                      }
-                    : message,
-                ),
-              );
-            }
-          } catch (error) {
-            if (error instanceof SyntaxError) {
-              continue;
-            }
-
-            throw error;
+          if (typeof parsed.token === 'string') {
+            assistantText += parsed.token;
+            updateAssistant(assistantText);
+          } else if (typeof parsed.content === 'string') {
+            assistantText += parsed.content;
+            updateAssistant(assistantText);
           }
         }
       };
@@ -732,34 +637,29 @@ export default function ChatPage() {
 
         buffer += decoder.decode(value, { stream: true });
 
-        const chunks = buffer.split('\n\n');
-        buffer = chunks.pop() || '';
+        const events = buffer.split('\n\n');
+        buffer = events.pop() || '';
 
-        for (const chunk of chunks) {
-          processSSE(chunk);
+        for (const item of events) {
+          processEvent(item);
         }
       }
 
       buffer += decoder.decode();
 
       if (buffer.trim()) {
-        processSSE(buffer);
+        processEvent(buffer);
       }
 
       if (!assistantText.trim()) {
-        throw new Error(
-          'The AI returned an empty response. Please try again.',
-        );
+        throw new Error('The AI returned an empty response.');
       }
     } catch (error) {
-      if (
-        error instanceof Error &&
-        error.name === 'AbortError'
-      ) {
+      if (error instanceof Error && error.name === 'AbortError') {
         return;
       }
 
-      console.error('Chat request error:', error);
+      console.error('Chat error:', error);
 
       const message =
         error instanceof Error
@@ -785,9 +685,9 @@ export default function ChatPage() {
     }
   };
 
-  /* ---------------- IMAGE GENERATION ---------------- */
+  /* IMAGE GENERATION */
 
-  const generateImage = async () => {
+  const generateImage = () => {
     const cleanPrompt = imagePrompt.trim();
 
     if (!cleanPrompt || imageLoading) return;
@@ -795,7 +695,6 @@ export default function ChatPage() {
     setImageLoading(true);
     setImageModalOpen(false);
     setImagePrompt('');
-    setErrorMessage('');
 
     const userMessage: Message = {
       role: 'user',
@@ -810,70 +709,45 @@ export default function ChatPage() {
       userMessage,
       {
         role: 'assistant',
-        content: `Creating an image for: "${cleanPrompt}"`,
+        content: 'Your image is being prepared. Loading may take some time.',
         id: assistantId,
       },
     ]);
 
-    try {
-      const imageUrl =
-        `https://image.pollinations.ai/prompt/` +
-        `${encodeURIComponent(cleanPrompt)}` +
-        `?model=flux&width=1024&height=1024&nologo=true`;
+    const imageUrl =
+      `https://image.pollinations.ai/prompt/` +
+      `${encodeURIComponent(cleanPrompt)}` +
+      `?model=flux&width=1024&height=1024&nologo=true`;
 
-      setMessages((previous) =>
-        previous.map((message) =>
-          message.id === assistantId
-            ? {
-                ...message,
-                content: 'Your image is ready to load.',
-                imageUrl,
-              }
-            : message,
-        ),
-      );
-    } catch (error) {
-      console.error('Image generation error:', error);
+    setMessages((previous) =>
+      previous.map((message) =>
+        message.id === assistantId
+          ? { ...message, imageUrl }
+          : message,
+      ),
+    );
 
-      setMessages((previous) =>
-        previous.map((message) =>
-          message.id === assistantId
-            ? {
-                ...message,
-                content:
-                  'Image generation could not be started. Please try again.',
-                error: true,
-              }
-            : message,
-        ),
-      );
-    } finally {
-      setImageLoading(false);
-    }
+    setImageLoading(false);
   };
 
-  /* ---------------- COPY MESSAGE ---------------- */
+  /* COPY */
 
-  const copyMessage = async (
-    content: string,
-    id: string,
-  ) => {
+  const copyMessage = async (content: string, id: string) => {
     try {
       await navigator.clipboard.writeText(content);
       setCopiedMessage(id);
 
-      setTimeout(() => {
-        setCopiedMessage(null);
-      }, 1500);
+      window.setTimeout(() => setCopiedMessage(null), 1500);
     } catch (error) {
       console.error('Copy failed:', error);
     }
   };
 
-  /* ---------------- CLEAR CHAT ---------------- */
+  /* CLEAR */
 
   const clearChat = async () => {
     abortControllerRef.current?.abort();
+    recognitionRef.current?.abort();
     stopSpeaking();
 
     setMessages([]);
@@ -891,12 +765,12 @@ export default function ChatPage() {
           { merge: true },
         );
       } catch (error) {
-        console.error('Could not clear saved chat:', error);
+        console.error('Clear history error:', error);
       }
     }
   };
 
-  /* ---------------- KEYBOARD ---------------- */
+  /* KEYBOARD */
 
   const handleKeyDown = (
     event: KeyboardEvent<HTMLTextAreaElement>,
@@ -916,77 +790,76 @@ export default function ChatPage() {
     setSending(false);
   };
 
-  /* ---------------- RENDER ---------------- */
+  /* CLEANUP */
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.abort();
+      window.speechSynthesis?.cancel();
+
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
+  const ActiveToolIcon = activeTool?.icon || MessageSquare;
+
+  /* UI */
 
   return (
     <main className="a3-page">
-      {/* HEADER */}
-
       <header className="a3-header">
         <div className="a3-header-left">
           <button
             type="button"
             className="a3-icon-button a3-mobile-menu"
             onClick={() => setSidebarOpen((value) => !value)}
-            aria-label="Open sidebar"
+            aria-label="Toggle sidebar"
           >
-            <Menu size={20} />
+            <Menu size={19} />
           </button>
 
           <Link href="/" className="a3-brand">
             <span className="a3-brand-mark">
-              <Sparkles size={20} />
+              <Sparkles size={19} />
             </span>
 
-            <span>
-              <strong>AUREXA</strong>
-              <small>AI</small>
+            <span className="a3-brand-name">
+              AUREXA <small>AI</small>
             </span>
           </Link>
         </div>
 
         <div className="a3-header-center">
           <span className="a3-status-dot" />
-          <span>AI Assistant</span>
+          AI Assistant
         </div>
 
-        <div className="a3-header-right">
-          <span className="a3-early-badge">
-            EARLY ACCESS
-          </span>
-        </div>
+        <span className="a3-early-badge">EARLY ACCESS</span>
       </header>
 
       <div className="a3-layout">
-        {/* SIDEBAR */}
+        {sidebarOpen && (
+          <button
+            type="button"
+            className="a3-sidebar-backdrop"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close sidebar"
+          />
+        )}
 
-        <AnimatePresence>
-          {sidebarOpen && (
-            <motion.div
-              className="a3-sidebar-backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSidebarOpen(false)}
-            />
-          )}
-        </AnimatePresence>
-
-        <aside
-          className={`a3-sidebar ${
-            sidebarOpen ? 'a3-sidebar-open' : ''
-          }`}
-        >
+        <aside className={`a3-sidebar ${sidebarOpen ? 'a3-sidebar-open' : ''}`}>
           <div className="a3-sidebar-top">
             <button
               type="button"
               className="a3-new-chat"
-              onClick={() => {
-                void clearChat();
-              }}
+              onClick={() => void clearChat()}
             >
               <Plus size={17} />
-              <span>New chat</span>
+              New chat
             </button>
 
             <button
@@ -1000,22 +873,36 @@ export default function ChatPage() {
           </div>
 
           <div className="a3-sidebar-section">
-            <span className="a3-sidebar-label">
-              WORKSPACE
-            </span>
+            <span className="a3-sidebar-label">WORKSPACE</span>
 
-            <button
-              type="button"
-              className="a3-sidebar-item active"
-            >
-              <MessageSquare size={17} />
-              <span>AI Chat</span>
-            </button>
+            {TOOL_OPTIONS.map((tool) => {
+              const Icon = tool.icon;
+
+              return (
+                <button
+                  type="button"
+                  key={tool.id}
+                  className={`a3-sidebar-item ${
+                    selectedTool === tool.id ? 'active' : ''
+                  }`}
+                  onClick={() => {
+                    setSelectedTool(tool.id);
+                    setSidebarOpen(false);
+                  }}
+                >
+                  <Icon size={17} />
+                  <span>{tool.label}</span>
+                </button>
+              );
+            })}
 
             <button
               type="button"
               className="a3-sidebar-item"
-              onClick={() => setImageModalOpen(true)}
+              onClick={() => {
+                setImageModalOpen(true);
+                setSidebarOpen(false);
+              }}
             >
               <ImageIcon size={17} />
               <span>Image Studio</span>
@@ -1023,26 +910,19 @@ export default function ChatPage() {
           </div>
 
           <div className="a3-sidebar-section">
-            <span className="a3-sidebar-label">
-              RECENT
-            </span>
+            <span className="a3-sidebar-label">RECENT CHAT</span>
 
-            {messages.length > 0 ? (
-              <div className="a3-sidebar-history">
-                <button
-                  type="button"
-                  className="a3-sidebar-item"
-                >
-                  <MessageSquare size={16} />
-                  <span>
-                    {messages.find((message) => message.role === 'user')
-                      ?.content.slice(0, 26) || 'Current conversation'}
-                  </span>
-                </button>
+            {messages.some((message) => message.role === 'user') ? (
+              <div className="a3-sidebar-item a3-history-preview">
+                <MessageSquare size={16} />
+                <span>
+                  {messages.find((message) => message.role === 'user')
+                    ?.content.slice(0, 30)}
+                </span>
               </div>
             ) : (
               <p className="a3-sidebar-empty">
-                Your conversations will appear here.
+                Your recent conversations appear here.
               </p>
             )}
           </div>
@@ -1054,12 +934,8 @@ export default function ChatPage() {
               </div>
 
               <div className="a3-user-info">
-                <strong>
-                  {user?.displayName || 'AUREXA User'}
-                </strong>
-                <small>
-                  {user?.email || 'Guest session'}
-                </small>
+                <strong>{user?.displayName || 'AUREXA User'}</strong>
+                <small>{user?.email || 'Guest session'}</small>
               </div>
             </div>
 
@@ -1069,77 +945,50 @@ export default function ChatPage() {
               onClick={() => void clearChat()}
             >
               <Trash2 size={16} />
-              <span>Clear conversation</span>
+              Clear conversation
             </button>
           </div>
         </aside>
 
-        {/* MAIN */}
-
         <section className="a3-main">
           <div className="a3-chat-toolbar">
             <div className="a3-chat-toolbar-left">
-              <button
-                type="button"
-                className="a3-icon-button a3-desktop-sidebar-toggle"
-                onClick={() => setSidebarOpen((value) => !value)}
-                aria-label="Toggle sidebar"
-              >
-                {sidebarOpen ? (
-                  <PanelLeftClose size={18} />
-                ) : (
-                  <PanelLeftOpen size={18} />
-                )}
-              </button>
-
               <div className="a3-tool-selector-wrap">
                 <button
                   type="button"
                   className="a3-tool-selector"
-                  onClick={() => setMobileToolsOpen((value) => !value)}
+                  onClick={() => setToolMenuOpen((value) => !value)}
                 >
-                  {activeTool && <activeTool.icon size={17} />}
+                  <ActiveToolIcon size={17} />
                   <span>{activeTool?.label || 'AI Chat'}</span>
                   <ChevronDown size={15} />
                 </button>
 
-                <AnimatePresence>
-                  {mobileToolsOpen && (
-                    <motion.div
-                      className="a3-tool-dropdown"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 8 }}
-                    >
-                      {TOOL_OPTIONS.map((tool) => {
-                        const Icon = tool.icon;
+                {toolMenuOpen && (
+                  <div className="a3-tool-dropdown">
+                    {TOOL_OPTIONS.map((tool) => {
+                      const Icon = tool.icon;
 
-                        return (
-                          <button
-                            type="button"
-                            key={tool.id}
-                            className={
-                              selectedTool === tool.id
-                                ? 'active'
-                                : ''
-                            }
-                            onClick={() => {
-                              setSelectedTool(tool.id);
-                              setMobileToolsOpen(false);
-                            }}
-                          >
-                            <Icon size={17} />
-
-                            <span>
-                              <strong>{tool.label}</strong>
-                              <small>{tool.description}</small>
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                      return (
+                        <button
+                          type="button"
+                          key={tool.id}
+                          className={selectedTool === tool.id ? 'active' : ''}
+                          onClick={() => {
+                            setSelectedTool(tool.id);
+                            setToolMenuOpen(false);
+                          }}
+                        >
+                          <Icon size={17} />
+                          <span>
+                            <strong>{tool.label}</strong>
+                            <small>{tool.description}</small>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1148,6 +997,7 @@ export default function ChatPage() {
                 type="button"
                 className="a3-icon-button"
                 onClick={() => setImageModalOpen(true)}
+                aria-label="Open image generator"
                 title="Image generation"
               >
                 <ImageIcon size={18} />
@@ -1158,30 +1008,26 @@ export default function ChatPage() {
                 className="a3-icon-button"
                 onClick={() => void clearChat()}
                 title="New conversation"
+                aria-label="New conversation"
               >
                 <RefreshCw size={17} />
               </button>
             </div>
           </div>
 
-          {/* MESSAGES */}
-
           <div className="a3-messages">
             {historyLoading ? (
               <div className="a3-loading-state">
-                <Loader2 size={25} className="animate-spin" />
+                <Loader2 size={24} />
                 <span>Loading your workspace...</span>
               </div>
             ) : messages.length === 0 ? (
               <div className="a3-welcome">
-                <OrbScene />
+                <div className="a3-welcome-icon">
+                  <Sparkles size={30} />
+                </div>
 
-                <motion.div
-                  className="a3-welcome-content"
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
+                <div className="a3-welcome-content">
                   <span className="a3-welcome-eyebrow">
                     INTELLIGENCE, REIMAGINED
                   </span>
@@ -1193,9 +1039,8 @@ export default function ChatPage() {
                   </h1>
 
                   <p>
-                    Meet AUREXA AI — your multilingual AI
-                    assistant for ideas, learning, creativity
-                    and development.
+                    Meet AUREXA AI — your multilingual assistant
+                    for learning, ideas and development.
                   </p>
 
                   <div className="a3-tool-grid">
@@ -1214,7 +1059,6 @@ export default function ChatPage() {
                           <span className="a3-tool-card-icon">
                             <Icon size={20} />
                           </span>
-
                           <strong>{tool.label}</strong>
                           <small>{tool.description}</small>
                         </button>
@@ -1222,53 +1066,55 @@ export default function ChatPage() {
                     })}
                   </div>
 
-                  <div className="a3-upcoming-nav">
-                    <span>EXPLORE AUREXA</span>
+                  <div className="a3-upcoming-section">
+                    <div className="a3-upcoming-heading">
+                      <Sparkles size={15} />
+                      UPCOMING FEATURES
+                      <small>IN DEVELOPMENT</small>
+                    </div>
+
+                    <div className="a3-upcoming-grid">
+                      <div className="a3-upcoming-card">
+                        <WandSparkles size={19} />
+                        <strong>Video AI</strong>
+                        <p>AI-powered video creation</p>
+                        <span className="a3-coming-badge">COMING SOON</span>
+                      </div>
+
+                      <div className="a3-upcoming-card">
+                        <Code2 size={19} />
+                        <strong>AI Editor</strong>
+                        <p>Build and edit projects</p>
+                        <span className="a3-coming-badge">COMING SOON</span>
+                      </div>
+
+                      <div className="a3-upcoming-card">
+                        <MessageSquare size={19} />
+                        <strong>AI Courses</strong>
+                        <p>Learn with AI assistance</p>
+                        <span className="a3-coming-badge">COMING SOON</span>
+                      </div>
+                    </div>
                   </div>
-
-                  <div className="a3-upcoming-grid">
-                    <div className="a3-upcoming-card">
-                      <ImageIcon size={19} />
-                      <strong>AI Images</strong>
-                      <small>Generate visuals from prompts</small>
-                    </div>
-
-                    <div className="a3-upcoming-card">
-                      <WandSparkles size={19} />
-                      <strong>Video AI</strong>
-                      <small>Coming soon</small>
-                      <span className="a3-coming-badge">SOON</span>
-                    </div>
-
-                    <div className="a3-upcoming-card">
-                      <Monitor size={19} />
-                      <strong>Screen Assistance</strong>
-                      <small>Coming soon</small>
-                      <span className="a3-coming-badge">SOON</span>
-                    </div>
-                  </div>
-                </motion.div>
+                </div>
               </div>
             ) : (
               <div className="a3-message-list">
                 {messages.map((message, index) => {
-                  const messageId =
-                    message.id || `message-${index}`;
+                  const messageId = message.id || `message-${index}`;
 
                   return (
-                    <motion.div
+                    <div
                       key={messageId}
                       className={`a3-message-row ${
                         message.role === 'user'
                           ? 'a3-user-row'
                           : 'a3-assistant-row'
                       }`}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
                     >
                       {message.role === 'assistant' && (
                         <div className="a3-message-avatar">
-                          <Sparkles size={17} />
+                          <Sparkles size={16} />
                         </div>
                       )}
 
@@ -1293,37 +1139,31 @@ export default function ChatPage() {
                           <p>{message.content}</p>
                         )}
 
-                        {message.role === 'assistant' &&
-                          message.content && (
-                            <div className="a3-message-actions">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  void copyMessage(
-                                    message.content,
-                                    messageId,
-                                  )
-                                }
-                                title="Copy response"
-                              >
-                                {copiedMessage === messageId ? (
-                                  <Check size={14} />
-                                ) : (
-                                  <Copy size={14} />
-                                )}
-                              </button>
+                        {message.role === 'assistant' && message.content && (
+                          <div className="a3-message-actions">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                void copyMessage(message.content, messageId)
+                              }
+                              title="Copy response"
+                            >
+                              {copiedMessage === messageId ? (
+                                <Check size={14} />
+                              ) : (
+                                <Copy size={14} />
+                              )}
+                            </button>
 
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  speakMessage(message.content)
-                                }
-                                title="Read response aloud"
-                              >
-                                <Volume2 size={14} />
-                              </button>
-                            </div>
-                          )}
+                            <button
+                              type="button"
+                              onClick={() => speakMessage(message.content)}
+                              title="Read aloud"
+                            >
+                              <Volume2 size={14} />
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       {message.role === 'user' && (
@@ -1331,7 +1171,7 @@ export default function ChatPage() {
                           {user?.email?.charAt(0).toUpperCase() || 'U'}
                         </div>
                       )}
-                    </motion.div>
+                    </div>
                   );
                 })}
 
@@ -1349,17 +1189,14 @@ export default function ChatPage() {
             )}
           </div>
 
-          {/* VOICE ERROR */}
-
           {voiceError && (
             <div className="a3-voice-error" role="alert">
               <AlertCircle size={15} />
               <span>{voiceError}</span>
-
               <button
                 type="button"
                 onClick={() => setVoiceError('')}
-                aria-label="Dismiss voice error"
+                aria-label="Dismiss"
               >
                 <X size={14} />
               </button>
@@ -1370,17 +1207,15 @@ export default function ChatPage() {
             <div className="a3-error-banner" role="alert">
               <AlertCircle size={16} />
               <span>{errorMessage}</span>
-
               <button
                 type="button"
                 onClick={() => setErrorMessage('')}
+                aria-label="Dismiss"
               >
                 <X size={14} />
               </button>
             </div>
           )}
-
-          {/* COMPOSER */}
 
           <div className="a3-composer-wrap">
             <div className="a3-voice-controls">
@@ -1393,10 +1228,7 @@ export default function ChatPage() {
                 aria-label="Voice language"
               >
                 {VOICE_LANGUAGES.map((language) => (
-                  <option
-                    key={language.value}
-                    value={language.value}
-                  >
+                  <option key={language.value} value={language.value}>
                     {language.label}
                   </option>
                 ))}
@@ -1404,47 +1236,31 @@ export default function ChatPage() {
 
               <button
                 type="button"
-                className={`a3-voice-button ${
-                  listening ? 'active' : ''
-                }`}
+                className={`a3-voice-button ${listening ? 'active' : ''}`}
                 onClick={startVoiceInput}
-                title={listening ? 'Stop listening' : 'Voice input'}
               >
-                {listening ? (
-                  <MicOff size={17} />
-                ) : (
-                  <Mic size={17} />
-                )}
-                <span>{listening ? 'Listening...' : 'Voice input'}</span>
+                {listening ? <MicOff size={16} /> : <Mic size={16} />}
+                {listening ? 'Listening...' : 'Voice input'}
               </button>
 
               <button
                 type="button"
-                className={`a3-voice-button ${
-                  speaking ? 'active' : ''
-                }`}
-                onClick={speaking ? stopSpeaking : undefined}
+                className={`a3-voice-button ${speaking ? 'active' : ''}`}
+                onClick={stopSpeaking}
                 disabled={!speaking}
-                title="Stop voice output"
               >
-                {speaking ? (
-                  <VolumeX size={17} />
-                ) : (
-                  <Volume2 size={17} />
-                )}
-                <span>{speaking ? 'Stop voice' : 'Voice output'}</span>
+                {speaking ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                {speaking ? 'Stop voice' : 'Voice output'}
               </button>
             </div>
 
-            <form
-              className="a3-composer"
-              onSubmit={sendMessage}
-            >
+            <form className="a3-composer" onSubmit={sendMessage}>
               <button
                 type="button"
                 className="a3-composer-action"
                 onClick={() => setImageModalOpen(true)}
                 title="Generate image"
+                aria-label="Generate image"
               >
                 <ImageIcon size={19} />
               </button>
@@ -1471,7 +1287,7 @@ export default function ChatPage() {
                   type="button"
                   className="a3-send-button"
                   onClick={stopGeneration}
-                  title="Stop generating"
+                  title="Stop generation"
                 >
                   <StopCircle size={19} />
                 </button>
@@ -1482,11 +1298,7 @@ export default function ChatPage() {
                   disabled={!input.trim()}
                   title="Send message"
                 >
-                  {input.trim() ? (
-                    <ArrowUp size={20} />
-                  ) : (
-                    <Send size={18} />
-                  )}
+                  {input.trim() ? <ArrowUp size={20} /> : <Send size={18} />}
                 </button>
               )}
             </form>
@@ -1498,110 +1310,83 @@ export default function ChatPage() {
         </section>
       </div>
 
-      {/* IMAGE GENERATION MODAL */}
+      {/* IMAGE MODAL */}
 
-      <AnimatePresence>
-        {imageModalOpen && (
-          <motion.div
-            className="a3-modal-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) {
-                setImageModalOpen(false);
-              }
-            }}
+      {imageModalOpen && (
+        <div
+          className="a3-modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setImageModalOpen(false);
+            }
+          }}
+        >
+          <section
+            className="a3-image-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="a3-image-title"
           >
-            <motion.div
-              className="a3-image-modal"
-              initial={{ opacity: 0, y: 20, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 15, scale: 0.98 }}
-              transition={{ duration: 0.2 }}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="a3-image-title"
-            >
-              <div className="a3-modal-header">
-                <div>
-                  <span className="a3-modal-eyebrow">
-                    AUREXA CREATIVE STUDIO
-                  </span>
-
-                  <h2 id="a3-image-title">
-                    Create an image
-                  </h2>
-
-                  <p>
-                    Turn your imagination into a visual.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  className="a3-icon-button"
-                  onClick={() => setImageModalOpen(false)}
-                  aria-label="Close image generator"
-                >
-                  <X size={19} />
-                </button>
+            <div className="a3-modal-header">
+              <div>
+                <span className="a3-modal-eyebrow">
+                  AUREXA CREATIVE STUDIO
+                </span>
+                <h2 id="a3-image-title">Create an image</h2>
+                <p>Describe the image you want to create.</p>
               </div>
 
-              <div className="a3-image-form">
-                <label htmlFor="a3-image-prompt">
-                  Describe your image
-                </label>
+              <button
+                type="button"
+                className="a3-icon-button"
+                onClick={() => setImageModalOpen(false)}
+                aria-label="Close image generator"
+              >
+                <X size={19} />
+              </button>
+            </div>
 
-                <textarea
-                  id="a3-image-prompt"
-                  className="a3-image-textarea"
-                  value={imagePrompt}
-                  onChange={(event) =>
-                    setImagePrompt(event.target.value)
-                  }
-                  placeholder="Example: A futuristic golden city at sunset, cinematic lighting, ultra detailed..."
-                  rows={5}
-                  autoFocus
-                />
+            <div className="a3-image-form">
+              <label htmlFor="a3-image-prompt">
+                Describe your image
+              </label>
 
-                <div className="a3-image-prompt-hint">
-                  Be descriptive for better results.
-                </div>
+              <textarea
+                id="a3-image-prompt"
+                className="a3-image-textarea"
+                value={imagePrompt}
+                onChange={(event) => setImagePrompt(event.target.value)}
+                placeholder="Example: A futuristic city at sunset, cinematic lighting..."
+                rows={5}
+              />
 
-                <button
-                  type="button"
-                  className="a3-image-generate-button"
-                  disabled={!imagePrompt.trim() || imageLoading}
-                  onClick={() => void generateImage()}
-                >
-                  {imageLoading ? (
-                    <>
-                      <Loader2 size={18} className="animate-spin" />
-                      Preparing...
-                    </>
-                  ) : (
-                    <>
-                      <WandSparkles size={18} />
-                      Generate image
-                    </>
-                  )}
-                </button>
+              <p className="a3-image-note">
+                Image generation depends on the availability of the
+                external image service.
+              </p>
 
-                <p className="a3-image-disclaimer">
-                  Image generation uses an external image service.
-                  Availability and loading time may vary.
-                </p>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <button
+                type="button"
+                className="a3-image-generate-button"
+                disabled={!imagePrompt.trim() || imageLoading}
+                onClick={generateImage}
+              >
+                {imageLoading ? (
+                  <Loader2 size={17} />
+                ) : (
+                  <WandSparkles size={17} />
+                )}
+                Generate image
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
 
-/* ---------------- SPEECH RECOGNITION TYPES ---------------- */
+/* SPEECH RECOGNITION TYPES */
 
 declare global {
   interface Window {
@@ -1614,27 +1399,16 @@ declare global {
     continuous: boolean;
     interimResults: boolean;
     maxAlternatives: number;
-
     start(): void;
     stop(): void;
     abort(): void;
-
     onstart: ((this: SpeechRecognition, event: Event) => any) | null;
-
     onresult:
-      | ((
-          this: SpeechRecognition,
-          event: SpeechRecognitionEvent,
-        ) => any)
+      | ((this: SpeechRecognition, event: SpeechRecognitionEvent) => any)
       | null;
-
     onerror:
-      | ((
-          this: SpeechRecognition,
-          event: SpeechRecognitionErrorEvent,
-        ) => any)
+      | ((this: SpeechRecognition, event: SpeechRecognitionErrorEvent) => any)
       | null;
-
     onend: ((this: SpeechRecognition, event: Event) => any) | null;
   }
 
