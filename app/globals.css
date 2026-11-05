@@ -2,58 +2,79 @@
 @tailwind components;
 @tailwind utilities;
 
-/* AUREXA AI — White & Champagne Gold */
+/* =========================================
+   AUREXA AI — COSMIC INDIGO
+   DEEP SPACE PURPLE THEME
+========================================= */
 
 @layer base {
   :root {
-    --bg: #fbf9f5;
-    --surface: #ffffff;
-    --card: #fffdf9;
-    --border: #eadfc9;
-    --text-primary: #211b14;
-    --text-muted: #817565;
+    color-scheme: dark;
 
-    --brand-violet: #bd8b2e;
-    --brand-blue: #e0b95f;
-    --brand-gradient: linear-gradient(135deg, #f4d995, #bd8627);
+    --bg: #090817;
+    --surface: #12102a;
+    --card: #171432;
+    --border: #302852;
 
-    --accent-chat: #c39132;
-    --accent-solve: #d2a64d;
-    --accent-coding: #9e762e;
-    --accent-courses: #c69a42;
-    --accent-image: #d7ad5b;
-    --accent-video: #b58b42;
-    --accent-editor: #d0a04a;
+    --text-primary: #f4f0ff;
+    --text-muted: #aaa2c8;
+
+    --brand-violet: #a78bfa;
+    --brand-blue: #6d5bd0;
+
+    --brand-gradient: linear-gradient(
+      135deg,
+      #c4b5fd,
+      #8b5cf6,
+      #5141a8
+    );
+
+    --accent-chat: #a78bfa;
+    --accent-solve: #8b7cf6;
+    --accent-coding: #6d5bd0;
+    --accent-courses: #b69cff;
+    --accent-image: #9b8aff;
+    --accent-video: #7867df;
+    --accent-editor: #c4b5fd;
 
     --radius-card: 22px;
     --radius-button: 14px;
     --radius-input: 999px;
 
-    --background: 40 33% 98%;
-    --foreground: 28 25% 12%;
-    --card-foreground: 28 25% 12%;
-    --popover: 40 33% 99%;
-    --popover-foreground: 28 25% 12%;
-    --primary: 40 62% 48%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 42 35% 94%;
-    --secondary-foreground: 28 25% 12%;
-    --muted: 42 25% 94%;
-    --muted-foreground: 30 12% 45%;
-    --accent: 42 55% 90%;
-    --accent-foreground: 28 25% 12%;
+    --background: 247 45% 7%;
+    --foreground: 258 100% 97%;
+
+    --card-foreground: 258 100% 97%;
+
+    --popover: 250 42% 11%;
+    --popover-foreground: 258 100% 97%;
+
+    --primary: 255 91% 76%;
+    --primary-foreground: 250 45% 10%;
+
+    --secondary: 252 35% 18%;
+    --secondary-foreground: 258 100% 97%;
+
+    --muted: 252 30% 17%;
+    --muted-foreground: 254 20% 72%;
+
+    --accent: 255 45% 24%;
+    --accent-foreground: 258 100% 97%;
+
     --destructive: 0 72% 52%;
     --destructive-foreground: 0 0% 100%;
-    --border-hsl: 40 30% 86%;
-    --input: 40 30% 88%;
-    --ring: 40 62% 48%;
+
+    --border-hsl: 255 32% 24%;
+    --input: 255 32% 24%;
+    --ring: 255 91% 76%;
+
     --radius: 1rem;
 
-    --chart-1: 40 62% 48%;
-    --chart-2: 35 48% 62%;
-    --chart-3: 28 35% 42%;
-    --chart-4: 45 70% 72%;
-    --chart-5: 20 25% 55%;
+    --chart-1: 255 91% 76%;
+    --chart-2: 265 78% 68%;
+    --chart-3: 245 65% 58%;
+    --chart-4: 280 70% 78%;
+    --chart-5: 230 55% 65%;
   }
 
   * {
@@ -63,36 +84,49 @@
 
   html {
     background: var(--bg);
-    scroll-behavior: smooth;
+    color-scheme: dark;
+    scroll-behavior: auto;
   }
 
   body {
     background:
       radial-gradient(
-        ellipse at 78% 8%,
-        rgba(244, 217, 149, .22),
+        ellipse at 15% 0%,
+        rgba(109, 91, 208, .20),
+        transparent 38%
+      ),
+      radial-gradient(
+        ellipse at 90% 18%,
+        rgba(139, 92, 246, .14),
         transparent 34%
       ),
       radial-gradient(
-        ellipse at 8% 82%,
-        rgba(229, 210, 174, .20),
-        transparent 36%
+        ellipse at 50% 100%,
+        rgba(54, 39, 112, .22),
+        transparent 42%
       ),
       var(--bg);
 
     color: var(--text-primary);
-    font-family: 'Inter', 'Noto Sans Kannada',
-      'Noto Sans Devanagari', sans-serif;
+
+    font-family: 'Inter',
+      'Noto Sans Kannada',
+      'Noto Sans Devanagari',
+      sans-serif;
 
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+
     min-height: 100vh;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', 'Noto Sans Kannada',
-      'Noto Sans Devanagari', sans-serif;
-    color: #241d14;
+    font-family: 'Poppins',
+      'Noto Sans Kannada',
+      'Noto Sans Devanagari',
+      sans-serif;
+
+    color: #f4f0ff;
   }
 
   button, input, textarea {
@@ -100,25 +134,34 @@
   }
 }
 
+/* =========================================
+   UTILITIES
+========================================= */
+
 @layer utilities {
   .font-heading {
-    font-family: 'Poppins', 'Noto Sans Kannada',
-      'Noto Sans Devanagari', sans-serif;
+    font-family: 'Poppins',
+      'Noto Sans Kannada',
+      'Noto Sans Devanagari',
+      sans-serif;
   }
 
   .font-body {
-    font-family: 'Inter', 'Noto Sans Kannada',
-      'Noto Sans Devanagari', sans-serif;
+    font-family: 'Inter',
+      'Noto Sans Kannada',
+      'Noto Sans Devanagari',
+      sans-serif;
   }
 
   .text-gradient,
   .gradient-text {
     background: linear-gradient(
       115deg,
-      #9c6b18 0%,
-      #d8ad52 48%,
-      #a87925 100%
+      #ddd2ff 0%,
+      #a78bfa 48%,
+      #7966e8 100%
     );
+
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -126,14 +169,16 @@
   }
 
   .bg-brand-gradient {
-    background: linear-gradient(135deg, #f1d58e, #bd8627);
+    background: var(--brand-gradient);
   }
 
   .border-gradient {
     border: 1px solid transparent;
+
     background-image:
-      linear-gradient(#fffdf9, #fffdf9),
-      linear-gradient(135deg, #f1d58e, #bd8627);
+      linear-gradient(#171432, #171432),
+      linear-gradient(135deg, #c4b5fd, #6d5bd0);
+
     background-origin: border-box;
     background-clip: padding-box, border-box;
   }
@@ -147,7 +192,7 @@
   .glow-image,
   .glow-video,
   .glow-editor {
-    box-shadow: 0 10px 32px rgba(185, 137, 48, .16);
+    box-shadow: 0 10px 32px rgba(139, 92, 246, .18);
   }
 
   .scrollbar-hide {
@@ -160,190 +205,154 @@
   }
 }
 
-/* Frosted Glass */
+/* =========================================
+   FROSTED GLASS
+========================================= */
 
 .glass {
-  background: rgba(255, 253, 249, .72);
-  backdrop-filter: blur(22px) saturate(150%);
-  -webkit-backdrop-filter: blur(22px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, .88);
+  background: rgba(21, 18, 48, .82);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  border: 1px solid rgba(167, 139, 250, .22);
+
   box-shadow:
-    0 12px 38px rgba(115, 87, 39, .10),
-    inset 0 1px 0 rgba(255,255,255,.95);
+    0 12px 38px rgba(3, 2, 15, .28),
+    inset 0 1px 0 rgba(255,255,255,.05);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, .66);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(220, 190, 130, .42);
+  background: rgba(23, 20, 50, .88);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  border: 1px solid rgba(167, 139, 250, .20);
   border-radius: 22px;
+
   box-shadow:
-    0 14px 40px rgba(105, 79, 35, .09),
-    inset 0 1px 0 rgba(255,255,255,.95);
+    0 14px 40px rgba(3, 2, 15, .25),
+    inset 0 1px 0 rgba(255,255,255,.04);
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, .58);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, .9);
-  box-shadow: 0 8px 30px rgba(126, 93, 35, .08);
+  background: rgba(18, 16, 42, .88);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  border: 1px solid rgba(167, 139, 250, .18);
+
+  box-shadow: 0 8px 30px rgba(3, 2, 15, .22);
 }
 
 .glass-gold {
   background: linear-gradient(
     135deg,
-    rgba(255,255,255,.88),
-    rgba(248,237,213,.68)
+    rgba(31, 26, 67, .95),
+    rgba(22, 18, 49, .92)
   );
-  border: 1px solid rgba(205, 164, 83, .45);
-  box-shadow: 0 8px 28px rgba(176, 130, 42, .14);
+
+  border: 1px solid rgba(167, 139, 250, .28);
+
+  box-shadow: 0 8px 28px rgba(109, 91, 208, .16);
 }
 
-.gold-button {
+/* =========================================
+   BUTTONS
+========================================= */
+
+.gold-button,
+.cosmic-button {
   color: #fff;
-  background: linear-gradient(135deg, #e8c875, #bd8627);
-  border: 1px solid rgba(255,255,255,.7);
-  box-shadow:
-    0 7px 20px rgba(177, 128, 38, .25),
-    inset 0 1px 0 rgba(255,255,255,.45);
-  transition: .25s ease;
-}
 
-.gold-button:hover {
-  filter: brightness(1.04);
-  transform: translateY(-1px);
-}
-
-/* Animations */
-
-@keyframes glowPulse {
-  0%, 100% {
-    box-shadow: 0 0 18px rgba(205, 164, 83, .16);
-  }
-
-  50% {
-    box-shadow: 0 0 32px rgba(205, 164, 83, .30);
-  }
-}
-
-.glow-pulse {
-  animation: glowPulse 3s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% center;
-  }
-
-  100% {
-    background-position: 200% center;
-  }
-}
-
-.shimmer {
   background: linear-gradient(
-    90deg,
-    #bd8627 0%,
-    #f5dfaa 25%,
-    #c39132 50%,
-    #f5dfaa 75%,
-    #bd8627 100%
+    135deg,
+    #9b87f5,
+    #654bd0
   );
-  background-size: 200% auto;
-  animation: shimmer 4s linear infinite;
+
+  border: 1px solid rgba(220, 210, 255, .20);
+
+  box-shadow:
+    0 7px 20px rgba(109, 91, 208, .25),
+    inset 0 1px 0 rgba(255,255,255,.16);
 }
 
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.gold-button:hover,
+.cosmic-button:hover {
+  filter: brightness(1.08);
 }
 
-.fade-up {
-  animation: fadeUp .5s ease both;
-}
-
-.fade-up-1 {
-  animation: fadeUp .5s ease .1s both;
-}
-
-.fade-up-2 {
-  animation: fadeUp .5s ease .2s both;
-}
-
-.fade-up-3 {
-  animation: fadeUp .5s ease .3s both;
-}
-
-/* Scrollbar */
+/* =========================================
+   SCROLLBAR
+========================================= */
 
 ::-webkit-scrollbar {
   width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #0d0b20;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d9c69f;
+  background: #51418c;
   border-radius: 99px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #bd9a55;
+  background: #8b7cf6;
 }
 
 ::selection {
-  background: rgba(205, 164, 83, .28);
-  color: #33230b;
+  background: rgba(167, 139, 250, .32);
+  color: #fff;
 }
 
-/* Accessibility */
+/* =========================================
+   ACCESSIBILITY
+========================================= */
 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
+    animation: none !important;
+    transition: none !important;
     scroll-behavior: auto !important;
   }
 }
-/* AUREXA AI - Premium Glass Stats */
+
+/* =========================================
+   AUREXA AI — STATS
+========================================= */
 
 .aurexa-stats {
   display: grid;
+
   grid-template-columns: repeat(2, minmax(0, 1fr));
+
   gap: 14px;
+
   width: 100%;
   max-width: 600px;
+
   margin: 28px auto;
 }
 
 .aurexa-stat-card {
   padding: 22px 12px;
-  text-align: center;
-  border: 1px solid rgba(201, 164, 92, 0.3);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 8px 28px rgba(160, 125, 60, 0.09);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
 
-.aurexa-stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(160, 125, 60, 0.16);
+  text-align: center;
+
+  border: 1px solid rgba(167, 139, 250, .22);
+  border-radius: 22px;
+
+  background: rgba(23, 20, 50, .86);
+
+  box-shadow: 0 8px 28px rgba(3, 2, 15, .22);
 }
 
 .aurexa-stat-icon {
@@ -353,15 +362,18 @@
 
 .aurexa-stat-card h2 {
   margin: 0;
+
   font-size: 30px;
   font-weight: 800;
-  color: #b18a43;
+
+  color: #c4b5fd;
   letter-spacing: -1px;
 }
 
 .aurexa-stat-card p {
   margin: 6px 0 0;
-  color: #777064;
+
+  color: #aaa2c8;
   font-size: 13px;
   font-weight: 600;
 }
