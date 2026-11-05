@@ -283,22 +283,32 @@ export default function ChatPage() {
 
   /* LOAD FIREBASE HISTORY */
 
-  useEffect(() => {
+useEffect(() => {
+  let cancelled = false;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  const loadHistory = async () => {
     if (!userId) {
+      setMessages([]);
       setHistoryLoading(false);
       return;
     }
 
-    let cancelled = false;
+    setHistoryLoading(true);
 
-    const loadHistory = async () => {
-      setHistoryLoading(true);
+    try {
+      const snapshot = await Promise.race([
+        getDoc(doc(db, 'chats', userId)),
+        new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(() => {
+            reject(new Error('Firebase history loading timed out.'));
+          }, 10000);
+        }),
+      ]);
 
-      try {
-        const snapshot = await getDoc(doc(db, 'chats', userId));
+      if (cancelled) return;
 
-        if (!snapshot.exists() || cancelled) return;
-
+      if (snapshot.exists()) {
         const stored = snapshot.data().messages;
 
         const validMessages: Message[] = Array.isArray(stored)
@@ -320,23 +330,29 @@ export default function ChatPage() {
               }))
           : [];
 
-        if (!cancelled) {
-          setMessages(validMessages);
-        }
-      } catch (error) {
-        console.error('History loading error:', error);
-      } finally {
-        if (!cancelled) setHistoryLoading(false);
+        setMessages(validMessages);
+      } else {
+        setMessages([]);
       }
-    };
+    } catch (error) {
+      console.error('History loading error:', error);
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
 
-    void loadHistory();
+      if (!cancelled) {
+        setHistoryLoading(false);
+      }
+    }
+  };
 
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
+  void loadHistory();
 
+  return () => {
+    cancelled = true;
+    if (timeoutId) clearTimeout(timeoutId);
+  };
+}, [userId]);
+  
   /* SAVE FIREBASE HISTORY */
 
   useEffect(() => {
