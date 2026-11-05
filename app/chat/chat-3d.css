@@ -1409,3 +1409,74 @@
     transition-duration: 0.01ms !important;
   }
 }
+/* =========================================
+   AUREXA AI — FIXED CHAT INPUT POSITION
+========================================= */
+
+.a3-page {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.a3-layout {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.a3-main {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.a3-messages {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 20px;
+}
+
+.a3-composer-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 10px 5% 12px;
+  background: rgba(8, 7, 17, 0.98);
+  border-top: 1px solid var(--border);
+}
+
+.a3-composer {
+  min-height: 58px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.a3-composer-disclaimer {
+  margin-top: 6px;
+}
+
+/* Mobile adjustment */
+
+@media (max-width: 680px) {
+  .a3-page {
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .a3-layout {
+    min-height: 0;
+  }
+
+  .a3-composer-wrap {
+    padding: 8px 10px max(10px, env(safe-area-inset-bottom));
+  }
+
+  .a3-composer {
+    min-height: 54px;
+  }
+
+  .a3-messages {
+    padding: 15px 12px;
+  }
+}
