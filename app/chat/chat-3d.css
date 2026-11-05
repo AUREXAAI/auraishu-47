@@ -1480,3 +1480,302 @@
     padding: 15px 12px;
   }
 }
+/* =========================================
+   AUREXA AI — MERCURY × SATURN
+   PREMIUM COSMIC SPACE THEME
+========================================= */
+
+.a3-page {
+  --bg: #05050d;
+  --surface: rgba(13, 14, 27, 0.94);
+  --surface-2: rgba(20, 21, 38, 0.94);
+  --surface-3: #25243a;
+
+  --border: rgba(185, 174, 220, 0.17);
+  --border-active: rgba(183, 158, 255, 0.65);
+
+  --purple: #825bdf;
+  --purple-light: #c2aaff;
+
+  --text: #f5f5fa;
+  --muted: #9695ac;
+
+  position: relative;
+  isolation: isolate;
+  background: #05050d;
+  color: var(--text);
+}
+
+/* GALAXY BACKGROUND */
+
+.a3-page::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+
+  background:
+    linear-gradient(
+      rgba(5, 5, 13, 0.76),
+      rgba(5, 5, 13, 0.91)
+    ),
+    url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564")
+    center / cover no-repeat;
+}
+
+/* PLANETARY GLOW */
+
+.a3-page::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+
+  background:
+    radial-gradient(
+      circle at 85% 17%,
+      rgba(120, 91, 210, 0.20),
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at 12% 75%,
+      rgba(180, 165, 190, 0.12),
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 35%,
+      rgba(0, 0, 0, 0.35)
+    );
+}
+
+/* HEADER */
+
+.a3-header {
+  background: rgba(5, 5, 13, 0.88);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+}
+
+.a3-brand-mark {
+  background: linear-gradient(135deg, #c3c9d8, #7954c9);
+  color: #090914;
+}
+
+.a3-brand-name small {
+  color: #c4a66d;
+}
+
+.a3-status-dot {
+  background: #c5a76d;
+  box-shadow: 0 0 12px #c5a76d;
+}
+
+/* SIDEBAR */
+
+.a3-sidebar {
+  background: rgba(7, 7, 17, 0.94);
+  border-color: var(--border);
+  backdrop-filter: blur(18px);
+}
+
+.a3-new-chat {
+  border-color: rgba(193, 170, 255, 0.35);
+  background: linear-gradient(110deg, #57418f, #8461c9);
+}
+
+.a3-sidebar-item:hover,
+.a3-sidebar-item.active {
+  background: rgba(130, 91, 223, 0.15);
+  border-color: var(--border-active);
+}
+
+.a3-user-avatar {
+  background: #51452f;
+  color: #e9d4a8;
+}
+
+/* MAIN */
+
+.a3-main {
+  background: transparent;
+}
+
+/* TOOLBAR */
+
+.a3-chat-toolbar {
+  background: rgba(7, 7, 17, 0.75);
+  border-color: var(--border);
+  backdrop-filter: blur(14px);
+}
+
+.a3-tool-selector,
+.a3-icon-button {
+  background: rgba(20, 20, 37, 0.88);
+  border-color: var(--border);
+  color: #e3e0ef;
+}
+
+/* WELCOME */
+
+.a3-welcome-icon {
+  border-color: rgba(197, 167, 109, 0.5);
+  color: #d5c4a0;
+  background: linear-gradient(135deg, #393247, #12101c);
+  transform: none;
+}
+
+.a3-welcome-eyebrow {
+  color: #c5a76d;
+}
+
+.a3-welcome-content h1 span {
+  color: #b69aff;
+}
+
+/* TOOL CARDS */
+
+.a3-tool-card {
+  background: rgba(15, 15, 29, 0.82);
+  border-color: var(--border);
+  backdrop-filter: blur(12px);
+}
+
+.a3-tool-card:hover,
+.a3-tool-card.active {
+  background: rgba(40, 31, 66, 0.88);
+  border-color: var(--border-active);
+}
+
+.a3-tool-card-icon {
+  color: #d1c0ff;
+  background: rgba(130, 91, 223, 0.18);
+}
+
+/* UPCOMING */
+
+.a3-upcoming-card {
+  background: rgba(14, 14, 27, 0.82);
+  border-color: var(--border);
+}
+
+.a3-upcoming-card > svg {
+  color: #c5a76d;
+}
+
+.a3-coming-badge {
+  color: #d0b57d;
+}
+
+.a3-upcoming-heading {
+  color: #c5a76d;
+}
+
+/* MESSAGES */
+
+.a3-message-bubble {
+  border-color: var(--border);
+  backdrop-filter: blur(10px);
+}
+
+.a3-user-message {
+  background: rgba(49, 36, 76, 0.88);
+  border-color: rgba(174, 143, 255, 0.35);
+}
+
+.a3-assistant-message {
+  background: rgba(15, 15, 28, 0.91);
+}
+
+.a3-message-avatar {
+  background: #302744;
+  color: #d1bdff;
+}
+
+.a3-user-message-avatar {
+  background: #50432f;
+  color: #f0dfb8;
+}
+
+/* COMPOSER */
+
+.a3-composer-wrap {
+  background: rgba(5, 5, 13, 0.96);
+  border-color: var(--border);
+  backdrop-filter: blur(18px);
+}
+
+.a3-composer {
+  background: rgba(19, 19, 35, 0.96);
+  border-color: rgba(178, 157, 230, 0.38);
+  box-shadow: 0 0 30px rgba(108, 76, 180, 0.10);
+}
+
+.a3-composer:focus-within {
+  border-color: #a98aff;
+}
+
+.a3-composer-action {
+  background: #29243e;
+  color: #c7b5ef;
+}
+
+.a3-send-button {
+  background: linear-gradient(135deg, #8061c8, #a28bdc);
+  color: white;
+}
+
+.a3-composer-disclaimer {
+  color: #85839b;
+}
+
+/* VOICE */
+
+.a3-voice-button,
+.a3-voice-language {
+  background: #171628;
+  border-color: var(--border);
+  color: #d1c9e5;
+}
+
+/* IMAGE MODAL */
+
+.a3-image-modal {
+  background: #10101d;
+  border-color: rgba(197, 167, 109, 0.4);
+}
+
+.a3-modal-eyebrow {
+  color: #c5a76d;
+}
+
+.a3-image-textarea {
+  background: #080812;
+  border-color: var(--border);
+}
+
+/* CODE BLOCK */
+
+.a3-code-block {
+  background: #080811;
+  border-color: var(--border);
+}
+
+.a3-code-header {
+  background: #19172a;
+  color: #c9b5f4;
+}
+
+/* MOBILE */
+
+@media (max-width: 680px) {
+  .a3-page::before {
+    background-position: center;
+  }
+
+  .a3-composer-wrap {
+    background: rgba(5, 5, 13, 0.98);
+  }
+}
