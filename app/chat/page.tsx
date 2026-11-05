@@ -8,9 +8,13 @@ import {
   useMemo,
 } from 'react';
 
-import type { FormEvent, CSSProperties } from 'react';
+import type {
+  FormEvent,
+  KeyboardEvent,
+} from 'react';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -21,1820 +25,1625 @@ import {
   Loader2,
   Copy,
   Check,
-  AlertCircle,
-  ArrowLeft,
-  Image as ImageIcon,
-  X,
-  MessageCircle,
   Plus,
-  Code2,
-  Brain,
-  Trash2,
   Menu,
-  Zap,
-  ChevronRight,
-  WandSparkles,
+  X,
+  MessageSquare,
+  Code2,
+  Calculator,
+  Image as ImageIcon,
   Mic,
   MicOff,
   Volume2,
   VolumeX,
-  Video,
-  Monitor,
-  FileText,
-  Languages,
+  ChevronDown,
+  Trash2,
+  StopCircle,
+  WandSparkles,
+  AlertCircle,
+  ArrowUp,
+  PanelLeftClose,
+  PanelLeftOpen,
+  RefreshCw,
+  Download,
 } from 'lucide-react';
 
-import { useTranslations } from 'next-intl';
 import { useAuth } from '@/lib/auth-context';
 import { db } from '@/lib/firebase';
 
 import {
   doc,
-  setDoc,
   getDoc,
+  setDoc,
 } from 'firebase/firestore';
-
-import {
-  Prism as SyntaxHighlighter,
-} from 'react-syntax-highlighter';
-
-import {
-  vscDarkPlus,
-} from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 import './chat-3d.css';
 
-/* TYPES */
-
-type Message = {
-  role: 'user' | 'assistant';
-  content: string;
-  error?: boolean;
-  imageUrl?: string;
-};
+type Role = 'user' | 'assistant';
 
 type Tool = 'chat' | 'solve' | 'coding';
 
 type VoiceLanguage = 'en-IN' | 'hi-IN' | 'kn-IN';
 
-type SpeechRecognitionResult = {
-  transcript: string;
+type Message = {
+  role: Role;
+  content: string;
+  imageUrl?: string;
+  error?: boolean;
+  id?: string;
 };
-
-type SpeechRecognitionEventLike = {
-  results: ArrayLike<ArrayLike<SpeechRecognitionResult>>;
-};
-
-type SpeechRecognitionLike = {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
-  onerror: ((event: { error: string }) => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-  abort: () => void;
-};
-
-type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
-
-declare global {
-  interface Window {
-    SpeechRecognition?: SpeechRecognitionConstructor;
-    webkitSpeechRecognition?: SpeechRecognitionConstructor;
-  }
-}
 
 const CHAT_ID = 'default';
 const MAX_MESSAGES = 50;
 
-const tools: {
+const VOICE_LANGUAGES: {
+  label: string;
+  value: VoiceLanguage;
+}[] = [
+  { label: 'English', value: 'en-IN' },
+  { label: 'ಕನ್ನಡ', value: 'kn-IN' },
+  { label: 'हिन्दी', value: 'hi-IN' },
+];
+
+const TOOL_OPTIONS: {
   id: Tool;
   label: string;
   description: string;
-  icon: typeof MessageCircle;
+  icon: typeof MessageSquare;
 }[] = [
   {
     id: 'chat',
     label: 'AI Chat',
     description: 'Ask anything',
-    icon: MessageCircle,
+    icon: MessageSquare,
   },
   {
     id: 'solve',
-    label: 'Solve',
-    description: 'Understand problems',
-    icon: Brain,
+    label: 'AI Solver',
+    description: 'Solve step by step',
+    icon: Calculator,
   },
   {
     id: 'coding',
     label: 'Coding',
-    description: 'Build with AI',
+    description: 'Write and explain code',
     icon: Code2,
   },
 ];
 
-const upcomingFeatures = [
-  {
-    title: 'Video Generation',
-    description: 'Create videos from text prompts.',
-    icon: Video,
-  },
-  {
-    title: 'Screen Assistance',
-    description: 'Get help understanding your screen.',
-    icon: Monitor,
-  },
-  {
-    title: 'Document AI',
-    description: 'Understand and work with documents.',
-    icon: FileText,
-  },
-];
+function createId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
 
-/* CODE BLOCK */
+/* ---------------- CODE BLOCK ---------------- */
 
 function CodeBlock({
-  code,
-  lang,
+  children,
 }: {
-  code: string;
-  lang: string;
+  children: string;
 }) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = async () => {
+  const copyCode = async () => {
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(children);
       setCopied(true);
-
-      window.setTimeout(() => setCopied(false), 1800);
+      setTimeout(() => setCopied(false), 1600);
     } catch {
       setCopied(false);
     }
   };
 
   return (
-    <div className="a3-codeblock">
-      <div className="a3-codehead">
-        <span>{lang || 'code'}</span>
+    <div className="a3-code-block">
+      <div className="a3-code-header">
+        <span>Code</span>
 
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="a3-copy"
-        >
+        <button onClick={copyCode} type="button">
           {copied ? <Check size={14} /> : <Copy size={14} />}
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
 
-      <SyntaxHighlighter
-        language={lang || 'text'}
-        style={vscDarkPlus}
-        customStyle={{
-          margin: 0,
-          padding: '16px',
-          background: 'rgba(7, 7, 18, 0.96)',
-          fontSize: '13px',
-          lineHeight: '1.75',
-          overflowX: 'auto',
-        }}
-      >
-        {code}
-      </SyntaxHighlighter>
+      <pre>
+        <code>{children}</code>
+      </pre>
     </div>
   );
 }
 
-/* MESSAGE CONTENT */
+/* ---------------- MARKDOWN MESSAGE ---------------- */
 
 function MessageContent({
   content,
-  imageUrl,
-  onSpeak,
 }: {
   content: string;
-  imageUrl?: string;
-  onSpeak?: () => void;
 }) {
-  const parts = content.split(/(```[\s\S]*?```)/g);
-
   return (
-    <>
-      {imageUrl && (
-        <div className="a3-generated-image">
-          <img
-            src={imageUrl}
-            alt="AI generated artwork"
-            loading="lazy"
-            onError={(event) => {
-              const parent = event.currentTarget.parentElement;
+    <div className="a3-message-content">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          code({ children, className, ...props }) {
+            const match = /language-(\w+)/.exec(className || '');
+            const code = String(children).replace(/\n$/, '');
 
-              if (parent) {
-                const error = document.createElement('p');
-                error.className = 'a3-image-error';
-                error.textContent =
-                  'Image could not be loaded. Please try generating it again.';
-                parent.appendChild(error);
-              }
+            if (match) {
+              return <CodeBlock>{code}</CodeBlock>;
+            }
 
-              event.currentTarget.style.display = 'none';
-            }}
-          />
+            return (
+              <code className={className} {...props}>
+                {children}
+              </code>
+            );
+          },
 
-          <a
-            href={imageUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open full image <ChevronRight size={14} />
-          </a>
-        </div>
-      )}
+          pre({ children }) {
+            return <>{children}</>;
+          },
 
-      {parts.map((part, index) => {
-        if (
-          part.startsWith('```') &&
-          part.endsWith('```')
-        ) {
-          const lines = part.slice(3, -3).split('\n');
-          const firstLine = lines[0].trim();
-
-          const hasLanguage =
-            /^[a-zA-Z0-9+#.-]+$/.test(firstLine);
-
-          const lang = hasLanguage ? firstLine : 'text';
-
-          const code = hasLanguage
-            ? lines.slice(1).join('\n')
-            : lines.join('\n');
-
-          return (
-            <CodeBlock
-              key={index}
-              code={code}
-              lang={lang}
-            />
-          );
-        }
-
-        return (
-          <div
-            key={index}
-            className="a3-markdown-content"
-          >
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                a: ({ children, ...props }) => (
-                  <a
-                    {...props}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {children}
-                  </a>
-                ),
-              }}
-            >
-              {part}
-            </ReactMarkdown>
-          </div>
-        );
-      })}
-
-      {content.trim() && onSpeak && (
-        <button
-          type="button"
-          className="a3-message-speak"
-          onClick={onSpeak}
-          aria-label="Read response aloud"
-          title="Read response aloud"
-        >
-          <Volume2 size={15} />
-          Listen
-        </button>
-      )}
-    </>
+          a({ children, href }) {
+            return (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {children}
+              </a>
+            );
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
   );
 }
 
-/* ORB SCENE */
+/* ---------------- ORB ---------------- */
 
-function OrbScene({
-  active,
-  onClick,
+function OrbScene() {
+  return (
+    <div className="a3-orb-scene">
+      <motion.div
+        className="a3-orb"
+        animate={{
+          y: [0, -10, 0],
+          rotate: [0, 4, -4, 0],
+        }}
+        transition={{
+          duration: 7,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      >
+        <div className="a3-orb-core" />
+        <div className="a3-orb-ring a3-orb-ring-one" />
+        <div className="a3-orb-ring a3-orb-ring-two" />
+        <div className="a3-orb-glow" />
+      </motion.div>
+    </div>
+  );
+}
+
+/* ---------------- IMAGE MESSAGE ---------------- */
+
+function GeneratedImage({
+  src,
 }: {
-  active: boolean;
-  onClick?: () => void;
+  src: string;
 }) {
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+
   return (
-    <button
-      type="button"
-      aria-label="Interactive AUREXA AI orb"
-      onClick={onClick}
-      className={`a3-orb-button ${active ? 'is-active' : ''}`}
-    >
-      <div className="a3-orb-scene">
-        <div className="a3-orb-aura" />
-
-        <div className="a3-orb-ring a3-ring-one" />
-        <div className="a3-orb-ring a3-ring-two" />
-        <div className="a3-orb-ring a3-ring-three" />
-
-        <div className="a3-orb-core">
-          <div className="a3-orb-core-inner">
-            <Sparkles size={30} strokeWidth={1.5} />
-          </div>
+    <div className="a3-generated-image">
+      {loading && !failed && (
+        <div className="a3-image-loading">
+          <Loader2 className="animate-spin" size={24} />
+          <span>Loading generated image...</span>
         </div>
+      )}
 
-        {Array.from({ length: 12 }).map((_, index) => (
-          <span
-            key={index}
-            className="a3-particle"
-            style={{
-              '--particle-index': index,
-            } as CSSProperties}
-          />
-        ))}
-      </div>
-    </button>
+      {failed ? (
+        <div className="a3-image-error">
+          <AlertCircle size={20} />
+          <span>Image could not be loaded. Please try again.</span>
+        </div>
+      ) : (
+        <img
+          src={src}
+          alt="AI generated image"
+          loading="lazy"
+          onLoad={() => setLoading(false)}
+          onError={() => {
+            setLoading(false);
+            setFailed(true);
+          }}
+        />
+      )}
+
+      {!failed && !loading && (
+        <a
+          href={src}
+          target="_blank"
+          rel="noopener noreferrer"
+          download="aurexa-generated-image"
+          className="a3-image-download"
+        >
+          <Download size={15} />
+          Open image
+        </a>
+      )}
+    </div>
   );
 }
 
-/* MAIN CHAT PAGE */
+/* ---------------- MAIN PAGE ---------------- */
 
 export default function ChatPage() {
-  const t = useTranslations('nav');
-  const tc = useTranslations('chat');
-
   const { user } = useAuth();
-
-  const userId = user?.uid ?? null;
-
-  const docRef = useMemo(
-    () => userId ? doc(db, 'chats', userId) : null,
-    [userId]
-  );
+  const searchParams = useSearchParams();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
 
-  const [selectedTool, setSelectedTool] =
-    useState<Tool>('chat');
+  const [selectedTool, setSelectedTool] = useState<Tool>('chat');
 
-  const [streaming, setStreaming] = useState(false);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [initialLoaded, setInitialLoaded] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
-  const [showLimitDialog, setShowLimitDialog] = useState(false);
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [showTools, setShowTools] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
   const [imagePrompt, setImagePrompt] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
-
-  const [orbActive, setOrbActive] = useState(false);
 
   const [voiceLanguage, setVoiceLanguage] =
     useState<VoiceLanguage>('en-IN');
 
-  const [isListening, setIsListening] = useState(false);
-  const [voiceSupported, setVoiceSupported] = useState(false);
-  const [voiceAutoRead, setVoiceAutoRead] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
   const [voiceError, setVoiceError] = useState('');
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [copiedMessage, setCopiedMessage] = useState<string | null>(null);
 
-  const messagesRef = useRef<Message[]>([]);
-  const sendingRef = useRef(false);
-  const loadedUserRef = useRef<string | null>(null);
+  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
 
-  const recognitionRef =
-    useRef<SpeechRecognitionLike | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const autoReadRef = useRef(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    autoReadRef.current = voiceAutoRead;
-  }, [voiceAutoRead]);
+  const userId = user?.uid;
 
-  /* VOICE SUPPORT */
-
-  useEffect(() => {
-    const supported =
-      typeof window !== 'undefined' &&
-      !!(
-        window.SpeechRecognition ||
-        window.webkitSpeechRecognition
-      );
-
-    setVoiceSupported(supported);
-
-    return () => {
-      recognitionRef.current?.abort();
-
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, []);
-
-  /* VOICE OUTPUT */
-
-  const speakText = useCallback(
-    (text: string) => {
-      if (
-        typeof window === 'undefined' ||
-        !('speechSynthesis' in window)
-      ) {
-        setVoiceError(
-          'Speech output is not supported in this browser.'
-        );
-        return;
-      }
-
-      const cleanText = text
-        .replace(/```[\s\S]*?```/g, ' Code block omitted. ')
-        .replace(/[#*_`>]/g, '')
-        .trim();
-
-      if (!cleanText) return;
-
-      window.speechSynthesis.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(
-        cleanText.slice(0, 5000)
-      );
-
-      utterance.lang = voiceLanguage;
-      utterance.rate = 1;
-      utterance.pitch = 1;
-
-      utterance.onerror = () => {
-        setVoiceError('Could not play voice response.');
-      };
-
-      window.speechSynthesis.speak(utterance);
-    },
-    [voiceLanguage]
+  const activeTool = useMemo(
+    () => TOOL_OPTIONS.find((tool) => tool.id === selectedTool),
+    [selectedTool],
   );
 
-  /* VOICE INPUT */
-
-  const startVoiceInput = useCallback(() => {
-    const Recognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
-
-    if (!Recognition) {
-      setVoiceError(
-        'Voice input is not supported in this browser. Try a supported browser.'
-      );
-      return;
-    }
-
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-      return;
-    }
-
-    setVoiceError('');
-
-    try {
-      const recognition = new Recognition();
-
-      recognition.lang = voiceLanguage;
-      recognition.continuous = false;
-      recognition.interimResults = false;
-
-      recognition.onresult = (event) => {
-        const transcript =
-          event.results[0]?.[0]?.transcript ?? '';
-
-        if (transcript.trim()) {
-          setInput((previous) =>
-            previous.trim()
-              ? `${previous.trim()} ${transcript.trim()}`
-              : transcript.trim()
-          );
-        }
-      };
-
-      recognition.onerror = (event) => {
-        if (event.error === 'not-allowed') {
-          setVoiceError(
-            'Microphone permission was denied. Allow microphone access in browser settings.'
-          );
-        } else if (event.error !== 'no-speech') {
-          setVoiceError(
-            `Voice input error: ${event.error}`
-          );
-        }
-
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
-
-      recognition.start();
-      setIsListening(true);
-    } catch (error) {
-      console.error('Voice recognition error:', error);
-      setIsListening(false);
-      setVoiceError('Unable to start voice input.');
-    }
-  }, [voiceLanguage, isListening]);
-
-  /* LOAD MESSAGE REF */
+  /* ---------------- FIRESTORE HISTORY ---------------- */
 
   useEffect(() => {
-    messagesRef.current = messages;
-  }, [messages]);
-
-  /* LOAD CHAT HISTORY */
-
-  useEffect(() => {
-    if (!userId || !docRef) {
-      loadedUserRef.current = null;
-      messagesRef.current = [];
-      setMessages([]);
-      setInitialLoaded(true);
+    if (!userId) {
       setHistoryLoading(false);
       return;
     }
 
-    const currentUserId = userId;
-    const currentDocRef = docRef;
-
     let cancelled = false;
 
-    setInitialLoaded(false);
-    setHistoryLoading(true);
-
-    loadedUserRef.current = null;
-
-    async function loadHistory() {
+    const loadHistory = async () => {
       try {
-        const snapshot = await getDoc(currentDocRef);
+        setHistoryLoading(true);
 
-        if (cancelled) return;
+        const chatRef = doc(db, 'chats', userId);
+        const snapshot = await getDoc(chatRef);
 
-        if (snapshot.exists()) {
-          const data = snapshot.data();
-
-          if (Array.isArray(data.messages)) {
-            const safeMessages = data.messages
-              .filter(
-                (item: any) =>
-                  item &&
-                  (item.role === 'user' ||
-                    item.role === 'assistant') &&
-                  typeof item.content === 'string'
-              )
-              .slice(-MAX_MESSAGES) as Message[];
-
-            messagesRef.current = safeMessages;
-            setMessages(safeMessages);
-          } else {
-            messagesRef.current = [];
-            setMessages([]);
-          }
-        } else {
-          messagesRef.current = [];
-          setMessages([]);
+        if (!snapshot.exists() || cancelled) {
+          return;
         }
 
-        loadedUserRef.current = currentUserId;
+        const data = snapshot.data();
+        const storedMessages = Array.isArray(data.messages)
+          ? data.messages
+          : [];
+
+        const validMessages: Message[] = storedMessages
+          .filter(
+            (message: any) =>
+              (message.role === 'user' ||
+                message.role === 'assistant') &&
+              typeof message.content === 'string',
+          )
+          .slice(-MAX_MESSAGES)
+          .map((message: any) => ({
+            role: message.role,
+            content: message.content,
+            imageUrl:
+              typeof message.imageUrl === 'string'
+                ? message.imageUrl
+                : undefined,
+          }));
+
+        if (!cancelled) {
+          setMessages(validMessages);
+        }
       } catch (error) {
-        console.error(
-          'Chat history loading failed:',
-          error
-        );
+        console.error('Chat history load error:', error);
       } finally {
         if (!cancelled) {
           setHistoryLoading(false);
-          setInitialLoaded(true);
         }
       }
-    }
+    };
 
     void loadHistory();
 
     return () => {
       cancelled = true;
     };
-  }, [userId, docRef]);
+  }, [userId]);
 
-  /* SAVE CHAT HISTORY */
+  /* ---------------- SAVE HISTORY ---------------- */
 
   useEffect(() => {
-    if (
-      !userId ||
-      !docRef ||
-      !initialLoaded ||
-      loadedUserRef.current !== userId
-    ) {
-      return;
+    if (!userId || historyLoading) return;
+
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
 
-    const currentDocRef = docRef;
-
-    const timer = window.setTimeout(async () => {
+    saveTimeoutRef.current = setTimeout(async () => {
       try {
+        const chatRef = doc(db, 'chats', userId);
+
         await setDoc(
-          currentDocRef,
+          chatRef,
           {
             messages: messages.slice(-MAX_MESSAGES),
-            updatedAt: Date.now(),
+            updatedAt: new Date().toISOString(),
           },
-          { merge: true }
+          { merge: true },
         );
       } catch (error) {
-        console.error('Chat save failed:', error);
+        console.error('Chat history save error:', error);
       }
     }, 900);
 
-    return () => window.clearTimeout(timer);
-  }, [messages, userId, docRef, initialLoaded]);
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [messages, userId, historyLoading]);
 
-  /* SCROLL */
-
-  const scrollToBottom = useCallback(() => {
-    requestAnimationFrame(() => {
-      scrollRef.current?.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
-    });
-  }, []);
+  /* ---------------- AUTO SCROLL ---------------- */
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'end',
+    });
+  }, [messages, sending]);
 
-  /* UPDATE ASSISTANT MESSAGE */
+  /* ---------------- QUERY PROMPT ---------------- */
 
-  const updateAssistantMessage = useCallback(
-    (content: string, error = false) => {
-      const current = messagesRef.current.slice();
+  useEffect(() => {
+    const query = searchParams.get('q');
+    const tool = searchParams.get('tool');
 
-      if (!current.length) return;
+    if (tool === 'chat' || tool === 'solve' || tool === 'coding') {
+      setSelectedTool(tool);
+    }
 
-      const lastIndex = current.length - 1;
+    if (query) {
+      setInput(query);
+    }
+  }, [searchParams]);
 
-      current[lastIndex] = {
-        ...current[lastIndex],
-        role: 'assistant',
-        content,
-        ...(error ? { error: true } : {}),
-      };
+  /* ---------------- TEXTAREA RESIZE ---------------- */
 
-      messagesRef.current = current;
-      setMessages(current);
-    },
-    []
-  );
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
 
-  /* SEND MESSAGE */
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
+  }, [input]);
 
-  const sendMessage = useCallback(
-    async (
-      messageText: string,
-      tool: Tool = selectedTool
-    ) => {
-      if (!messageText.trim() || sendingRef.current) return;
+  /* ---------------- STOP SPEECH ---------------- */
 
-      if (!user) {
-        setVoiceError('Please sign in to use AUREXA AI.');
+  const stopSpeaking = useCallback(() => {
+    if (typeof window === 'undefined') return;
+
+    window.speechSynthesis?.cancel();
+    setSpeaking(false);
+  }, []);
+
+  /* ---------------- SPEAK MESSAGE ---------------- */
+
+  const speakMessage = useCallback(
+    (text: string) => {
+      if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+        setVoiceError('Voice output is not supported in this browser.');
         return;
       }
 
-      sendingRef.current = true;
-      setStreaming(true);
-      setOrbActive(true);
+      stopSpeaking();
 
-      const cleanText = messageText.trim();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = voiceLanguage;
+      utterance.rate = 1;
+      utterance.pitch = 1;
 
-      const userMessage: Message = {
-        role: 'user',
-        content: cleanText,
-      };
+      utterance.onstart = () => setSpeaking(true);
+      utterance.onend = () => setSpeaking(false);
+      utterance.onerror = () => setSpeaking(false);
 
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: '',
-      };
-
-      const previousMessages = messagesRef.current;
-
-      const updatedMessages = [
-        ...previousMessages,
-        userMessage,
-        assistantMessage,
-      ];
-
-      messagesRef.current = updatedMessages;
-      setMessages(updatedMessages);
-      setInput('');
-
-      try {
-        const idToken = await user.getIdToken();
-
-        const history = previousMessages
-          .slice(-20)
-          .map((message) => ({
-            role: message.role,
-            content: message.content,
-          }));
-
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            idToken,
-            tool,
-            chatId: CHAT_ID,
-            message: cleanText,
-            history,
-          }),
-        });
-
-        if (response.status === 429) {
-          let data: any = {};
-
-          try {
-            data = await response.json();
-          } catch {
-            // Ignore invalid JSON.
-          }
-
-          if (data.error === 'LIMIT_REACHED') {
-            setShowLimitDialog(true);
-
-            const rolledBack =
-              messagesRef.current.slice(0, -2);
-
-            messagesRef.current = rolledBack;
-            setMessages(rolledBack);
-
-            return;
-          }
-        }
-
-        if (!response.ok || !response.body) {
-          throw new Error(
-            `Chat request failed (${response.status})`
-          );
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-
-        let buffer = '';
-        let fullContent = '';
-
-        const processEvent = (event: string) => {
-          const line = event
-            .split(/\r?\n/)
-            .find((item) => item.startsWith('data:'));
-
-          if (!line) return;
-
-          const data = line.slice(5).trim();
-
-          if (!data || data === '[DONE]') return;
-
-          try {
-            const parsed = JSON.parse(data);
-
-            if (parsed.error) {
-              fullContent = String(parsed.error);
-
-              updateAssistantMessage(
-                `Error: ${fullContent}`,
-                true
-              );
-
-              return;
-            }
-
-            if (typeof parsed.token === 'string') {
-              fullContent += parsed.token;
-              updateAssistantMessage(fullContent);
-            }
-          } catch {
-            console.warn('Invalid SSE event received.');
-          }
-        };
-
-        while (true) {
-          const { done, value } = await reader.read();
-
-          if (done) {
-            buffer += decoder.decode();
-          } else {
-            buffer += decoder.decode(value, {
-              stream: true,
-            });
-          }
-
-          const events = buffer.split(/\r?\n\r?\n/);
-          buffer = events.pop() || '';
-
-          for (const event of events) {
-            processEvent(event);
-          }
-
-          if (done) break;
-        }
-
-        if (buffer.trim()) {
-          processEvent(buffer);
-        }
-
-        if (!fullContent.trim()) {
-          updateAssistantMessage(
-            'No response received. Please try again.',
-            true
-          );
-        } else if (autoReadRef.current) {
-          speakText(fullContent);
-        }
-      } catch (error) {
-        console.error('AI chat error:', error);
-
-        updateAssistantMessage(
-          'Sorry, something went wrong. Please try again.',
-          true
-        );
-      } finally {
-        sendingRef.current = false;
-        setStreaming(false);
-        setOrbActive(false);
-        inputRef.current?.focus();
-      }
+      window.speechSynthesis.speak(utterance);
     },
-    [user, selectedTool, updateAssistantMessage, speakText]
+    [voiceLanguage, stopSpeaking],
   );
 
-  /* URL QUERY SUPPORT */
+  /* ---------------- VOICE INPUT ---------------- */
 
-  useEffect(() => {
-    if (!initialLoaded) return;
+  const startVoiceInput = () => {
+    setVoiceError('');
 
-    const params = new URLSearchParams(window.location.search);
-    const initialMessage = params.get('q');
+    if (typeof window === 'undefined') return;
 
-    if (!initialMessage) return;
+    const SpeechRecognitionAPI =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
 
-    const toolValue = params.get('tool');
+    if (!SpeechRecognitionAPI) {
+      setVoiceError(
+        'Speech recognition is not supported in this browser. Try Chrome.',
+      );
+      return;
+    }
 
-    const validTool: Tool =
-      toolValue === 'solve' || toolValue === 'coding'
-        ? toolValue
-        : 'chat';
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
 
-    setSelectedTool(validTool);
+    try {
+      const recognition = new SpeechRecognitionAPI();
 
-    window.history.replaceState({}, '', '/chat');
+      recognition.lang = voiceLanguage;
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
 
-    void sendMessage(initialMessage, validTool);
-  }, [initialLoaded, sendMessage]);
+      recognition.onstart = () => {
+        setListening(true);
+      };
 
-  /* IMAGE GENERATION */
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        let transcript = '';
 
-  const generateImage = async (prompt: string) => {
-    const cleanPrompt = prompt.trim();
+        for (
+          let index = event.resultIndex;
+          index < event.results.length;
+          index += 1
+        ) {
+          transcript += event.results[index][0].transcript;
+        }
+
+        setInput(transcript);
+      };
+
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+        setListening(false);
+
+        if (event.error === 'not-allowed') {
+          setVoiceError('Microphone permission was denied.');
+        } else if (event.error === 'no-speech') {
+          setVoiceError('No speech detected. Please try again.');
+        } else {
+          setVoiceError(`Voice input error: ${event.error}`);
+        }
+      };
+
+      recognition.onend = () => {
+        setListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (error) {
+      console.error('Voice recognition error:', error);
+      setListening(false);
+      setVoiceError('Could not start voice recognition.');
+    }
+  };
+
+  /* ---------------- SEND CHAT ---------------- */
+
+  const sendMessage = async (
+    event?: FormEvent<HTMLFormElement>,
+  ) => {
+    event?.preventDefault();
+
+    const cleanInput = input.trim();
+
+    if (!cleanInput || sending) return;
+
+    setErrorMessage('');
+    setVoiceError('');
+
+    const userMessage: Message = {
+      role: 'user',
+      content: cleanInput,
+      id: createId(),
+    };
+
+    const updatedMessages = [...messages, userMessage];
+
+    setMessages(updatedMessages);
+    setInput('');
+    setSending(true);
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+
+    const assistantId = createId();
+
+    setMessages((previous) => [
+      ...previous,
+      {
+        role: 'assistant',
+        content: '',
+        id: assistantId,
+      },
+    ]);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      const idToken = user
+        ? await user.getIdToken()
+        : null;
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(idToken
+            ? { Authorization: `Bearer ${idToken}` }
+            : {}),
+        },
+        body: JSON.stringify({
+          idToken,
+          tool: selectedTool,
+          chatId: CHAT_ID,
+          message: cleanInput,
+          history: updatedMessages
+            .slice(-20)
+            .map((message) => ({
+              role: message.role,
+              content: message.content,
+            })),
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+
+        if (
+          response.status === 429 ||
+          errorData?.code === 'LIMIT_REACHED'
+        ) {
+          throw new Error(
+            errorData?.message ||
+              'You have reached the current usage limit.',
+          );
+        }
+
+        throw new Error(
+          errorData?.error ||
+            errorData?.message ||
+            `Request failed (${response.status})`,
+        );
+      }
+
+      if (!response.body) {
+        throw new Error('The server returned an empty response.');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      let buffer = '';
+      let assistantText = '';
+
+      const processSSE = (chunk: string) => {
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+
+          if (!trimmed.startsWith('data:')) continue;
+
+          const rawData = trimmed.slice(5).trim();
+
+          if (!rawData || rawData === '[DONE]') continue;
+
+          try {
+            const parsed = JSON.parse(rawData);
+
+            if (parsed.error) {
+              throw new Error(parsed.error);
+            }
+
+            if (parsed.token) {
+              assistantText += parsed.token;
+
+              setMessages((previous) =>
+                previous.map((message) =>
+                  message.id === assistantId
+                    ? {
+                        ...message,
+                        content: assistantText,
+                      }
+                    : message,
+                ),
+              );
+            }
+
+            if (parsed.content) {
+              assistantText += parsed.content;
+
+              setMessages((previous) =>
+                previous.map((message) =>
+                  message.id === assistantId
+                    ? {
+                        ...message,
+                        content: assistantText,
+                      }
+                    : message,
+                ),
+              );
+            }
+          } catch (error) {
+            if (error instanceof SyntaxError) {
+              continue;
+            }
+
+            throw error;
+          }
+        }
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        const chunks = buffer.split('\n\n');
+        buffer = chunks.pop() || '';
+
+        for (const chunk of chunks) {
+          processSSE(chunk);
+        }
+      }
+
+      buffer += decoder.decode();
+
+      if (buffer.trim()) {
+        processSSE(buffer);
+      }
+
+      if (!assistantText.trim()) {
+        throw new Error(
+          'The AI returned an empty response. Please try again.',
+        );
+      }
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.name === 'AbortError'
+      ) {
+        return;
+      }
+
+      console.error('Chat request error:', error);
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Something went wrong. Please try again.';
+
+      setErrorMessage(message);
+
+      setMessages((previous) =>
+        previous.map((item) =>
+          item.id === assistantId
+            ? {
+                ...item,
+                content: `Sorry, I couldn't complete that request.\n\n${message}`,
+                error: true,
+              }
+            : item,
+        ),
+      );
+    } finally {
+      setSending(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  /* ---------------- IMAGE GENERATION ---------------- */
+
+  const generateImage = async () => {
+    const cleanPrompt = imagePrompt.trim();
 
     if (!cleanPrompt || imageLoading) return;
 
     setImageLoading(true);
-    setVoiceError('');
-    setShowImageModal(false);
+    setImageModalOpen(false);
+    setImagePrompt('');
+    setErrorMessage('');
+
+    const userMessage: Message = {
+      role: 'user',
+      content: `Generate an image: ${cleanPrompt}`,
+      id: createId(),
+    };
+
+    const assistantId = createId();
+
+    setMessages((previous) => [
+      ...previous,
+      userMessage,
+      {
+        role: 'assistant',
+        content: `Creating an image for: "${cleanPrompt}"`,
+        id: assistantId,
+      },
+    ]);
 
     try {
       const imageUrl =
-        `https://image.pollinations.ai/prompt/${encodeURIComponent(
-          cleanPrompt
-        )}?model=flux&width=768&height=768&nologo=true`;
+        `https://image.pollinations.ai/prompt/` +
+        `${encodeURIComponent(cleanPrompt)}` +
+        `?model=flux&width=1024&height=1024&nologo=true`;
 
-      const nextMessages: Message[] = [
-        ...messagesRef.current,
-        {
-          role: 'user',
-          content: `Image: ${cleanPrompt}`,
-        },
-        {
-          role: 'assistant',
-          content: `Your image request: ${cleanPrompt}`,
-          imageUrl,
-        },
-      ];
-
-      messagesRef.current = nextMessages;
-      setMessages(nextMessages);
-      setImagePrompt('');
+      setMessages((previous) =>
+        previous.map((message) =>
+          message.id === assistantId
+            ? {
+                ...message,
+                content: 'Your image is ready to load.',
+                imageUrl,
+              }
+            : message,
+        ),
+      );
     } catch (error) {
-      console.error('Image generation failed:', error);
-      setVoiceError(
-        'Image generation could not be started. Please try again.'
+      console.error('Image generation error:', error);
+
+      setMessages((previous) =>
+        previous.map((message) =>
+          message.id === assistantId
+            ? {
+                ...message,
+                content:
+                  'Image generation could not be started. Please try again.',
+                error: true,
+              }
+            : message,
+        ),
       );
     } finally {
       setImageLoading(false);
-      inputRef.current?.focus();
     }
   };
 
-  /* FORM HANDLERS */
+  /* ---------------- COPY MESSAGE ---------------- */
 
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    void sendMessage(input);
+  const copyMessage = async (
+    content: string,
+    id: string,
+  ) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedMessage(id);
+
+      setTimeout(() => {
+        setCopiedMessage(null);
+      }, 1500);
+    } catch (error) {
+      console.error('Copy failed:', error);
+    }
   };
 
-  const handleImageSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    void generateImage(imagePrompt);
-  };
+  /* ---------------- CLEAR CHAT ---------------- */
 
-  /* CLEAR CHAT */
+  const clearChat = async () => {
+    abortControllerRef.current?.abort();
+    stopSpeaking();
 
-  const clearChat = () => {
-    if (sendingRef.current) return;
-
-    messagesRef.current = [];
     setMessages([]);
-    setShowMobileMenu(false);
+    setErrorMessage('');
+    setSidebarOpen(false);
 
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
+    if (userId) {
+      try {
+        await setDoc(
+          doc(db, 'chats', userId),
+          {
+            messages: [],
+            updatedAt: new Date().toISOString(),
+          },
+          { merge: true },
+        );
+      } catch (error) {
+        console.error('Could not clear saved chat:', error);
+      }
     }
   };
 
-  const activeTool =
-    tools.find((tool) => tool.id === selectedTool) || tools[0];
+  /* ---------------- KEYBOARD ---------------- */
 
-  /* UI */
+  const handleKeyDown = (
+    event: KeyboardEvent<HTMLTextAreaElement>,
+  ) => {
+    if (
+      event.key === 'Enter' &&
+      !event.shiftKey &&
+      !event.nativeEvent.isComposing
+    ) {
+      event.preventDefault();
+      void sendMessage();
+    }
+  };
+
+  const stopGeneration = () => {
+    abortControllerRef.current?.abort();
+    setSending(false);
+  };
+
+  /* ---------------- RENDER ---------------- */
 
   return (
-    <div className="a3-page">
-      <div className="a3-ambient a3-ambient-one" />
-      <div className="a3-ambient a3-ambient-two" />
-      <div className="a3-grid" />
-
+    <main className="a3-page">
       {/* HEADER */}
 
       <header className="a3-header">
-        <div className="a3-brand">
+        <div className="a3-header-left">
           <button
             type="button"
-            className="a3-back-button"
-            aria-label="Go back"
-            onClick={() => {
-              const previousPageIsInternal =
-                document.referrer.startsWith(
-                  window.location.origin
-                );
-
-              if (
-                window.history.length > 1 &&
-                previousPageIsInternal
-              ) {
-                window.history.back();
-              } else {
-                window.location.assign('/');
-              }
-            }}
-          >
-            <ArrowLeft size={17} />
-            <span>Back</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              setShowMobileMenu(!showMobileMenu)
-            }
             className="a3-icon-button a3-mobile-menu"
-            aria-label="Toggle menu"
-            aria-expanded={showMobileMenu}
+            onClick={() => setSidebarOpen((value) => !value)}
+            aria-label="Open sidebar"
           >
-            <Menu size={19} />
+            <Menu size={20} />
           </button>
 
-          <Link href="/" className="a3-logo">
-            <span className="a3-logo-symbol">
+          <Link href="/" className="a3-brand">
+            <span className="a3-brand-mark">
               <Sparkles size={20} />
             </span>
 
-            <span className="a3-logo-text">
-              AUREXA AI
+            <span>
+              <strong>AUREXA</strong>
+              <small>AI</small>
             </span>
           </Link>
-
-          <span className="a3-header-divider" />
-
-          <span className="a3-workspace-label">
-            AI Workspace
-          </span>
         </div>
 
-        <div className="a3-header-actions">
-          {historyLoading && (
-            <Loader2
-              size={16}
-              className="animate-spin"
-            />
-          )}
+        <div className="a3-header-center">
+          <span className="a3-status-dot" />
+          <span>AI Assistant</span>
+        </div>
 
-          <span className="a3-status">
-            <span className="a3-status-dot" />
-            AI Online
+        <div className="a3-header-right">
+          <span className="a3-early-badge">
+            EARLY ACCESS
           </span>
-
-          <Link
-            href="/pricing"
-            className="a3-upgrade-button"
-          >
-            <Zap size={14} />
-            <span>Upgrade</span>
-          </Link>
         </div>
       </header>
 
       <div className="a3-layout">
         {/* SIDEBAR */}
 
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              className="a3-sidebar-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+
         <aside
           className={`a3-sidebar ${
-            showMobileMenu ? 'a3-sidebar-open' : ''
+            sidebarOpen ? 'a3-sidebar-open' : ''
           }`}
         >
-          <button
-            type="button"
-            onClick={() => {
-              clearChat();
-              setShowMobileMenu(false);
-            }}
-            className="a3-new-chat"
-          >
-            <Plus size={17} />
-            New conversation
-          </button>
+          <div className="a3-sidebar-top">
+            <button
+              type="button"
+              className="a3-new-chat"
+              onClick={() => {
+                void clearChat();
+              }}
+            >
+              <Plus size={17} />
+              <span>New chat</span>
+            </button>
 
-          <div className="a3-sidebar-label">
-            WORKSPACE
+            <button
+              type="button"
+              className="a3-icon-button a3-sidebar-close"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close sidebar"
+            >
+              <X size={18} />
+            </button>
           </div>
 
-          {tools.map((tool) => {
-            const Icon = tool.icon;
+          <div className="a3-sidebar-section">
+            <span className="a3-sidebar-label">
+              WORKSPACE
+            </span>
 
-            return (
-              <button
-                key={tool.id}
-                type="button"
-                className={`a3-nav-item ${
-                  selectedTool === tool.id
-                    ? 'a3-nav-active'
-                    : ''
-                }`}
-                onClick={() => {
-                  setSelectedTool(tool.id);
-                  setShowMobileMenu(false);
-                }}
-              >
-                <Icon size={17} />
-                <span>{tool.id === 'solve' ? 'Problem Solver' : tool.id === 'coding' ? 'Code Assistant' : 'AI Chat'}</span>
+            <button
+              type="button"
+              className="a3-sidebar-item active"
+            >
+              <MessageSquare size={17} />
+              <span>AI Chat</span>
+            </button>
 
-                {selectedTool === tool.id && (
-                  <span className="a3-nav-indicator" />
-                )}
-              </button>
-            );
-          })}
-
-          <button
-            type="button"
-            className="a3-nav-item"
-            onClick={() => {
-              setShowImageModal(true);
-              setShowMobileMenu(false);
-            }}
-          >
-            <WandSparkles size={17} />
-            <span>Image Studio</span>
-          </button>
-
-          <div className="a3-sidebar-label">
-            COMING SOON
+            <button
+              type="button"
+              className="a3-sidebar-item"
+              onClick={() => setImageModalOpen(true)}
+            >
+              <ImageIcon size={17} />
+              <span>Image Studio</span>
+            </button>
           </div>
 
-          {upcomingFeatures.map((feature) => {
-            const Icon = feature.icon;
+          <div className="a3-sidebar-section">
+            <span className="a3-sidebar-label">
+              RECENT
+            </span>
 
-            return (
-              <div
-                key={feature.title}
-                className="a3-upcoming-nav"
-                title={feature.description}
-              >
-                <Icon size={16} />
-                <span>{feature.title}</span>
-                <small>SOON</small>
+            {messages.length > 0 ? (
+              <div className="a3-sidebar-history">
+                <button
+                  type="button"
+                  className="a3-sidebar-item"
+                >
+                  <MessageSquare size={16} />
+                  <span>
+                    {messages.find((message) => message.role === 'user')
+                      ?.content.slice(0, 26) || 'Current conversation'}
+                  </span>
+                </button>
               </div>
-            );
-          })}
-
-          <div className="a3-sidebar-label a3-history-label">
-            CURRENT SESSION
+            ) : (
+              <p className="a3-sidebar-empty">
+                Your conversations will appear here.
+              </p>
+            )}
           </div>
 
-          <div className="a3-session-card">
-            <div className="a3-session-icon">
-              <Sparkles size={16} />
-            </div>
+          <div className="a3-sidebar-bottom">
+            <div className="a3-sidebar-user">
+              <div className="a3-user-avatar">
+                {user?.email?.charAt(0).toUpperCase() || 'A'}
+              </div>
 
-            <div className="a3-session-info">
-              <strong>AI Conversation</strong>
-
-              <span>
-                {messages.length === 0
-                  ? 'Ready to explore'
-                  : `${messages.length} messages`}
-              </span>
+              <div className="a3-user-info">
+                <strong>
+                  {user?.displayName || 'AUREXA User'}
+                </strong>
+                <small>
+                  {user?.email || 'Guest session'}
+                </small>
+              </div>
             </div>
 
             <button
               type="button"
-              onClick={clearChat}
-              aria-label="Clear chat"
-              className="a3-small-icon"
-              disabled={streaming}
+              className="a3-sidebar-item a3-clear-button"
+              onClick={() => void clearChat()}
             >
-              <Trash2 size={14} />
+              <Trash2 size={16} />
+              <span>Clear conversation</span>
             </button>
           </div>
-
-          <div className="a3-sidebar-spacer" />
-
-          <div className="a3-plan-card">
-            <div className="a3-plan-glow" />
-
-            <div className="a3-plan-icon">
-              <Sparkles size={17} />
-            </div>
-
-            <strong>Your AI journey</strong>
-
-            <p>
-              Unlock more possibilities with AUREXA Premium.
-            </p>
-
-            <Link href="/pricing">
-              Explore Premium
-              <ChevronRight size={15} />
-            </Link>
-          </div>
-
-          <Link href="/" className="a3-sidebar-home">
-            <ArrowLeft size={15} />
-            {t('home')}
-          </Link>
         </aside>
 
-        {showMobileMenu && (
-          <button
-            type="button"
-            aria-label="Close menu"
-            className="a3-mobile-overlay"
-            onClick={() => setShowMobileMenu(false)}
-          />
-        )}
+        {/* MAIN */}
 
-        {/* MAIN CHAT */}
-
-        <main className="a3-main">
+        <section className="a3-main">
           <div className="a3-chat-toolbar">
-            <div className="a3-toolbar-title">
-              <span className="a3-toolbar-mark">
-                <Sparkles size={15} />
-              </span>
+            <div className="a3-chat-toolbar-left">
+              <button
+                type="button"
+                className="a3-icon-button a3-desktop-sidebar-toggle"
+                onClick={() => setSidebarOpen((value) => !value)}
+                aria-label="Toggle sidebar"
+              >
+                {sidebarOpen ? (
+                  <PanelLeftClose size={18} />
+                ) : (
+                  <PanelLeftOpen size={18} />
+                )}
+              </button>
 
-              <div>
-                <strong>{activeTool.label}</strong>
-                <span>{activeTool.description}</span>
+              <div className="a3-tool-selector-wrap">
+                <button
+                  type="button"
+                  className="a3-tool-selector"
+                  onClick={() => setMobileToolsOpen((value) => !value)}
+                >
+                  {activeTool && <activeTool.icon size={17} />}
+                  <span>{activeTool?.label || 'AI Chat'}</span>
+                  <ChevronDown size={15} />
+                </button>
+
+                <AnimatePresence>
+                  {mobileToolsOpen && (
+                    <motion.div
+                      className="a3-tool-dropdown"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                    >
+                      {TOOL_OPTIONS.map((tool) => {
+                        const Icon = tool.icon;
+
+                        return (
+                          <button
+                            type="button"
+                            key={tool.id}
+                            className={
+                              selectedTool === tool.id
+                                ? 'active'
+                                : ''
+                            }
+                            onClick={() => {
+                              setSelectedTool(tool.id);
+                              setMobileToolsOpen(false);
+                            }}
+                          >
+                            <Icon size={17} />
+
+                            <span>
+                              <strong>{tool.label}</strong>
+                              <small>{tool.description}</small>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
-            <div className="a3-toolbar-actions">
-              <span className="a3-model-pill">
-                <span className="a3-model-dot" />
-                AUREXA Engine
-              </span>
+            <div className="a3-chat-toolbar-right">
+              <button
+                type="button"
+                className="a3-icon-button"
+                onClick={() => setImageModalOpen(true)}
+                title="Image generation"
+              >
+                <ImageIcon size={18} />
+              </button>
 
               <button
                 type="button"
-                onClick={clearChat}
-                disabled={streaming || messages.length === 0}
                 className="a3-icon-button"
+                onClick={() => void clearChat()}
                 title="New conversation"
-                aria-label="New conversation"
               >
-                <Plus size={18} />
+                <RefreshCw size={17} />
               </button>
             </div>
           </div>
 
           {/* MESSAGES */}
 
-          <section
-            ref={scrollRef}
-            className="a3-messages"
-          >
-            {messages.length === 0 ? (
+          <div className="a3-messages">
+            {historyLoading ? (
+              <div className="a3-loading-state">
+                <Loader2 size={25} className="animate-spin" />
+                <span>Loading your workspace...</span>
+              </div>
+            ) : messages.length === 0 ? (
               <div className="a3-welcome">
-                <div className="a3-orb-stage">
-                  <div className="a3-stage-ring a3-stage-ring-one" />
-                  <div className="a3-stage-ring a3-stage-ring-two" />
-                  <div className="a3-stage-ring a3-stage-ring-three" />
-
-                  <OrbScene
-                    active={orbActive}
-                    onClick={() => {
-                      setOrbActive(true);
-
-                      window.setTimeout(
-                        () => setOrbActive(false),
-                        1500
-                      );
-                    }}
-                  />
-
-                  <span className="a3-orb-caption">
-                    INTELLIGENCE CORE
-                  </span>
-                </div>
+                <OrbScene />
 
                 <motion.div
-                  initial={{ opacity: 0, y: 14 }}
+                  className="a3-welcome-content"
+                  initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15 }}
-                  className="a3-welcome-copy"
+                  transition={{ duration: 0.5 }}
                 >
-                  <div className="a3-eyebrow">
-                    <span />
-                    YOUR INTELLIGENT ASSISTANT
-                  </div>
+                  <span className="a3-welcome-eyebrow">
+                    INTELLIGENCE, REIMAGINED
+                  </span>
 
                   <h1>
-                    Imagine beyond.
+                    What can I help
                     <br />
-                    <span>Create with AUREXA.</span>
+                    <span>you create today?</span>
                   </h1>
 
                   <p>
-                    Explore ideas, solve problems, write code,
-                    and bring your imagination to life.
+                    Meet AUREXA AI — your multilingual AI
+                    assistant for ideas, learning, creativity
+                    and development.
                   </p>
-                </motion.div>
 
-                <div className="a3-tool-grid">
-                  {tools.map((tool, index) => {
-                    const Icon = tool.icon;
-
-                    return (
-                      <motion.button
-                        key={tool.id}
-                        type="button"
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          delay: 0.2 + index * 0.08,
-                        }}
-                        onClick={() => {
-                          setSelectedTool(tool.id);
-                          inputRef.current?.focus();
-                        }}
-                        className={`a3-tool-card ${
-                          selectedTool === tool.id
-                            ? 'a3-tool-selected'
-                            : ''
-                        }`}
-                      >
-                        <span className="a3-tool-icon">
-                          <Icon size={19} />
-                        </span>
-
-                        <span className="a3-tool-copy">
-                          <strong>{tool.label}</strong>
-                          <small>{tool.description}</small>
-                        </span>
-
-                        <ChevronRight
-                          size={15}
-                          className="a3-tool-arrow"
-                        />
-                      </motion.button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowImageModal(true)}
-                  className="a3-image-shortcut"
-                >
-                  <ImageIcon size={16} />
-                  Create something visual
-                  <Sparkles size={14} />
-                </button>
-
-                {/* UPCOMING FEATURES */}
-
-                <div className="a3-upcoming-section">
-                  <div className="a3-upcoming-heading">
-                    <Sparkles size={15} />
-                    <span>MORE FROM AUREXA</span>
-                    <small>COMING SOON</small>
-                  </div>
-
-                  <div className="a3-upcoming-grid">
-                    {upcomingFeatures.map((feature) => {
-                      const Icon = feature.icon;
+                  <div className="a3-tool-grid">
+                    {TOOL_OPTIONS.map((tool) => {
+                      const Icon = tool.icon;
 
                       return (
-                        <div
-                          key={feature.title}
-                          className="a3-upcoming-card"
+                        <button
+                          type="button"
+                          key={tool.id}
+                          className={`a3-tool-card ${
+                            selectedTool === tool.id ? 'active' : ''
+                          }`}
+                          onClick={() => setSelectedTool(tool.id)}
                         >
-                          <span className="a3-upcoming-icon">
-                            <Icon size={19} />
+                          <span className="a3-tool-card-icon">
+                            <Icon size={20} />
                           </span>
 
-                          <strong>{feature.title}</strong>
-                          <p>{feature.description}</p>
-                          <span className="a3-coming-badge">
-                            COMING SOON
-                          </span>
-                        </div>
+                          <strong>{tool.label}</strong>
+                          <small>{tool.description}</small>
+                        </button>
                       );
                     })}
                   </div>
-                </div>
+
+                  <div className="a3-upcoming-nav">
+                    <span>EXPLORE AUREXA</span>
+                  </div>
+
+                  <div className="a3-upcoming-grid">
+                    <div className="a3-upcoming-card">
+                      <ImageIcon size={19} />
+                      <strong>AI Images</strong>
+                      <small>Generate visuals from prompts</small>
+                    </div>
+
+                    <div className="a3-upcoming-card">
+                      <WandSparkles size={19} />
+                      <strong>Video AI</strong>
+                      <small>Coming soon</small>
+                      <span className="a3-coming-badge">SOON</span>
+                    </div>
+
+                    <div className="a3-upcoming-card">
+                      <Monitor size={19} />
+                      <strong>Screen Assistance</strong>
+                      <small>Coming soon</small>
+                      <span className="a3-coming-badge">SOON</span>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
             ) : (
               <div className="a3-message-list">
-                {messages.map((message, index) => (
-                  <motion.article
-                    key={`${index}-${message.role}`}
-                    initial={{ opacity: 0, y: 9 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className={`a3-message-row ${
-                      message.role === 'user'
-                        ? 'a3-user-row'
-                        : 'a3-assistant-row'
-                    }`}
-                  >
-                    {message.role === 'assistant' && (
-                      <div className="a3-avatar">
-                        <Sparkles size={17} />
-                      </div>
-                    )}
+                {messages.map((message, index) => {
+                  const messageId =
+                    message.id || `message-${index}`;
 
-                    <div
-                      className={`a3-message-content ${
+                  return (
+                    <motion.div
+                      key={messageId}
+                      className={`a3-message-row ${
                         message.role === 'user'
-                          ? 'a3-user-message'
-                          : 'a3-assistant-message'
-                      } ${
-                        message.error
-                          ? 'a3-error-message'
-                          : ''
+                          ? 'a3-user-row'
+                          : 'a3-assistant-row'
                       }`}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
                     >
-                      {message.role === 'assistant' &&
-                      message.content === '' &&
-                      streaming &&
-                      index === messages.length - 1 ? (
-                        <div className="a3-thinking">
-                          <div className="a3-thinking-orb">
-                            <Sparkles size={16} />
-                          </div>
-
-                          <span>AUREXA is thinking</span>
-
-                          <div className="a3-thinking-dots">
-                            <i />
-                            <i />
-                            <i />
-                          </div>
+                      {message.role === 'assistant' && (
+                        <div className="a3-message-avatar">
+                          <Sparkles size={17} />
                         </div>
-                      ) : (
-                        <MessageContent
-                          content={message.content}
-                          imageUrl={message.imageUrl}
-                          onSpeak={
-                            message.role === 'assistant'
-                              ? () => speakText(message.content)
-                              : undefined
-                          }
-                        />
                       )}
-                    </div>
-                  </motion.article>
-                ))}
+
+                      <div
+                        className={`a3-message-bubble ${
+                          message.role === 'user'
+                            ? 'a3-user-message'
+                            : 'a3-assistant-message'
+                        } ${message.error ? 'a3-message-error' : ''}`}
+                      >
+                        {message.role === 'assistant' ? (
+                          <>
+                            {message.content && (
+                              <MessageContent content={message.content} />
+                            )}
+
+                            {message.imageUrl && (
+                              <GeneratedImage src={message.imageUrl} />
+                            )}
+                          </>
+                        ) : (
+                          <p>{message.content}</p>
+                        )}
+
+                        {message.role === 'assistant' &&
+                          message.content && (
+                            <div className="a3-message-actions">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  void copyMessage(
+                                    message.content,
+                                    messageId,
+                                  )
+                                }
+                                title="Copy response"
+                              >
+                                {copiedMessage === messageId ? (
+                                  <Check size={14} />
+                                ) : (
+                                  <Copy size={14} />
+                                )}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  speakMessage(message.content)
+                                }
+                                title="Read response aloud"
+                              >
+                                <Volume2 size={14} />
+                              </button>
+                            </div>
+                          )}
+                      </div>
+
+                      {message.role === 'user' && (
+                        <div className="a3-user-message-avatar">
+                          {user?.email?.charAt(0).toUpperCase() || 'U'}
+                        </div>
+                      )}
+                    </motion.div>
+                  );
+                })}
+
+                {sending && (
+                  <div className="a3-typing-indicator">
+                    <span />
+                    <span />
+                    <span />
+                    <small>AUREXA is thinking</small>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
               </div>
             )}
-          </section>
+          </div>
+
+          {/* VOICE ERROR */}
+
+          {voiceError && (
+            <div className="a3-voice-error" role="alert">
+              <AlertCircle size={15} />
+              <span>{voiceError}</span>
+
+              <button
+                type="button"
+                onClick={() => setVoiceError('')}
+                aria-label="Dismiss voice error"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
+          {errorMessage && (
+            <div className="a3-error-banner" role="alert">
+              <AlertCircle size={16} />
+              <span>{errorMessage}</span>
+
+              <button
+                type="button"
+                onClick={() => setErrorMessage('')}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
 
           {/* COMPOSER */}
 
           <div className="a3-composer-wrap">
-            <AnimatePresence>
-              {showTools && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 8 }}
-                  className="a3-composer-tools"
-                >
-                  {tools.map((tool) => {
-                    const Icon = tool.icon;
-
-                    return (
-                      <button
-                        key={tool.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedTool(tool.id);
-                          setShowTools(false);
-                          inputRef.current?.focus();
-                        }}
-                        className={
-                          selectedTool === tool.id
-                            ? 'a3-composer-tool a3-composer-tool-active'
-                            : 'a3-composer-tool'
-                        }
-                      >
-                        <Icon size={16} />
-                        {tool.label}
-                      </button>
-                    );
-                  })}
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowTools(false);
-                      setShowImageModal(true);
-                    }}
-                    className="a3-composer-tool"
-                  >
-                    <ImageIcon size={16} />
-                    Image
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* VOICE CONTROLS */}
-
             <div className="a3-voice-controls">
-              <div className="a3-voice-language">
-                <Languages size={15} />
-
-                <select
-                  value={voiceLanguage}
-                  onChange={(event) => {
-                    setVoiceLanguage(
-                      event.target.value as VoiceLanguage
-                    );
-                  }}
-                  aria-label="Voice language"
-                >
-                  <option value="en-IN">English</option>
-                  <option value="hi-IN">हिन्दी</option>
-                  <option value="kn-IN">ಕನ್ನಡ</option>
-                </select>
-              </div>
+              <select
+                className="a3-voice-language"
+                value={voiceLanguage}
+                onChange={(event) =>
+                  setVoiceLanguage(event.target.value as VoiceLanguage)
+                }
+                aria-label="Voice language"
+              >
+                {VOICE_LANGUAGES.map((language) => (
+                  <option
+                    key={language.value}
+                    value={language.value}
+                  >
+                    {language.label}
+                  </option>
+                ))}
+              </select>
 
               <button
                 type="button"
-                onClick={startVoiceInput}
-                disabled={!voiceSupported || streaming}
                 className={`a3-voice-button ${
-                  isListening ? 'a3-voice-listening' : ''
+                  listening ? 'active' : ''
                 }`}
-                title={
-                  voiceSupported
-                    ? 'Speak your message'
-                    : 'Voice input not supported'
-                }
+                onClick={startVoiceInput}
+                title={listening ? 'Stop listening' : 'Voice input'}
               >
-                {isListening ? (
-                  <MicOff size={16} />
+                {listening ? (
+                  <MicOff size={17} />
                 ) : (
-                  <Mic size={16} />
+                  <Mic size={17} />
                 )}
-
-                {isListening ? 'Listening...' : 'Voice input'}
+                <span>{listening ? 'Listening...' : 'Voice input'}</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => {
-                  setVoiceAutoRead(!voiceAutoRead);
-
-                  if (voiceAutoRead && 'speechSynthesis' in window) {
-                    window.speechSynthesis.cancel();
-                  }
-                }}
                 className={`a3-voice-button ${
-                  voiceAutoRead ? 'a3-voice-enabled' : ''
+                  speaking ? 'active' : ''
                 }`}
-                title="Toggle automatic spoken responses"
+                onClick={speaking ? stopSpeaking : undefined}
+                disabled={!speaking}
+                title="Stop voice output"
               >
-                {voiceAutoRead ? (
-                  <Volume2 size={16} />
+                {speaking ? (
+                  <VolumeX size={17} />
                 ) : (
-                  <VolumeX size={16} />
+                  <Volume2 size={17} />
                 )}
-
-                {voiceAutoRead ? 'Voice ON' : 'Voice OFF'}
+                <span>{speaking ? 'Stop voice' : 'Voice output'}</span>
               </button>
             </div>
 
-            {voiceError && (
-              <div className="a3-voice-error">
-                <AlertCircle size={14} />
-                <span>{voiceError}</span>
-                <button
-                  type="button"
-                  onClick={() => setVoiceError('')}
-                  aria-label="Dismiss voice message"
-                >
-                  <X size={13} />
-                </button>
-              </div>
-            )}
-
             <form
-              onSubmit={handleSubmit}
               className="a3-composer"
+              onSubmit={sendMessage}
             >
               <button
                 type="button"
-                onClick={() => setShowTools(!showTools)}
-                className={`a3-composer-add ${
-                  showTools ? 'a3-add-active' : ''
-                }`}
-                aria-label="Open AI tools"
-              >
-                {showTools ? <X size={19} /> : <Plus size={19} />}
-              </button>
-
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(event) =>
-                  setInput(event.target.value)
-                }
-                onKeyDown={(event) => {
-                  if (
-                    event.key === 'Enter' &&
-                    !event.shiftKey
-                  ) {
-                    event.preventDefault();
-
-                    if (!streaming && input.trim()) {
-                      void sendMessage(input);
-                    }
-                  }
-                }}
-                placeholder={
-                  selectedTool === 'coding'
-                    ? 'Describe what you want to build...'
-                    : selectedTool === 'solve'
-                      ? 'Tell me what you want to solve...'
-                      : 'Ask AUREXA anything...'
-                }
-                rows={1}
-                disabled={streaming}
-                className="a3-composer-input"
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowImageModal(true)}
-                className="a3-composer-image"
-                aria-label="Create image"
-                title="Create image"
+                className="a3-composer-action"
+                onClick={() => setImageModalOpen(true)}
+                title="Generate image"
               >
                 <ImageIcon size={19} />
               </button>
 
-              <button
-                type="submit"
-                disabled={streaming || !input.trim()}
-                className="a3-send-button"
-                aria-label="Send message"
-              >
-                {streaming ? (
-                  <Loader2
-                    size={19}
-                    className="animate-spin"
-                  />
-                ) : (
-                  <Send size={18} />
-                )}
-              </button>
+              <textarea
+                ref={textareaRef}
+                className="a3-composer-input"
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  selectedTool === 'solve'
+                    ? 'Ask AUREXA to solve a problem...'
+                    : selectedTool === 'coding'
+                      ? 'Describe what you want to code...'
+                      : 'Message AUREXA AI...'
+                }
+                rows={1}
+                disabled={sending}
+              />
+
+              {sending ? (
+                <button
+                  type="button"
+                  className="a3-send-button"
+                  onClick={stopGeneration}
+                  title="Stop generating"
+                >
+                  <StopCircle size={19} />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="a3-send-button"
+                  disabled={!input.trim()}
+                  title="Send message"
+                >
+                  {input.trim() ? (
+                    <ArrowUp size={20} />
+                  ) : (
+                    <Send size={18} />
+                  )}
+                </button>
+              )}
             </form>
 
-            <div className="a3-composer-footer">
-              <span>
-                <Sparkles size={12} />
-                Powered by AUREXA AI
-              </span>
-
-              <span>
-                Enter to send · Shift + Enter for new line
-              </span>
-            </div>
+            <p className="a3-composer-disclaimer">
+              AUREXA AI can make mistakes. Verify important information.
+            </p>
           </div>
-        </main>
+        </section>
       </div>
-
-      {/* DAILY LIMIT */}
-
-      <AnimatePresence>
-        {showLimitDialog && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="a3-modal-backdrop"
-            onClick={() => setShowLimitDialog(false)}
-          >
-            <motion.div
-              initial={{
-                opacity: 0,
-                scale: 0.94,
-                y: 12,
-              }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                y: 0,
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.94,
-              }}
-              onClick={(event) => event.stopPropagation()}
-              className="a3-modal"
-            >
-              <div className="a3-modal-icon a3-modal-warning">
-                <AlertCircle size={26} />
-              </div>
-
-              <h2>{tc('limitTitle')}</h2>
-
-              <p>{tc('limitDesc')}</p>
-
-              <Link
-                href="/pricing"
-                className="a3-modal-primary"
-              >
-                <Sparkles size={17} />
-                {tc('upgrade')}
-              </Link>
-
-              <button
-                type="button"
-                onClick={() => setShowLimitDialog(false)}
-                className="a3-modal-secondary"
-              >
-                {tc('comeBackTomorrow')}
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* IMAGE GENERATION MODAL */}
 
       <AnimatePresence>
-        {showImageModal && (
+        {imageModalOpen && (
           <motion.div
+            className="a3-modal-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="a3-modal-backdrop"
-            onClick={() => setShowImageModal(false)}
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                setImageModalOpen(false);
+              }
+            }}
           >
             <motion.div
-              initial={{
-                opacity: 0,
-                scale: 0.95,
-                y: 12,
-              }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                y: 0,
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.95,
-              }}
-              onClick={(event) => event.stopPropagation()}
-              className="a3-modal a3-image-modal"
+              className="a3-image-modal"
+              initial={{ opacity: 0, y: 20, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 15, scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="a3-image-title"
             >
-              <div className="a3-modal-heading">
-                <div className="a3-modal-icon">
-                  <WandSparkles size={23} />
+              <div className="a3-modal-header">
+                <div>
+                  <span className="a3-modal-eyebrow">
+                    AUREXA CREATIVE STUDIO
+                  </span>
+
+                  <h2 id="a3-image-title">
+                    Create an image
+                  </h2>
+
+                  <p>
+                    Turn your imagination into a visual.
+                  </p>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => setShowImageModal(false)}
                   className="a3-icon-button"
+                  onClick={() => setImageModalOpen(false)}
                   aria-label="Close image generator"
                 >
                   <X size={19} />
                 </button>
               </div>
 
-              <div className="a3-modal-title">
-                <h2>Create with imagination</h2>
-
-                <p>
-                  Describe the image you want AUREXA AI to create.
-                </p>
-              </div>
-
-              <form
-                onSubmit={handleImageSubmit}
-                className="a3-image-form"
-              >
+              <div className="a3-image-form">
                 <label htmlFor="a3-image-prompt">
-                  Image description
+                  Describe your image
                 </label>
 
                 <textarea
                   id="a3-image-prompt"
+                  className="a3-image-textarea"
                   value={imagePrompt}
                   onChange={(event) =>
                     setImagePrompt(event.target.value)
                   }
-                  placeholder="Example: A futuristic golden city at sunset, cinematic lighting..."
-                  rows={4}
-                  className="a3-image-textarea"
-                  disabled={imageLoading}
+                  placeholder="Example: A futuristic golden city at sunset, cinematic lighting, ultra detailed..."
+                  rows={5}
+                  autoFocus
                 />
 
+                <div className="a3-image-prompt-hint">
+                  Be descriptive for better results.
+                </div>
+
                 <button
-                  type="submit"
-                  disabled={
-                    !imagePrompt.trim() || imageLoading
-                  }
-                  className="a3-modal-primary"
+                  type="button"
+                  className="a3-image-generate-button"
+                  disabled={!imagePrompt.trim() || imageLoading}
+                  onClick={() => void generateImage()}
                 >
                   {imageLoading ? (
-                    <Loader2
-                      size={17}
-                      className="animate-spin"
-                    />
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Preparing...
+                    </>
                   ) : (
-                    <WandSparkles size={17} />
+                    <>
+                      <WandSparkles size={18} />
+                      Generate image
+                    </>
                   )}
-
-                  {imageLoading
-                    ? 'Preparing...'
-                    : 'Generate Image'}
                 </button>
 
-                <p className="a3-image-note">
-                  Image generation depends on the external image service.
+                <p className="a3-image-disclaimer">
+                  Image generation uses an external image service.
+                  Availability and loading time may vary.
                 </p>
-              </form>
+              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </main>
   );
+}
+
+/* ---------------- SPEECH RECOGNITION TYPES ---------------- */
+
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognition;
+    webkitSpeechRecognition?: new () => SpeechRecognition;
+  }
+
+  interface SpeechRecognition extends EventTarget {
+    lang: string;
+    continuous: boolean;
+    interimResults: boolean;
+    maxAlternatives: number;
+
+    start(): void;
+    stop(): void;
+    abort(): void;
+
+    onstart: ((this: SpeechRecognition, event: Event) => any) | null;
+
+    onresult:
+      | ((
+          this: SpeechRecognition,
+          event: SpeechRecognitionEvent,
+        ) => any)
+      | null;
+
+    onerror:
+      | ((
+          this: SpeechRecognition,
+          event: SpeechRecognitionErrorEvent,
+        ) => any)
+      | null;
+
+    onend: ((this: SpeechRecognition, event: Event) => any) | null;
+  }
+
+  interface SpeechRecognitionEvent extends Event {
+    resultIndex: number;
+    results: SpeechRecognitionResultList;
+  }
+
+  interface SpeechRecognitionErrorEvent extends Event {
+    error: string;
+    message: string;
+  }
 }
