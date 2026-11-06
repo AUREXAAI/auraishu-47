@@ -2,10 +2,10 @@ import './globals.css';
 import type { Metadata } from 'next';
 
 import {
-Inter,
-Poppins,
-Noto_Sans_Kannada,
-Noto_Sans_Devanagari,
+  Inter,
+  Poppins,
+  Noto_Sans_Kannada,
+  Noto_Sans_Devanagari,
 } from 'next/font/google';
 
 import { NextIntlClientProvider } from 'next-intl';
@@ -16,113 +16,126 @@ import AppShell from '@/components/app-shell';
 import ClientErrorBoundary from '@/components/client-error-boundary';
 
 const inter = Inter({
-subsets: ['latin'],
-variable: '--font-inter',
-display: 'swap',
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
 });
 
 const poppins = Poppins({
-subsets: ['latin'],
-weight: ['600', '700'],
-variable: '--font-poppins',
-display: 'swap',
+  subsets: ['latin'],
+  weight: ['600', '700'],
+  variable: '--font-poppins',
+  display: 'swap',
 });
 
 const notoKannada = Noto_Sans_Kannada({
-subsets: ['kannada'],
-variable: '--font-noto-kannada',
-display: 'swap',
+  subsets: ['kannada'],
+  variable: '--font-noto-kannada',
+  display: 'swap',
 });
 
 const notoDevanagari = Noto_Sans_Devanagari({
-subsets: ['devanagari'],
-variable: '--font-noto-devanagari',
-display: 'swap',
+  subsets: ['devanagari'],
+  variable: '--font-noto-devanagari',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-title: 'AUREXA AI — One AI. Everything you need.',
-description:
-'A multilingual AI assistant for chat, coding, problem solving and more.',
-openGraph: {
-title: 'AUREXA AI',
-description: 'One AI. Everything you need.',
-images: [
-{
-url: 'https://bolt.new/static/og_default.png',
-},
-],
-},
-twitter: {
-card: 'summary_large_image',
-images: ['https://bolt.new/static/og_default.png'],
-},
+  title: 'AUREXA AI — One AI. Everything you need.',
+  description:
+    'AUREXA AI is a multilingual AI assistant for chat, coding, problem solving and more.',
+
+  applicationName: 'AUREXA AI',
+
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'AUREXA AI',
+  },
+
+  openGraph: {
+    title: 'AUREXA AI',
+    description: 'One AI. Everything you need.',
+    siteName: 'AUREXA AI',
+    type: 'website',
+  },
+
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AUREXA AI',
+    description: 'One AI. Everything you need.',
+  },
 };
 
 export default async function RootLayout({
-children,
+  children,
 }: {
-children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-const locale = await getLocale();
-const messages = await getMessages();
+  const locale = await getLocale();
+  const messages = await getMessages();
 
-return (
-<html
-lang={locale}
-className={"${inter.variable} ${poppins.variable} ${notoKannada.variable} ${notoDevanagari.variable}"}
->
-<head>
-<meta
-name="google-site-verification"
-content="rwyrDiBpUxInetJQusIJMylWmgUStWwhpO9qQZPO938"
-/>
+  return (
+    <html
+      lang={locale}
+      className={`${inter.variable} ${poppins.variable} ${notoKannada.variable} ${notoDevanagari.variable}`}
+    >
+      <head>
+        <meta
+          name="google-site-verification"
+          content="rwyrDiBpUxInetJQusIJMylWmgUStWwhpO9qQZPO938"
+        />
 
-    <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="manifest" href="/manifest.webmanifest" />
 
-    <link
-      rel="apple-touch-icon"
-      href="/17465db46-683e-487b-9fc6-edfcbdfc3934-1_1.png"
-    />
+        <link
+          rel="apple-touch-icon"
+          href="/17465db46-683e-487b-9fc6-edfcbdfc3934-1_1.png"
+        />
 
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+          name="apple-mobile-web-app-capable"
+          content="yes"
+        />
 
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
 
-    <meta name="apple-mobile-web-app-title" content="AUREXA AI" />
-  </head>
+        <meta
+          name="apple-mobile-web-app-title"
+          content="AUREXA AI"
+        />
+      </head>
 
-  <body className="font-body antialiased">
-    <ClientErrorBoundary>
-      <NextIntlClientProvider
-        locale={locale}
-        messages={messages}
-      >
-        <AuthProvider>
-          <AppShell>{children}</AppShell>
-        </AuthProvider>
-      </NextIntlClientProvider>
-    </ClientErrorBoundary>
+      <body className="font-body antialiased">
+        <ClientErrorBoundary>
+          <NextIntlClientProvider
+            locale={locale}
+            messages={messages}
+          >
+            <AuthProvider>
+              <AppShell>{children}</AppShell>
+            </AuthProvider>
+          </NextIntlClientProvider>
+        </ClientErrorBoundary>
 
-    <script
-      dangerouslySetInnerHTML={{
-        __html: `
-          if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function () {
-              navigator.serviceWorker.register('/sw.js')
-                .catch(function (error) {
-                  console.error('Service Worker Error:', error);
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function () {
+                  navigator.serviceWorker.register('/sw.js')
+                    .catch(function (error) {
+                      console.error('Service Worker Error:', error);
+                    });
                 });
-            });
-          }
-        `,
-      }}
-    />
-  </body>
-</html>
-
-);
+              }
+            `,
+          }}
+        />
+      </body>
+    </html>
+  );
 }
