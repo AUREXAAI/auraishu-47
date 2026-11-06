@@ -19,12 +19,14 @@ import {
   Image as ImageIcon,
   Mic,
   Languages,
-  Command,
-  ArrowRight,
+  MessageCircle,
+  Calculator,
+  CheckCircle2,
+  Infinity,
+  TrendingUp,
   Orbit,
   Stars,
-  Moon,
-  Cpu,
+  Paperclip,
 } from 'lucide-react';
 
 import { useAuth } from '@/lib/auth-context';
@@ -32,51 +34,24 @@ import { useAuth } from '@/lib/auth-context';
 const upcomingFeatures = [
   {
     number: '01',
-    title: 'VIDEO / AI',
-    description: 'Explore the next generation of AI video experiences.',
+    title: 'VIDEO AI',
+    description: 'Explore next-generation AI video experiences.',
     icon: Video,
     status: 'COMING SOON',
-    accent: 'gold',
   },
   {
     number: '02',
-    title: 'CREATIVE / EDITOR',
-    description: 'A smarter workspace for your creative projects.',
+    title: 'CREATIVE EDITOR',
+    description: 'A smarter workspace for creative projects.',
     icon: Scissors,
     status: 'IN DEVELOPMENT',
-    accent: 'silver',
   },
   {
     number: '03',
-    title: 'LEARN / AI',
+    title: 'AI LEARNING',
     description: 'Discover artificial intelligence through learning.',
     icon: GraduationCap,
     status: 'COMING SOON',
-    accent: 'violet',
-  },
-];
-
-const tools = [
-  {
-    number: '01',
-    title: 'AI CHAT',
-    desc: 'Ask questions and explore new ideas.',
-    icon: Sparkles,
-    tool: 'chat',
-  },
-  {
-    number: '02',
-    title: 'AI SOLVER',
-    desc: 'Understand problems step by step.',
-    icon: Zap,
-    tool: 'solve',
-  },
-  {
-    number: '03',
-    title: 'AI CODING',
-    desc: 'Write, explain and improve code.',
-    icon: Code2,
-    tool: 'coding',
   },
 ];
 
@@ -109,7 +84,6 @@ export default function HomeScreen() {
 
     if (hour < 12) return 'GOOD MORNING';
     if (hour < 17) return 'GOOD AFTERNOON';
-
     return 'GOOD EVENING';
   };
 
@@ -164,38 +138,77 @@ export default function HomeScreen() {
     }
   };
 
+  const capabilities = [
+    'AI Chat & Assistant',
+    'Smart Problem Solver',
+    'Code with AI',
+    'Chat History',
+    'Image Generation',
+    'Multilingual Experience',
+  ];
+
+  const quickTools = [
+    {
+      title: 'Chat',
+      subtitle: 'Talk with AI',
+      icon: MessageCircle,
+      tool: 'chat',
+    },
+    {
+      title: 'Solve',
+      subtitle: 'Get solutions',
+      icon: Calculator,
+      tool: 'solve',
+    },
+    {
+      title: 'Coding',
+      subtitle: 'Write & debug',
+      icon: Code2,
+      tool: 'coding',
+    },
+    {
+      title: 'Generate Image',
+      subtitle: 'Turn ideas into art',
+      icon: ImageIcon,
+      tool: 'chat',
+      prompt: 'Help me create an image based on my idea.',
+    },
+  ];
+
   return (
-    <main className="relative mx-auto w-full max-w-[1400px] overflow-hidden px-4 pb-12 text-white sm:px-7 lg:px-10">
+    <main className="relative mx-auto min-h-screen w-full max-w-[1600px] overflow-hidden px-4 pb-10 text-white sm:px-6 lg:px-8">
 
       {/* COSMIC BACKGROUND */}
 
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-[#05040b]">
 
-        <div className="absolute -top-40 left-1/3 h-[500px] w-[500px] rounded-full bg-violet-700/[0.13] blur-[130px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_65%_20%,rgba(91,35,160,0.23),transparent_48%)]" />
 
-        <div className="absolute right-[-180px] top-[500px] h-[450px] w-[450px] rounded-full bg-amber-500/[0.07] blur-[130px]" />
+        <div className="absolute -left-40 top-40 h-[450px] w-[450px] rounded-full bg-violet-700/15 blur-[140px]" />
 
-        <div className="absolute bottom-0 left-[-150px] h-[400px] w-[400px] rounded-full bg-indigo-600/[0.09] blur-[120px]" />
+        <div className="absolute -right-40 top-[45%] h-[500px] w-[500px] rounded-full bg-purple-600/15 blur-[150px]" />
+
+        <div className="absolute bottom-0 left-1/3 h-[300px] w-[500px] rounded-full bg-amber-500/[0.06] blur-[130px]" />
 
       </div>
 
-      {/* TOP NAVIGATION */}
+      {/* TOP BAR */}
 
-      <header className="relative z-10 mb-12 flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.09] py-5">
+      <header className="relative z-10 flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] py-5">
 
         <div className="flex items-center gap-3">
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-300/30 bg-gradient-to-br from-amber-200/20 to-violet-500/20 shadow-[0_0_25px_rgba(196,155,255,0.12)]">
-            <Orbit size={21} className="text-amber-200" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-300/30 bg-gradient-to-br from-amber-300/20 to-violet-500/20">
+            <Orbit size={21} className="text-amber-300" />
           </div>
 
           <div>
-            <p className="text-sm font-black tracking-[3px]">
-              AUREXA<span className="text-violet-400">.</span>
+            <p className="text-sm font-black tracking-[2px]">
+              AUREXA <span className="text-amber-300">AI</span>
             </p>
 
-            <p className="mt-1 text-[9px] tracking-[2px] text-white/35">
-              INTELLIGENCE SYSTEM
+            <p className="mt-1 text-[9px] tracking-[2px] text-white/40">
+              IMAGINE · CREATE · INNOVATE
             </p>
           </div>
 
@@ -203,17 +216,22 @@ export default function HomeScreen() {
 
         <div className="flex items-center gap-3">
 
-          <div className="flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/[0.07] px-3 py-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+          <div className="flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[0.07] px-3 py-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-400" />
 
-            <span className="text-[9px] font-bold tracking-[1.5px] text-emerald-200">
-              EARLY ACCESS
+            <span className="text-[10px] text-emerald-200">
+              Online · Ready to help
             </span>
           </div>
 
-          <div className="hidden h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] sm:flex">
-            <Command size={15} className="text-amber-200/80" />
-          </div>
+          <button
+            type="button"
+            onClick={() => router.push('/pricing')}
+            className="flex items-center gap-2 rounded-full border border-amber-300/30 bg-gradient-to-r from-amber-500 to-yellow-600 px-4 py-2.5 text-xs font-bold text-black shadow-[0_0_25px_rgba(212,160,55,0.18)] transition hover:brightness-110"
+          >
+            <Crown size={14} />
+            Upgrade
+          </button>
 
         </div>
 
@@ -221,409 +239,298 @@ export default function HomeScreen() {
 
       {/* HERO */}
 
-      <section className="relative mb-16">
+      <section className="relative mb-10 mt-10 grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-4">
 
-        <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="relative z-10">
 
-          {/* HERO TEXT */}
+          <div className="mb-5 flex items-center gap-2">
 
-          <div className="relative z-10">
+            <span className="h-px w-8 bg-amber-300" />
 
-            <div className="mb-7 flex items-center gap-3">
+            <span className="text-[10px] font-bold tracking-[3px] text-amber-300">
+              {getGreeting()}
+            </span>
 
-              <span className="h-px w-10 bg-gradient-to-r from-amber-200 to-violet-400" />
+            <Stars size={13} className="text-violet-300" />
 
-              <span className="text-[10px] font-bold uppercase tracking-[3px] text-amber-200">
-                {getGreeting()}
-              </span>
+          </div>
 
-              <Stars size={14} className="text-violet-300" />
+          <h1 className="text-[42px] font-bold leading-[1.12] tracking-[-2px] sm:text-[62px]">
 
-            </div>
+            Hello,{' '}
+            <span className="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
+              {displayName}
+            </span>
 
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-violet-300/20 bg-violet-400/[0.07] px-3 py-1.5">
+            <span className="ml-2 inline-block">👋</span>
 
-              <Sparkles size={12} className="text-violet-300" />
+          </h1>
 
-              <span className="text-[9px] font-bold tracking-[2px] text-violet-200">
-                MERCURY × SATURN EDITION
-              </span>
+          <h2 className="mt-5 text-2xl font-semibold sm:text-3xl">
+            Welcome to{' '}
+            <span className="text-amber-300">
+              AUREXA AI
+            </span>
+          </h2>
 
-            </div>
+          <p className="mt-4 max-w-xl text-sm leading-7 text-white/55 sm:text-base">
+            Your intelligent AI companion, built for creativity,
+            productivity and innovation.
+          </p>
 
-            <h1 className="text-[48px] font-black leading-[0.98] tracking-[-3px] sm:text-[72px] lg:text-[82px]">
+          <div className="mt-7 flex flex-wrap gap-3">
 
-              THINK
-              <span className="text-violet-400">.</span>
+            <span className="rounded-full border border-violet-400/20 bg-violet-400/[0.08] px-4 py-2 text-[10px] font-bold tracking-wider text-violet-200">
+              ☿ MERCURY / PLATINUM
+            </span>
 
-              <br />
+            <span className="rounded-full border border-amber-300/20 bg-amber-300/[0.08] px-4 py-2 text-[10px] font-bold tracking-wider text-amber-200">
+              ♄ SATURN / GOLD
+            </span>
 
-              <span className="bg-gradient-to-r from-white via-slate-300 to-amber-200 bg-clip-text text-transparent">
-                CREATE.
-              </span>
+          </div>
 
-              <br />
+        </div>
 
-              <span className="text-white/35">
-                BUILD /
-              </span>
+        {/* PLANET VISUAL */}
 
-            </h1>
+        <div className="relative mx-auto flex h-[310px] w-full max-w-[470px] items-center justify-center sm:h-[390px]">
 
-            <div className="mt-8 flex items-center gap-4">
+          <div className="absolute h-[250px] w-[250px] rounded-full bg-violet-600/20 blur-[90px]" />
 
-              <div className="h-12 w-[3px] rounded-full bg-gradient-to-b from-amber-200 via-violet-400 to-transparent" />
+          <div className="absolute h-[240px] w-[240px] rounded-full border border-violet-300/20 sm:h-[290px] sm:w-[290px]" />
 
-              <div>
+          <div className="absolute h-[310px] w-[310px] rotate-[-20deg] rounded-full border border-amber-300/35 sm:h-[370px] sm:w-[370px]" />
 
-                <p className="text-sm font-semibold text-white">
-                  Welcome, {displayName}
-                </p>
+          <div className="absolute h-[270px] w-[270px] rotate-[35deg] rounded-full border border-violet-400/20 sm:h-[330px] sm:w-[330px]" />
 
-                <p className="mt-1 text-xs text-white/45">
-                  What would you like to create today?
-                </p>
+          <div className="relative flex h-[180px] w-[180px] items-center justify-center rounded-full border border-amber-200/50 bg-gradient-to-br from-[#fff0bd] via-[#8b68b5] to-[#171024] shadow-[0_0_70px_rgba(165,108,255,0.35),inset_0_0_40px_rgba(255,255,255,0.25)] sm:h-[220px] sm:w-[220px]">
 
-              </div>
+            <div className="absolute inset-3 rounded-full border border-white/20" />
 
-            </div>
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 via-transparent to-black/50" />
 
-            <p className="mt-7 max-w-lg text-sm leading-8 text-slate-300/55">
-              Explore ideas, solve problems, write code and discover new
-              possibilities with AUREXA AI. One intelligent workspace,
-              multiple possibilities.
-            </p>
-
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-
-              <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-4 py-2.5">
-                <span className="text-amber-200">☿</span>
-                <span className="text-[9px] font-bold tracking-[1.5px] text-white/60">
-                  MERCURY / SILVER
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-4 py-2.5">
-                <span className="text-amber-200">♄</span>
-                <span className="text-[9px] font-bold tracking-[1.5px] text-white/60">
-                  SATURN / GOLD
-                </span>
-              </div>
-
+            <div className="relative z-10 text-[90px] font-black text-amber-300 drop-shadow-[0_5px_20px_rgba(255,190,50,0.7)] sm:text-[115px]">
+              A
             </div>
 
           </div>
 
-          {/* COSMIC VISUAL */}
+          <div className="absolute right-[12%] top-[17%] h-3 w-3 rounded-full border border-amber-200 bg-amber-300 shadow-[0_0_18px_5px_rgba(255,190,50,0.5)]" />
 
-          <div className="relative mx-auto w-full max-w-[530px]">
+          <div className="absolute bottom-[17%] left-[15%] h-2.5 w-2.5 rounded-full bg-violet-300 shadow-[0_0_18px_5px_rgba(180,130,255,0.7)]" />
 
-            <div className="absolute inset-0 rounded-full bg-violet-600/20 blur-[100px]" />
-
-            <div
-              className="relative min-h-[390px] overflow-hidden rounded-[28px] border border-white/10 bg-[#090812] sm:min-h-[470px]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(180deg, rgba(5,5,14,.12), rgba(5,5,14,.88)), url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1200&q=85')",
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}
-            >
-
-              <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 via-transparent to-amber-400/10" />
-
-              <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full border border-white/15 bg-black/40 px-3 py-2 backdrop-blur-md">
-
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-
-                <span className="text-[9px] font-bold tracking-[2px] text-white/80">
-                  AUREXA CORE
-                </span>
-
-              </div>
-
-              {/* PLANET GRAPHIC */}
-
-              <div className="absolute left-1/2 top-[43%] h-[185px] w-[185px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-[#e9ddca] via-[#9d91b4] to-[#302443] shadow-[0_0_80px_rgba(160,130,220,0.35)] sm:h-[220px] sm:w-[220px]">
-
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/50 via-transparent to-black/60" />
-
-                <div className="absolute left-[-35px] top-[42%] h-[55px] w-[255px] rotate-[-22deg] rounded-[50%] border-[8px] border-amber-200/50 shadow-[0_0_25px_rgba(231,196,132,0.25)] sm:left-[-45px] sm:w-[310px]" />
-
-                <div className="absolute left-[-35px] top-[42%] h-[55px] w-[255px] rotate-[-22deg] rounded-[50%] border border-white/40 sm:left-[-45px] sm:w-[310px]" />
-
-              </div>
-
-              <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
-
-                <div className="mb-4 flex items-center gap-2">
-                  <span className="h-px w-8 bg-amber-200" />
-
-                  <span className="text-[9px] font-bold tracking-[3px] text-amber-200">
-                    INTELLIGENCE REIMAGINED
-                  </span>
-                </div>
-
-                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                  Beyond
-                  <br />
-                  <span className="bg-gradient-to-r from-violet-300 to-amber-200 bg-clip-text text-transparent">
-                    Ordinary AI.
-                  </span>
-                </h2>
-
-                <p className="mt-3 max-w-xs text-xs leading-6 text-white/55">
-                  A new space for ideas, creativity and intelligent
-                  possibilities.
-                </p>
-
-                <div className="mt-6 flex items-center justify-between border-t border-white/15 pt-4">
-
-                  <span className="text-[9px] font-bold tracking-[2px] text-white/45">
-                    AUREXA AI / 001
-                  </span>
-
-                  <span className="flex items-center gap-2 text-[10px] font-semibold text-amber-200">
-                    EXPLORE
-                    <ArrowUpRight size={14} />
-                  </span>
-
-                </div>
-
-              </div>
-
-            </div>
-
-            <div className="absolute -bottom-4 -right-3 hidden rounded-xl border border-amber-200/20 bg-[#11101a]/90 px-4 py-3 shadow-xl backdrop-blur-xl sm:block">
-
-              <div className="flex items-center gap-3">
-                <Moon size={18} className="text-amber-200" />
-
-                <div>
-                  <p className="text-[9px] font-bold tracking-[1.5px] text-white">
-                    COSMIC INTERFACE
-                  </p>
-
-                  <p className="mt-1 text-[9px] text-white/40">
-                    Designed for possibilities
-                  </p>
-                </div>
-
-              </div>
-
-            </div>
-
+          <div className="absolute bottom-5 rounded-full border border-amber-300/20 bg-black/50 px-4 py-2 backdrop-blur-xl">
+            <span className="text-[9px] font-bold tracking-[3px] text-amber-200">
+              AUREXA CORE / 001
+            </span>
           </div>
 
         </div>
 
       </section>
 
-      {/* PROMPT CONSOLE */}
+      {/* PROMPT BAR */}
 
-      <section className="relative mb-16">
-
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-
-          <div>
-
-            <p className="text-[10px] font-bold tracking-[3px] text-amber-200">
-              01 / START HERE
-            </p>
-
-            <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
-              What&apos;s on your mind?
-            </h2>
-
-            <p className="mt-2 text-xs text-white/40">
-              Your next idea starts here.
-            </p>
-
-          </div>
-
-          <Sparkles size={23} className="text-violet-300" />
-
-        </div>
+      <section className="relative z-10 mb-8">
 
         <form
           onSubmit={handleSubmit}
-          className="relative overflow-hidden rounded-2xl border border-violet-300/25 bg-gradient-to-br from-[#171329] via-[#0e0d1a] to-[#17131b] p-4 shadow-[0_15px_60px_rgba(85,54,150,0.12)] transition-colors focus-within:border-amber-200/50 sm:p-7"
+          className="group relative overflow-hidden rounded-full border border-violet-300/30 bg-[#100c1c]/90 p-2 shadow-[0_0_35px_rgba(139,92,246,0.12)] backdrop-blur-xl transition focus-within:border-amber-300/60"
         >
 
-          <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-violet-500/10 blur-[60px]" />
+          <div className="flex items-center gap-3">
 
-          <div className="relative mb-4 flex items-center justify-between">
+            <Sparkles
+              size={23}
+              className="ml-3 shrink-0 text-amber-300"
+            />
 
-            <div className="flex items-center gap-2">
+            <textarea
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={t('askPlaceholder')}
+              rows={1}
+              className="max-h-28 min-h-[48px] flex-1 resize-none border-0 bg-transparent px-1 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:ring-0"
+            />
 
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-400/10">
-                <Command size={13} className="text-violet-200" />
-              </div>
+            <div className="hidden items-center gap-3 pr-2 sm:flex">
 
-              <span className="text-[9px] font-bold tracking-[2px] text-white/45">
-                AUREXA / PROMPT CONSOLE
-              </span>
+              <Paperclip size={19} className="text-white/55" />
 
-            </div>
-
-            <span className="text-[9px] tracking-widest text-amber-200/60">
-              READY
-            </span>
-
-          </div>
-
-          <textarea
-            value={prompt}
-            onChange={(event) => setPrompt(event.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={t('askPlaceholder')}
-            rows={3}
-            className="relative w-full resize-none border-0 bg-transparent px-1 py-4 text-sm leading-7 text-white outline-none placeholder:text-white/25 focus:ring-0"
-          />
-
-          <div className="relative flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-5">
-
-            <div className="flex flex-wrap gap-2">
-
-              <button
-                type="button"
-                onClick={() => setPrompt('Explain this topic step by step.')}
-                className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[10px] text-white/65 transition hover:border-amber-200/40 hover:text-amber-200"
-              >
-                <Lightbulb size={13} />
-                Explain
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPrompt('Help me write and understand this code.')}
-                className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[10px] text-white/65 transition hover:border-violet-300/40 hover:text-violet-200"
-              >
-                <Code2 size={13} />
-                Code
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPrompt('Help me solve this problem step by step.')}
-                className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[10px] text-white/65 transition hover:border-amber-200/40 hover:text-amber-200"
-              >
-                <Zap size={13} />
-                Solve
-              </button>
+              <ImageIcon size={19} className="text-white/55" />
 
             </div>
 
             <button
               type="submit"
               disabled={!prompt.trim()}
-              className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-violet-600 to-violet-500 px-6 py-3.5 text-[10px] font-black tracking-[1.5px] text-white shadow-[0_5px_25px_rgba(139,92,246,0.25)] transition hover:from-violet-500 hover:to-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Start chat"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-yellow-600 text-black shadow-[0_0_25px_rgba(245,190,60,0.35)] transition hover:scale-105 disabled:opacity-40"
             >
-              START CHAT
-              <Send size={14} />
+              <Send size={19} />
             </button>
 
           </div>
 
         </form>
 
-        <p className="mt-3 text-[9px] tracking-wide text-white/25">
+        <p className="mt-3 text-center text-[9px] tracking-wider text-white/30">
           PRESS ENTER TO START · SHIFT + ENTER FOR NEW LINE
         </p>
 
       </section>
 
-      {/* AI TOOLKIT */}
+      {/* QUICK TOOLS */}
 
-      <section className="mb-16">
+      <section className="mb-10 grid grid-cols-2 gap-3 lg:grid-cols-4">
 
-        <div className="mb-7 flex items-end justify-between">
+        {quickTools.map((item) => {
+          const Icon = item.icon;
 
-          <div>
-            <p className="text-[10px] font-bold tracking-[3px] text-amber-200">
-              02 / CAPABILITIES
-            </p>
+          return (
+            <button
+              key={item.title}
+              type="button"
+              onClick={() =>
+                routeToChat(item.prompt || '', item.tool)
+              }
+              className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-white/10 bg-gradient-to-br from-[#1b1429]/95 to-[#0c0a15] p-4 text-left transition hover:border-amber-300/40 hover:shadow-[0_0_25px_rgba(139,92,246,0.12)] sm:p-5"
+            >
 
-            <h2 className="mt-3 text-2xl font-bold">
-              Your AI toolkit
-            </h2>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-amber-300/20 bg-amber-300/[0.08] text-amber-300 transition group-hover:bg-amber-300/15">
+                <Icon size={21} />
+              </div>
 
-            <p className="mt-2 text-xs text-white/40">
-              Powerful tools for your everyday ideas.
-            </p>
+              <div className="min-w-0">
+                <p className="text-sm font-bold">
+                  {item.title}
+                </p>
+
+                <p className="mt-1 text-[10px] text-white/45">
+                  {item.subtitle}
+                </p>
+              </div>
+
+            </button>
+          );
+        })}
+
+      </section>
+
+      {/* FEATURES AND STATS */}
+
+      <section className="mb-10 grid gap-4 lg:grid-cols-[1fr_1fr]">
+
+        {/* FEATURES */}
+
+        <div className="rounded-2xl border border-violet-300/20 bg-gradient-to-br from-[#191329] to-[#0c0a14] p-5 sm:p-6">
+
+          <div className="mb-5 flex items-center justify-between">
+
+            <div className="flex items-center gap-3">
+
+              <Sparkles size={20} className="text-amber-300" />
+
+              <h2 className="text-base font-bold">
+                Powerful Features
+              </h2>
+
+            </div>
+
+            <span className="text-[10px] font-bold text-amber-300">
+              EXPLORE →
+            </span>
+
           </div>
 
-          <span className="hidden text-[9px] tracking-[2px] text-white/30 sm:block">
-            EXPLORE WORKSPACE /
-          </span>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+
+            {capabilities.map((feature) => (
+              <div key={feature} className="flex items-center gap-2">
+
+                <CheckCircle2
+                  size={15}
+                  className="shrink-0 text-amber-300"
+                />
+
+                <span className="text-[11px] text-white/75 sm:text-xs">
+                  {feature}
+                </span>
+
+              </div>
+            ))}
+
+          </div>
 
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        {/* STATS */}
 
-          {tools.map((item) => {
-            const Icon = item.icon;
+        <div className="relative overflow-hidden rounded-2xl border border-amber-300/20 bg-gradient-to-br from-[#21172a] to-[#0c0a14] p-5 sm:p-6">
 
-            return (
-              <button
-                key={item.tool}
-                type="button"
-                onClick={() => routeToChat('', item.tool)}
-                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#171329] to-[#0b0a14] p-6 text-left transition hover:border-violet-300/40 hover:shadow-[0_10px_40px_rgba(139,92,246,0.10)]"
-              >
+          <div className="mb-6 flex items-center gap-3">
 
-                <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-violet-500/[0.08] blur-2xl" />
+            <TrendingUp size={20} className="text-amber-300" />
 
-                <div className="relative flex items-center justify-between">
+            <h2 className="text-base font-bold">
+              AUREXA AI Stats
+            </h2>
 
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-violet-300/20 bg-violet-400/10 text-violet-200">
-                    <Icon size={21} />
-                  </div>
+          </div>
 
-                  <span className="text-[10px] tracking-widest text-white/25">
-                    / {item.number}
-                  </span>
+          <div className="flex items-center justify-between gap-4">
 
-                </div>
+            <div>
 
-                <h3 className="relative mt-7 text-sm font-black tracking-[1.5px]">
-                  {item.title}
-                </h3>
+              <p className="text-4xl font-black text-amber-300">
+                27+
+              </p>
 
-                <p className="relative mt-2 text-xs leading-6 text-white/45">
-                  {item.desc}
-                </p>
+              <p className="mt-2 text-xs text-white/55">
+                Free Chats
+              </p>
 
-                <div className="relative mt-6 flex items-center justify-between border-t border-white/10 pt-4">
+            </div>
 
-                  <span className="text-[9px] font-bold tracking-[2px] text-amber-200">
-                    OPEN TOOL
-                  </span>
+            <div className="h-14 w-px bg-white/15" />
 
-                  <ArrowUpRight
-                    size={17}
-                    className="text-white/40 transition group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-amber-200"
-                  />
+            <div>
 
-                </div>
+              <Infinity size={43} className="text-amber-300" />
 
-              </button>
-            );
-          })}
+              <p className="mt-2 text-xs text-white/55">
+                Limitless Possibilities
+              </p>
+
+            </div>
+
+            <div className="hidden items-end gap-1 sm:flex">
+
+              {[18, 28, 40, 53].map((height, index) => (
+                <div
+                  key={index}
+                  style={{ height: `${height}px` }}
+                  className="w-3 rounded-t-sm bg-gradient-to-t from-amber-600 to-yellow-300"
+                />
+              ))}
+
+            </div>
+
+          </div>
 
         </div>
 
       </section>
 
-      {/* STATUS CARDS */}
+      {/* STATUS */}
 
-      <section className="mb-16 grid gap-4 sm:grid-cols-2">
+      <section className="mb-10 grid gap-3 sm:grid-cols-2">
 
-        <div className="flex items-center gap-4 rounded-2xl border border-violet-300/15 bg-gradient-to-r from-violet-500/[0.09] to-transparent p-5 sm:p-6">
+        <div className="flex items-center gap-4 rounded-2xl border border-violet-300/15 bg-violet-500/[0.06] p-5">
 
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-violet-300/20 bg-violet-400/10 text-violet-200">
-            <Languages size={21} />
-          </div>
+          <Languages size={23} className="text-violet-300" />
 
           <div>
             <p className="text-sm font-bold">
@@ -635,15 +542,11 @@ export default function HomeScreen() {
             </p>
           </div>
 
-          <ArrowUpRight size={17} className="ml-auto text-violet-300/50" />
-
         </div>
 
-        <div className="flex items-center gap-4 rounded-2xl border border-amber-200/15 bg-gradient-to-r from-amber-300/[0.07] to-transparent p-5 sm:p-6">
+        <div className="flex items-center gap-4 rounded-2xl border border-amber-300/15 bg-amber-300/[0.05] p-5">
 
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-amber-200/20 bg-amber-200/10 text-amber-200">
-            <Clock3 size={21} />
-          </div>
+          <Clock3 size={23} className="text-amber-300" />
 
           <div>
             <p className="text-sm font-bold">
@@ -655,33 +558,27 @@ export default function HomeScreen() {
             </p>
           </div>
 
-          <ArrowUpRight size={17} className="ml-auto text-amber-200/50" />
-
         </div>
 
       </section>
 
-      {/* UPCOMING FEATURES */}
+      {/* UPCOMING */}
 
-      <section className="mb-16">
+      <section className="mb-10">
 
-        <div className="mb-7">
+        <div className="mb-5">
 
-          <p className="text-[10px] font-bold tracking-[3px] text-violet-300">
-            03 / THE FUTURE
+          <p className="text-[10px] font-bold tracking-[3px] text-amber-300">
+            THE FUTURE
           </p>
 
-          <h2 className="mt-3 text-2xl font-bold">
-            What&apos;s coming next?
+          <h2 className="mt-2 text-xl font-bold">
+            Coming to AUREXA
           </h2>
-
-          <p className="mt-2 text-xs text-white/40">
-            More creative experiences are in development.
-          </p>
 
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-3">
 
           {upcomingFeatures.map((feature) => {
             const Icon = feature.icon;
@@ -689,38 +586,32 @@ export default function HomeScreen() {
             return (
               <div
                 key={feature.number}
-                className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#100e1a] p-6 transition hover:border-amber-200/25"
+                className="rounded-2xl border border-white/10 bg-[#100d1a] p-5"
               >
 
-                <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-violet-500/[0.08] blur-2xl" />
+                <div className="flex items-center justify-between">
 
-                <div className="relative flex items-center justify-between">
-
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-amber-200/20 bg-amber-200/[0.07] text-amber-200">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-violet-300/20 bg-violet-400/10 text-violet-200">
                     <Icon size={19} />
                   </div>
 
-                  <span className="text-[10px] tracking-widest text-white/25">
-                    / {feature.number}
+                  <span className="text-[9px] text-white/35">
+                    {feature.number}
                   </span>
 
                 </div>
 
-                <h3 className="relative mt-7 text-sm font-black tracking-wide">
+                <h3 className="mt-5 text-sm font-bold">
                   {feature.title}
                 </h3>
 
-                <p className="relative mt-3 min-h-[42px] text-xs leading-6 text-white/45">
+                <p className="mt-2 text-xs leading-6 text-white/45">
                   {feature.description}
                 </p>
 
-                <div className="relative mt-5 border-t border-white/10 pt-4">
-
-                  <span className="text-[9px] font-bold tracking-[1.5px] text-amber-200">
-                    {feature.status}
-                  </span>
-
-                </div>
+                <p className="mt-4 border-t border-white/10 pt-4 text-[9px] font-bold tracking-[1.5px] text-amber-300">
+                  {feature.status}
+                </p>
 
               </div>
             );
@@ -730,79 +621,29 @@ export default function HomeScreen() {
 
       </section>
 
-      {/* IMAGE + VOICE */}
+      {/* PRO BANNER */}
 
-      <section className="relative mb-12 overflow-hidden rounded-2xl border border-violet-300/20 bg-gradient-to-r from-[#1a1430] via-[#100e1c] to-[#17131a] p-6 sm:p-8">
+      <section className="relative mb-10 overflow-hidden rounded-2xl border border-amber-300/25 bg-gradient-to-r from-[#281b36] via-[#171126] to-[#0c0a15] p-6 sm:p-8">
 
-        <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 rounded-full bg-violet-500/15 blur-[70px]" />
+        <div className="absolute -right-10 -top-16 text-[190px] font-black text-amber-300/[0.04]">
+          A
+        </div>
 
-        <div className="relative flex flex-wrap items-center gap-5">
-
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-violet-300/20 bg-violet-400/10 text-violet-200">
-            <ImageIcon size={24} />
-          </div>
-
-          <div className="min-w-0 flex-1">
-
-            <p className="text-[9px] font-bold tracking-[2px] text-amber-200">
-              EXPANDING POSSIBILITIES
-            </p>
-
-            <h3 className="mt-2 text-lg font-bold">
-              More ways to create.
-            </h3>
-
-            <p className="mt-2 text-xs leading-6 text-white/45">
-              Discover image generation and voice experiences in AUREXA AI.
-            </p>
-
-          </div>
+        <div className="relative flex flex-wrap items-center justify-between gap-5">
 
           <div className="flex items-center gap-4">
 
-            <div className="flex items-center gap-2 text-[10px] text-white/55">
-              <Mic size={17} className="text-violet-300" />
-              VOICE
-            </div>
-
-            <div className="h-6 w-px bg-white/15" />
-
-            <div className="flex items-center gap-2 text-[10px] text-white/55">
-              <ImageIcon size={17} className="text-amber-200" />
-              IMAGE
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
-
-      {/* PRO SECTION */}
-
-      <section className="relative mb-12 overflow-hidden rounded-2xl border border-amber-200/20 bg-gradient-to-br from-[#241a32] via-[#171126] to-[#0d0b17] p-6 shadow-[0_15px_60px_rgba(140,100,200,0.10)] sm:p-9">
-
-        <div className="pointer-events-none absolute -right-12 -top-20 text-[230px] font-black leading-none text-amber-200/[0.045]">
-          /
-        </div>
-
-        <div className="pointer-events-none absolute bottom-0 right-0 h-40 w-40 rounded-full bg-amber-300/10 blur-[70px]" />
-
-        <div className="relative flex flex-wrap items-center justify-between gap-7">
-
-          <div className="flex items-start gap-4">
-
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-amber-200/25 bg-amber-200/10 text-amber-200">
-              <Crown size={24} />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-amber-300/25 bg-amber-300/10 text-amber-300">
+              <Crown size={23} />
             </div>
 
             <div>
 
-              <p className="text-[9px] font-bold tracking-[2px] text-amber-200">
+              <p className="text-[9px] font-bold tracking-[2px] text-amber-300">
                 AUREXA / PRO
               </p>
 
-              <h3 className="mt-2 text-xl font-bold">
+              <h3 className="mt-2 text-lg font-bold">
                 {tp('title')}
               </h3>
 
@@ -817,10 +658,10 @@ export default function HomeScreen() {
           <button
             type="button"
             onClick={() => router.push('/pricing')}
-            className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-amber-200 to-yellow-500 px-6 py-3.5 text-[10px] font-black tracking-[1.5px] text-[#17101d] transition hover:brightness-110"
+            className="flex items-center gap-3 rounded-full bg-gradient-to-r from-amber-300 to-yellow-600 px-6 py-3 text-xs font-black text-black transition hover:brightness-110"
           >
             {tp('cta')}
-            <ArrowRight size={15} />
+            <ArrowUpRight size={15} />
           </button>
 
         </div>
@@ -829,27 +670,19 @@ export default function HomeScreen() {
 
       {/* FOOTER */}
 
-      <footer className="flex flex-wrap items-center justify-between gap-5 border-t border-white/10 pt-7">
+      <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6">
 
-        <div className="flex items-center gap-3">
+        <div>
+          <p className="text-[10px] font-black tracking-[2px] text-white/75">
+            AUREXA AI
+          </p>
 
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-amber-200/20 bg-amber-200/[0.07]">
-            <Orbit size={17} className="text-amber-200" />
-          </div>
-
-          <div>
-            <p className="text-[10px] font-black tracking-[2px] text-white/75">
-              AUREXA / AI
-            </p>
-
-            <p className="mt-1 text-[9px] text-white/30">
-              Think. Create. Build.
-            </p>
-          </div>
-
+          <p className="mt-1 text-[9px] text-white/35">
+            Imagine · Create · Innovate
+          </p>
         </div>
 
-        <p className="text-[9px] tracking-wide text-white/30">
+        <p className="text-[9px] text-white/35">
           © {new Date().getFullYear()} AUREXA AI. All rights reserved.
         </p>
 
