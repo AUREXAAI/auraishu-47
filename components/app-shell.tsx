@@ -82,16 +82,18 @@ const router = useRouter();
 
 const { user, loading } = useAuth();
 
-// Correct pathname normalization
-const normalizedPathname =
-pathname.length > 1
-? pathname.replace(//+$/, '')
-: '/';
+// Normalize pathname without regex
+let normalizedPathname = pathname || '/';
+
+while (
+normalizedPathname.length > 1 &&
+normalizedPathname.endsWith('/')
+) {
+normalizedPathname = normalizedPathname.slice(0, -1);
+}
 
 const isPublicPath = publicPaths.includes(normalizedPathname);
-
 const isChatPage = normalizedPathname.endsWith('/chat');
-
 const currentTool = searchParams.get('tool');
 
 useEffect(() => {
@@ -308,7 +310,6 @@ return (
 
   {/* Header */}
   <header className="fixed left-0 right-0 top-0 z-40 flex h-[68px] items-center justify-between border-b border-[#302852] bg-[#090817] px-4 md:px-6">
-
     <div className="flex items-center gap-4">
 
       {/* Mobile menu */}
@@ -359,7 +360,6 @@ return (
     {/* Account */}
     <div className="flex items-center gap-3">
       <ProPill />
-
       <Avatar onClick={() => setProfileOpen(true)} />
     </div>
   </header>
