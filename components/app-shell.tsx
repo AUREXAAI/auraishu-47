@@ -56,37 +56,15 @@ Icon: Instagram,
 ];
 
 const navigation = [
-{
-label: 'Home',
-icon: House,
-href: '/',
-},
-{
-label: 'Chat',
-icon: MessageSquare,
-href: '/chat',
-},
-{
-label: 'AI Solver',
-icon: Calculator,
-href: '/chat?tool=solve',
-},
-{
-label: 'Coding',
-icon: Code2,
-href: '/chat?tool=coding',
-},
+{ label: 'Home', icon: House, href: '/' },
+{ label: 'Chat', icon: MessageSquare, href: '/chat' },
+{ label: 'AI Solver', icon: Calculator, href: '/chat?tool=solve' },
+{ label: 'Coding', icon: Code2, href: '/chat?tool=coding' },
 ];
 
 const upcomingFeatures = [
-{
-label: 'Image Generation',
-icon: ImageIcon,
-},
-{
-label: 'Live Voice Mode',
-icon: Mic,
-},
+{ label: 'Image Generation', icon: ImageIcon },
+{ label: 'Live Voice Mode', icon: Mic },
 ];
 
 export default function AppShell({
@@ -104,8 +82,11 @@ const router = useRouter();
 
 const { user, loading } = useAuth();
 
+// Correct pathname normalization
 const normalizedPathname =
-pathname.length > 1 ? pathname.replace(//+$/, '') : '/';
+pathname.length > 1
+? pathname.replace(//+$/, '')
+: '/';
 
 const isPublicPath = publicPaths.includes(normalizedPathname);
 
@@ -138,6 +119,7 @@ return (
 );
 }
 
+// Full-screen chat layout
 if (isChatPage) {
 return (
 <div className="h-[100dvh] w-full overflow-hidden bg-[#090817]">
@@ -178,9 +160,10 @@ mobile = false,
 mobile?: boolean;
 }) => (
 <div className="flex h-full flex-col">
-{/* Brand */}
-<div className="border-b border-[#302852] px-5 py-5">
-<Logo />
+
+  {/* Brand */}
+  <div className="border-b border-[#302852] px-5 py-5">
+    <Logo />
 
     <div className="mt-3 flex items-center gap-2">
       <span className="h-2 w-2 rounded-full bg-violet-400" />
@@ -245,7 +228,6 @@ mobile?: boolean;
                 title="Coming Soon"
               >
                 <Icon className="h-[18px] w-[18px] shrink-0" />
-
                 <span>{item.label}</span>
 
                 <span className="ml-auto rounded-md border border-[#393052] px-1.5 py-0.5 text-[9px] font-semibold uppercase text-violet-300">
@@ -323,20 +305,23 @@ mobile?: boolean;
 
 return (
 <div className="min-h-screen bg-[#090817] text-[#f4f0ff]">
-{/* Header /}
-<header className="fixed left-0 right-0 top-0 z-40 flex h-[68px] items-center justify-between border-b border-[#302852] bg-[#090817] px-4 md:px-6">
-<div className="flex items-center gap-4">
-{/ Mobile menu */}
-<div className="md:hidden">
-<Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-<SheetTrigger asChild>
-<button
-aria-label="Open navigation"
-className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#302852] bg-[#12102a] text-violet-200"
->
-<Menu className="h-5 w-5" />
-</button>
-</SheetTrigger>
+
+  {/* Header */}
+  <header className="fixed left-0 right-0 top-0 z-40 flex h-[68px] items-center justify-between border-b border-[#302852] bg-[#090817] px-4 md:px-6">
+
+    <div className="flex items-center gap-4">
+
+      {/* Mobile menu */}
+      <div className="md:hidden">
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetTrigger asChild>
+            <button
+              aria-label="Open navigation"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#302852] bg-[#12102a] text-violet-200"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </SheetTrigger>
 
           <SheetContent
             side="left"
@@ -375,7 +360,6 @@ className="flex h-10 w-10 items-center justify-center rounded-xl border border-[
     <div className="flex items-center gap-3">
       <ProPill />
 
-      {/* Fixed: no nested buttons */}
       <Avatar onClick={() => setProfileOpen(true)} />
     </div>
   </header>
