@@ -1,5 +1,5 @@
 import './globals.css';
-import type { Metadata, Viewport } from 'next';
+import type { Metadata } from 'next';
 
 import {
 Inter,
@@ -59,13 +59,6 @@ images: ['https://bolt.new/static/og_default.png'],
 },
 };
 
-export const viewport: Viewport = {
-width: 'device-width',
-initialScale: 1,
-maximumScale: 1,
-themeColor: '#05050D',
-};
-
 export default async function RootLayout({
 children,
 }: {
@@ -93,10 +86,12 @@ content="rwyrDiBpUxInetJQusIJMylWmgUStWwhpO9qQZPO938"
     />
 
     <meta name="apple-mobile-web-app-capable" content="yes" />
+
     <meta
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
+
     <meta name="apple-mobile-web-app-title" content="AUREXA AI" />
   </head>
 
