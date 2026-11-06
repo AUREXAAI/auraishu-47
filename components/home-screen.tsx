@@ -19,7 +19,6 @@ Languages,
 MessageCircle,
 Calculator,
 CheckCircle2,
-Infinity,
 TrendingUp,
 Orbit,
 Stars,
@@ -59,7 +58,6 @@ const tp = useTranslations('pro');
 const locale = useLocale();
 
 const { user } = useAuth();
-
 const [prompt, setPrompt] = useState('');
 
 const displayName = user?.displayName || t('username');
@@ -103,11 +101,9 @@ const handleSubmit = (event?: FormEvent<HTMLFormElement>) => {
 event?.preventDefault();
 
 const value = prompt.trim();
-
 if (!value) return;
 
 const lower = value.toLowerCase();
-
 let tool = 'chat';
 
 if (
@@ -179,7 +175,6 @@ return (
 <main className="relative mx-auto min-h-screen w-full max-w-[1600px] overflow-hidden px-4 pb-10 text-white sm:px-6 lg:px-8">
 
   {/* COSMIC BACKGROUND */}
-
   <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-[#05040b]">
     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_65%_20%,rgba(91,35,160,0.23),transparent_48%)]" />
     <div className="absolute -left-40 top-40 h-[450px] w-[450px] rounded-full bg-violet-700/15 blur-[140px]" />
@@ -188,9 +183,7 @@ return (
   </div>
 
   {/* TOP BAR */}
-
   <header className="relative z-10 flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] py-5">
-
     <div className="flex items-center gap-3">
       <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-300/30 bg-gradient-to-br from-amber-300/20 to-violet-500/20">
         <Orbit size={21} className="text-amber-300" />
@@ -226,9 +219,7 @@ return (
   </header>
 
   {/* HERO */}
-
   <section className="relative mb-10 mt-10 grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-4">
-
     <div className="relative z-10">
       <div className="mb-5 flex items-center gap-2">
         <span className="h-px w-8 bg-amber-300" />
@@ -247,8 +238,7 @@ return (
       </h1>
 
       <h2 className="mt-5 text-2xl font-semibold sm:text-3xl">
-        Welcome to{' '}
-        <span className="text-amber-300">AUREXA AI</span>
+        Welcome to <span className="text-amber-300">AUREXA AI</span>
       </h2>
 
       <p className="mt-4 max-w-xl text-sm leading-7 text-white/55 sm:text-base">
@@ -268,9 +258,7 @@ return (
     </div>
 
     {/* PLANET VISUAL */}
-
     <div className="relative mx-auto flex h-[310px] w-full max-w-[470px] items-center justify-center sm:h-[390px]">
-
       <div className="absolute h-[250px] w-[250px] rounded-full bg-violet-600/20 blur-[90px]" />
       <div className="absolute h-[240px] w-[240px] rounded-full border border-violet-300/20 sm:h-[290px] sm:w-[290px]" />
       <div className="absolute h-[310px] w-[310px] rotate-[-20deg] rounded-full border border-amber-300/35 sm:h-[370px] sm:w-[370px]" />
@@ -285,7 +273,6 @@ return (
       </div>
 
       <div className="absolute right-[12%] top-[17%] h-3 w-3 rounded-full border border-amber-200 bg-amber-300 shadow-[0_0_18px_5px_rgba(255,190,50,0.5)]" />
-
       <div className="absolute bottom-[17%] left-[15%] h-2.5 w-2.5 rounded-full bg-violet-300 shadow-[0_0_18px_5px_rgba(180,130,255,0.7)]" />
 
       <div className="absolute bottom-5 rounded-full border border-amber-300/20 bg-black/50 px-4 py-2 backdrop-blur-xl">
@@ -297,7 +284,6 @@ return (
   </section>
 
   {/* PROMPT BAR */}
-
   <section className="relative z-10 mb-8">
     <form
       onSubmit={handleSubmit}
@@ -337,7 +323,6 @@ return (
   </section>
 
   {/* QUICK TOOLS */}
-
   <section className="mb-10 grid grid-cols-2 gap-3 lg:grid-cols-4">
     {quickTools.map((item) => {
       const Icon = item.icon;
@@ -365,9 +350,7 @@ return (
   </section>
 
   {/* FEATURES AND STATS */}
-
   <section className="mb-10 grid gap-4 lg:grid-cols-2">
-
     <div className="rounded-2xl border border-violet-300/20 bg-gradient-to-br from-[#191329] to-[#0c0a14] p-5 sm:p-6">
       <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -409,7 +392,9 @@ return (
         <div className="h-14 w-px bg-white/15" />
 
         <div>
-          <Infinity size={43} className="text-amber-300" />
+          <span className="text-5xl font-bold leading-none text-amber-300">
+            ∞
+          </span>
           <p className="mt-2 text-xs text-white/55">
             Limitless Possibilities
           </p>
@@ -419,7 +404,6 @@ return (
   </section>
 
   {/* STATUS */}
-
   <section className="mb-10 grid gap-3 sm:grid-cols-2">
     <div className="flex items-center gap-4 rounded-2xl border border-violet-300/15 bg-violet-500/[0.06] p-5">
       <Languages size={23} className="text-violet-300" />
@@ -443,7 +427,6 @@ return (
   </section>
 
   {/* UPCOMING */}
-
   <section className="mb-10">
     <div className="mb-5">
       <p className="text-[10px] font-bold tracking-[3px] text-amber-300">
@@ -487,7 +470,6 @@ return (
   </section>
 
   {/* PRO BANNER */}
-
   <section className="relative mb-10 overflow-hidden rounded-2xl border border-amber-300/25 bg-gradient-to-r from-[#281b36] via-[#171126] to-[#0c0a15] p-6 sm:p-8">
     <div className="absolute -right-10 -top-16 text-[190px] font-black text-amber-300/[0.04]">
       A
@@ -526,7 +508,6 @@ return (
   </section>
 
   {/* FOOTER */}
-
   <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6">
     <div>
       <p className="text-[10px] font-black tracking-[2px] text-white/75">
@@ -541,7 +522,6 @@ return (
       © {new Date().getFullYear()} AUREXA AI. All rights reserved.
     </p>
   </footer>
-
 </main>
 
 );
