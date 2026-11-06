@@ -56,6 +56,15 @@ const upcomingFeatures = [
 ];
 
 export default function HomeScreen() {
+  return (
+    <main className="min-h-screen bg-[#080510] p-10 text-white">
+      <h1 className="text-3xl font-bold text-amber-300">
+        AUREXA AI
+      </h1>
+      <p className="mt-4">Home page is working.</p>
+    </main>
+  );
+}
   const router = useRouter();
   const t = useTranslations('home');
   const tp = useTranslations('pro');
