@@ -1779,3 +1779,584 @@
     background: rgba(5, 5, 13, 0.98);
   }
 }
+/* ==================================================
+AUREXA AI — EMERALD PRESTIGE
+DEEP EMERALD × CHAMPAGNE GOLD
+================================================== */
+
+.a3-page {
+--bg: #030D09;
+--surface: #064E3B;
+--surface-2: #0A2B1E;
+--surface-3: #103D2C;
+
+--border: rgba(212, 175, 55, 0.18);
+--border-active: rgba(212, 175, 55, 0.65);
+
+--purple: #D4AF37;
+--purple-light: #E8D28A;
+
+--text: #F5F5E9;
+--muted: #A6B5A9;
+
+background: #030D09;
+color: var(--text);
+}
+
+/* BACKGROUND */
+
+.a3-page::before {
+background:
+linear-gradient(
+rgba(3, 13, 9, 0.91),
+rgba(3, 13, 9, 0.96)
+),
+radial-gradient(
+circle at 80% 15%,
+rgba(13, 148, 92, 0.20),
+transparent 35%
+) !important;
+}
+
+.a3-page::after {
+background:
+radial-gradient(
+circle at 85% 15%,
+rgba(212, 175, 55, 0.09),
+transparent 25%
+),
+radial-gradient(
+circle at 10% 80%,
+rgba(5, 150, 105, 0.12),
+transparent 30%
+) !important;
+}
+
+/* HEADER */
+
+.a3-header {
+background: rgba(3, 13, 9, 0.96);
+border-color: var(--border);
+}
+
+.a3-brand-mark {
+background: linear-gradient(135deg, #F0D878, #A98220);
+color: #07140D;
+box-shadow: 0 0 18px rgba(212, 175, 55, 0.2);
+}
+
+.a3-brand-name {
+color: #F5F5E9;
+}
+
+.a3-brand-name small,
+.a3-welcome-eyebrow,
+.a3-modal-eyebrow {
+color: #D4AF37;
+}
+
+.a3-header-center {
+color: #B6C7B9;
+}
+
+.a3-status-dot {
+background: #D4AF37;
+box-shadow: 0 0 12px #D4AF37;
+}
+
+.a3-early-badge {
+color: #E8D28A;
+background: rgba(212, 175, 55, 0.08);
+border-color: var(--border-active);
+}
+
+/* SIDEBAR */
+
+.a3-sidebar {
+background: rgba(4, 22, 14, 0.98);
+border-color: var(--border);
+}
+
+.a3-new-chat {
+color: #07140D;
+border-color: #D4AF37;
+background: linear-gradient(110deg, #B88B24, #E8D28A);
+}
+
+.a3-new-chat:hover {
+background: linear-gradient(110deg, #D4AF37, #F5E6A8);
+}
+
+.a3-sidebar-label {
+color: #B49A51;
+}
+
+.a3-sidebar-item {
+color: #B6C7B9;
+}
+
+.a3-sidebar-item:hover,
+.a3-sidebar-item.active {
+color: #F5F5E9;
+background: linear-gradient(
+100deg,
+rgba(6, 78, 59, 0.8),
+rgba(6, 78, 59, 0.22)
+);
+border-color: var(--border-active);
+}
+
+.a3-sidebar-item.active::before {
+background: #D4AF37;
+}
+
+.a3-history-preview {
+color: #E8D28A;
+}
+
+.a3-sidebar-empty,
+.a3-user-info small {
+color: #879C8C;
+}
+
+.a3-user-avatar {
+color: #F1D982;
+background: #164B36;
+border: 1px solid var(--border);
+}
+
+.a3-user-info strong {
+color: #F5F5E9;
+}
+
+.a3-sidebar-bottom {
+border-color: var(--border);
+}
+
+.a3-clear-button {
+color: #C6B77C;
+}
+
+/* MAIN */
+
+.a3-main {
+background: transparent;
+}
+
+/* TOOLBAR */
+
+.a3-chat-toolbar {
+background: rgba(4, 22, 14, 0.88);
+border-color: var(--border);
+}
+
+.a3-tool-selector,
+.a3-icon-button {
+color: #E8D28A;
+background: #0A2B1E;
+border-color: var(--border);
+}
+
+.a3-tool-selector > svg:first-child {
+color: #D4AF37;
+}
+
+.a3-icon-button:hover {
+color: #F5E6A8;
+background: #145239;
+border-color: #D4AF37;
+}
+
+.a3-tool-dropdown {
+background: #071A11;
+border-color: var(--border-active);
+}
+
+.a3-tool-dropdown button {
+color: #C2D0C5;
+}
+
+.a3-tool-dropdown button:hover,
+.a3-tool-dropdown button.active {
+color: white;
+background: #10442F;
+}
+
+.a3-tool-dropdown small {
+color: #A2B3A6;
+}
+
+/* WELCOME */
+
+.a3-welcome-icon {
+color: #F0D878;
+background: linear-gradient(135deg, #145239, #06170F);
+border-color: var(--border-active);
+box-shadow: 0 0 25px rgba(212, 175, 55, 0.10);
+transform: none;
+}
+
+.a3-welcome-content h1 {
+color: #F5F5E9;
+}
+
+.a3-welcome-content h1 span {
+color: #D4AF37;
+}
+
+.a3-welcome-content > p {
+color: #A6B5A9;
+}
+
+/* TOOL CARDS */
+
+.a3-tool-card {
+color: #F5F5E9;
+background: rgba(6, 36, 23, 0.94);
+border-color: var(--border);
+}
+
+.a3-tool-card::after {
+border-color: rgba(212, 175, 55, 0.15);
+}
+
+.a3-tool-card:hover,
+.a3-tool-card.active {
+background: #10442F;
+border-color: #D4AF37;
+}
+
+.a3-tool-card-icon {
+color: #E8D28A;
+background: rgba(212, 175, 55, 0.12);
+}
+
+.a3-tool-card small {
+color: #A6B5A9;
+}
+
+/* UPCOMING FEATURES */
+
+.a3-upcoming-section {
+border-color: var(--border);
+}
+
+.a3-upcoming-heading {
+color: #D4AF37;
+}
+
+.a3-upcoming-heading small {
+color: #9CAC9F;
+}
+
+.a3-upcoming-card {
+background: rgba(6, 36, 23, 0.9);
+border-color: var(--border);
+}
+
+.a3-upcoming-card > svg {
+color: #D4AF37;
+}
+
+.a3-upcoming-card strong {
+color: #F5F5E9;
+}
+
+.a3-upcoming-card p {
+color: #A6B5A9;
+}
+
+.a3-coming-badge {
+color: #E8D28A;
+}
+
+/* MESSAGES */
+
+.a3-message-avatar {
+color: #F0D878;
+background: #10442F;
+border-color: var(--border-active);
+}
+
+.a3-user-message-avatar {
+color: #07140D;
+background: linear-gradient(135deg, #D4AF37, #E8D28A);
+border-color: var(--border-active);
+}
+
+.a3-message-bubble {
+border-color: var(--border);
+}
+
+.a3-user-message {
+color: #F5F5E9;
+background: linear-gradient(
+120deg,
+#10583D,
+#073A28
+);
+border-color: rgba(212, 175, 55, 0.35);
+}
+
+.a3-assistant-message {
+color: #F5F5E9;
+background: rgba(6, 36, 23, 0.96);
+}
+
+.a3-message-content {
+color: #E2EAE2;
+}
+
+.a3-message-content h1,
+.a3-message-content h2,
+.a3-message-content h3 {
+color: #F5F5E9;
+}
+
+.a3-message-content a {
+color: #E8D28A;
+}
+
+.a3-message-content blockquote {
+color: #C7D4C9;
+border-left-color: #D4AF37;
+background: rgba(212, 175, 55, 0.07);
+}
+
+.a3-message-content th {
+background: #10442F;
+}
+
+/* CODE BLOCK */
+
+.a3-code-block {
+background: #020B07;
+border-color: var(--border);
+}
+
+.a3-code-header {
+color: #E8D28A;
+background: #0A2B1E;
+border-color: var(--border);
+}
+
+.a3-code-header button {
+color: #E8D28A;
+}
+
+.a3-code-block pre {
+color: #DCE9DD;
+}
+
+.a3-message-content :not(pre) > code {
+color: #F0D878;
+background: #164B36;
+}
+
+/* MESSAGE ACTIONS */
+
+.a3-message-actions {
+border-color: var(--border);
+}
+
+.a3-message-actions button {
+color: #D4C58D;
+background: #0A2B1E;
+border-color: var(--border);
+}
+
+.a3-message-actions button:hover {
+color: #F5E6A8;
+border-color: #D4AF37;
+}
+
+/* GENERATED IMAGE */
+
+.a3-generated-image img {
+border-color: var(--border-active);
+}
+
+.a3-image-loading,
+.a3-image-error {
+color: #E8D28A;
+background: #0A2B1E;
+border-color: var(--border);
+}
+
+.a3-image-download {
+color: #E8D28A;
+}
+
+/* TYPING */
+
+.a3-typing-indicator {
+color: #C6B77C;
+}
+
+.a3-typing-indicator span {
+background: #D4AF37;
+box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+}
+
+/* COMPOSER */
+
+.a3-composer-wrap {
+background: rgba(3, 13, 9, 0.98);
+border-color: var(--border);
+}
+
+.a3-voice-language,
+.a3-voice-button {
+color: #D8DCCF;
+background: #0A2B1E;
+border-color: var(--border);
+}
+
+.a3-voice-language option {
+color: white;
+background: #0A2B1E;
+}
+
+.a3-voice-button.active {
+color: #F5E6A8;
+background: #145239;
+border-color: #D4AF37;
+}
+
+.a3-composer {
+background: #071A11;
+border-color: rgba(212, 175, 55, 0.38);
+box-shadow: 0 0 25px rgba(6, 78, 59, 0.2);
+}
+
+.a3-composer:focus-within {
+border-color: #D4AF37;
+box-shadow: 0 0 22px rgba(212, 175, 55, 0.09);
+}
+
+.a3-composer-action {
+color: #E8D28A;
+background: #10442F;
+}
+
+.a3-composer-input {
+color: #F5F5E9;
+}
+
+.a3-composer-input::placeholder {
+color: #879C8C;
+}
+
+.a3-send-button {
+color: #07140D;
+background: linear-gradient(135deg, #B88B24, #E8D28A);
+}
+
+.a3-send-button:hover {
+background: linear-gradient(135deg, #D4AF37, #F5E6A8);
+}
+
+.a3-composer-disclaimer {
+color: #829487;
+}
+
+/* ERROR */
+
+.a3-error-banner,
+.a3-voice-error {
+color: #FFB6A8;
+background: rgba(127, 29, 29, 0.16);
+}
+
+/* IMAGE MODAL */
+
+.a3-modal-backdrop {
+background: rgba(1, 9, 5, 0.86);
+}
+
+.a3-image-modal {
+background: #071A11;
+border-color: var(--border-active);
+}
+
+.a3-modal-header {
+border-color: var(--border);
+}
+
+.a3-modal-header h2 {
+color: #F5F5E9;
+}
+
+.a3-modal-header p {
+color: #A6B5A9;
+}
+
+.a3-image-form label {
+color: #E8D28A;
+}
+
+.a3-image-textarea {
+color: #F5F5E9;
+background: #030D09;
+border-color: var(--border);
+}
+
+.a3-image-textarea:focus {
+border-color: #D4AF37;
+}
+
+.a3-image-textarea::placeholder {
+color: #829487;
+}
+
+.a3-image-note {
+color: #9CAC9F;
+}
+
+.a3-image-generate-button {
+color: #07140D;
+background: linear-gradient(110deg, #B88B24, #E8D28A);
+}
+
+.a3-image-generate-button:hover {
+background: linear-gradient(110deg, #D4AF37, #F5E6A8);
+}
+
+/* LOADING */
+
+.a3-loading-state {
+color: #E8D28A;
+}
+
+/* SCROLLBAR */
+
+.a3-messages {
+scrollbar-color: #B88B24 #071A11;
+}
+
+/* MOBILE */
+
+@media (max-width: 680px) {
+.a3-sidebar {
+background: #04160E;
+box-shadow: 20px 0 50px rgba(0, 0, 0, 0.55);
+}
+
+.a3-sidebar-backdrop {
+background: rgba(0, 8, 4, 0.72);
+}
+
+.a3-composer-wrap {
+background: rgba(3, 13, 9, 0.99);
+}
+}
+
+/* ACCESSIBILITY */
+
+.a3-page button:focus-visible,
+.a3-page a:focus-visible,
+.a3-page textarea:focus-visible,
+.a3-page select:focus-visible {
+outline: 2px solid #D4AF37;
+outline-offset: 3px;
+}
